@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Brand colours ─────────────────────────────────────────────
+     Change a value here to update the whole app instantly.       */
+  --color-gold:        #F9D783;
+  --color-gold-dark:   #E8C355;
+  --color-navy:        #222C41;
+  --color-navy-light:  #2E3A52;
+  --color-navy-dark:   #161E2E;
+
+  /* ── Semantic aliases ──────────────────────────────────────── */
+  --color-surface:     var(--color-navy-light);
+  --color-page:        var(--color-navy-dark);
+  --color-border:      color-mix(in srgb, var(--color-navy-light) 100%, transparent);
+
+  /* ── Typography ────────────────────────────────────────────── */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Shared input style (apply with @apply or as utility) ─────── */
+@layer utilities {
+  .input-base {
+    @apply w-full px-4 py-3 bg-navy text-white rounded-lg border border-gray-600
+           focus:outline-none focus:border-gold placeholder-gray-500;
+  }
+  .btn-primary {
+    @apply px-6 py-3 bg-gold text-navy rounded-lg font-semibold
+           hover:bg-gold-dark transition-colors disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply px-4 py-2 text-sm bg-navy-light text-gray-300 rounded-lg border border-gray-600
+           hover:border-gray-400 transition-colors;
+  }
+  .card {
+    @apply bg-navy-light rounded-xl;
+  }
+}
