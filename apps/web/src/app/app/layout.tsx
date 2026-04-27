@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import type { JSX, ReactNode } from "react"
+import LogoutButton from "./LogoutButton"
 
 export default async function AppLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
   const supabase = await createClient()
@@ -43,16 +44,17 @@ export default async function AppLayout({ children }: { children: ReactNode }): 
               <img
                 src={profile.avatar_url}
                 alt="avatar"
-                className="w-8 h-8 rounded-full object-cover"
+                className="w-8 h-8 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center text-gold text-sm font-bold">
+              <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center text-gold text-sm font-bold shrink-0">
                 {profile?.full_name?.[0]?.toUpperCase() ?? "U"}
               </div>
             )}
-            <span className="text-sm text-gray-300 truncate">
+            <span className="text-sm text-gray-300 truncate flex-1">
               {profile?.full_name ?? user.email}
             </span>
+            <LogoutButton />
           </div>
         </div>
       </aside>
