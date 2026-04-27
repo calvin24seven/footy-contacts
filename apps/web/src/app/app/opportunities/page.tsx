@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import Link from "next/link"
 
 export default async function OpportunitiesPage() {
   const supabase = await createClient()
@@ -20,7 +21,7 @@ export default async function OpportunitiesPage() {
       {opportunities && opportunities.length > 0 ? (
         <div className="space-y-3">
           {opportunities.map((opp) => (
-            <div key={opp.id} className="bg-navy-light rounded-xl px-5 py-4">
+            <Link key={opp.id} href={`/app/opportunities/${opp.id}`} className="block bg-navy-light rounded-xl px-5 py-4 hover:bg-navy-light/80 transition-colors">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-white font-medium">{opp.title}</p>
@@ -44,7 +45,7 @@ export default async function OpportunitiesPage() {
                   Deadline: {new Date(opp.deadline).toLocaleDateString("en-GB")}
                 </p>
               )}
-            </div>
+            </Link>
           ))}
         </div>
       ) : (

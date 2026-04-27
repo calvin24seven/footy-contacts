@@ -1,9 +1,15 @@
 import { createClient } from "@/lib/supabase/server"
 import type { Tables } from "@/database.types"
+import { UpgradeButton, ManageSubscriptionButton } from "./BillingClient"
 
 type PlanRow = Tables<"plans">
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string }>
+}) {
+  const { success } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -37,13 +43,25 @@ export default async function BillingPage() {
     currentPlan = data
   }
 
+  const hasActiveSub = !!subscription
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-white mb-1">Billing</h1>
       <p className="text-gray-400 text-sm mb-8">Manage your subscription and billing</p>
 
+      {/* Success banner */}
+      {success === "true" && (
+        <div className="bg-green-900/40 border border-green-700 rounded-xl p-4 mb-6">
+          <p className="text-green-300 font-semibold">🎉 Subscription activated!</p>
+          <p className="text-green-400 text-sm mt-1">
+            Welcome to your new plan. Your unlocks are ready to use.
+          </p>
+        </div>
+      )}
+
       {/* Current plan */}
-      <div className="bg-navy-light rounded-xl p-5 mb-8">
+      <div className="bg-navy-light rounded-xl p-5 mb-4">
         <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Current plan</p>
         <p className="text-white text-xl font-bold">
           {currentPlan?.name ?? "Free"}
@@ -68,6 +86,13 @@ export default async function BillingPage() {
           </p>
         )}
       </div>
+
+      {/* Manage subscription */}
+      {hasActiveSub && (
+        <div className="flex justify-end mb-8">
+          <ManageSubscriptionButton />
+        </div>
+      )}
 
       {/* Plans */}
       <h2 className="text-white font-semibold mb-4">Plans</h2>
@@ -102,11 +127,11 @@ export default async function BillingPage() {
                 <li>{plan.monthly_unlock_limit} unlocks/month</li>
                 <li>{plan.monthly_export_limit} exports/month</li>
               </ul>
-              {!isActive && plan.monthly_price_gbp > 0 && (
-                <button className="w-full py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark transition-colors">
-                  Upgrade — coming soon
-                </button>
-              )}
+              <UpgradeButton
+                plan={plan}
+                hasActiveSubscription={hasActiveSub}
+                isCurrentPlan={isActive}
+              />
             </div>
           )
         })}

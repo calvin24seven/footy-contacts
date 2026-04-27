@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import type { Tables } from "@/database.types"
+import ExportListButton from "./ExportListButton"
 
 export default async function ListDetailPage({
   params,
@@ -42,15 +43,18 @@ export default async function ListDetailPage({
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <Link
-          href="/app/lists"
-          className="text-gray-400 hover:text-white transition-colors text-sm"
-        >
-          ← My Lists
-        </Link>
-        <span className="text-gray-600">/</span>
-        <h1 className="text-2xl font-bold text-white">{list.name}</h1>
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/app/lists"
+            className="text-gray-400 hover:text-white transition-colors text-sm"
+          >
+            ← My Lists
+          </Link>
+          <span className="text-gray-600">/</span>
+          <h1 className="text-2xl font-bold text-white">{list.name}</h1>
+        </div>
+        {contacts.length > 0 && <ExportListButton listId={id} />}
       </div>
 
       {list.description && (

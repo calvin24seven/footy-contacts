@@ -120,6 +120,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.5(react@19.2.5)
+      stripe:
+        specifier: ^22.1.0
+        version: 22.1.0(@types/node@22.19.17)
       tailwind-merge:
         specifier: ^3.2.0
         version: 3.5.0
@@ -990,7 +993,7 @@ packages:
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
-    engines: {'0': node >=0.10.0}
+    engines: {node: '>=0.10.0'}
 
   '@expo/cli@0.22.28':
     resolution: {integrity: sha512-lvt72KNitGuixYD2l3SZmRKVu2G4zJpmg5V7WfUBNpmUU5oODBw/6qmiJ6kSLAlfDozscUk+BBGknBBzxUrwrA==}
@@ -5034,6 +5037,15 @@ packages:
   strip-json-comments@3.1.1:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
+
+  stripe@22.1.0:
+    resolution: {integrity: sha512-w/xHyJGxXWnLPbNHG13sz/fae0MrFGC80Oz7YbICQymbfpqfEcsoG+6yG+9BWb81PWc4rrkeSO4wmTcmefmbLw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   structured-headers@0.4.1:
     resolution: {integrity: sha512-0MP/Cxx5SzeeZ10p/bZI0S6MpgD+yxAhi1BOQ34jgnMXsCq3j1t6tQnZu+KdlL7dvJTLT3g9xN8tl10TqgFMcg==}
@@ -11483,6 +11495,10 @@ snapshots:
   strip-json-comments@2.0.1: {}
 
   strip-json-comments@3.1.1: {}
+
+  stripe@22.1.0(@types/node@22.19.17):
+    optionalDependencies:
+      '@types/node': 22.19.17
 
   structured-headers@0.4.1: {}
 

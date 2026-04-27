@@ -332,6 +332,54 @@ export type Database = {
         }
         Relationships: []
       }
+      email_verification_tasks: {
+        Row: {
+          id: string
+          reoon_task_id: string
+          task_name: string | null
+          status: string
+          count_submitted: number | null
+          count_processing: number | null
+          count_duplicates_removed: number | null
+          progress_percentage: number | null
+          created_by: string
+          created_at: string
+          completed_at: string | null
+          error_message: string | null
+          results_applied: boolean | null
+        }
+        Insert: {
+          id?: string
+          reoon_task_id: string
+          task_name?: string | null
+          status?: string
+          count_submitted?: number | null
+          count_processing?: number | null
+          count_duplicates_removed?: number | null
+          progress_percentage?: number | null
+          created_by: string
+          created_at?: string
+          completed_at?: string | null
+          error_message?: string | null
+          results_applied?: boolean | null
+        }
+        Update: {
+          id?: string
+          reoon_task_id?: string
+          task_name?: string | null
+          status?: string
+          count_submitted?: number | null
+          count_processing?: number | null
+          count_duplicates_removed?: number | null
+          progress_percentage?: number | null
+          created_by?: string
+          created_at?: string
+          completed_at?: string | null
+          error_message?: string | null
+          results_applied?: boolean | null
+        }
+        Relationships: []
+      }
       exports: {
         Row: {
           contact_count: number
@@ -843,6 +891,17 @@ export type Database = {
     Views: Record<string, never>
     Functions: {
       is_admin: { Args: { check_user_id?: string }; Returns: boolean }
+      get_admin_secret: { Args: { name: string }; Returns: string }
+      unlock_contact: { Args: { p_contact_id: string }; Returns: Json }
+      get_unlock_usage: { Args: Record<string, never>; Returns: Json }
+      log_export: {
+        Args: {
+          p_contact_count: number
+          p_list_id?: string | null
+          p_export_type?: string
+        }
+        Returns: Json
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

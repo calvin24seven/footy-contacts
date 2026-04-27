@@ -20,6 +20,7 @@ interface ImportResult {
   totalRows: number
   successfulRows: number
   failedRows: number
+  duplicatesSkipped: number
   errors: Array<{ row: number; message: string }>
 }
 
@@ -145,9 +146,10 @@ export default function ImportPage() {
               <p className="text-gray-400 text-sm">Import ID: {result.importId}</p>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-4 gap-4 mb-6">
             <StatBox label="Total rows" value={result.totalRows} />
             <StatBox label="Imported" value={result.successfulRows} green />
+            <StatBox label="Duplicates skipped" value={result.duplicatesSkipped ?? 0} />
             <StatBox label="Failed" value={result.failedRows} red={result.failedRows > 0} />
           </div>
           {result.errors.length > 0 && (

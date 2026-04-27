@@ -26,9 +26,11 @@ export default async function AppLayout({ children }: { children: ReactNode }): 
         <nav className="flex-1 p-3 space-y-1">
           <NavItem href="/app" label="Search" />
           <NavItem href="/app/lists" label="My Lists" />
+          <NavItem href="/app/exports" label="Exports" />
           <NavItem href="/app/opportunities" label="Opportunities" />
           <NavItem href="/app/billing" label="Billing" />
           <NavItem href="/app/profile" label="Profile" />
+          <NavItem href="/app/settings" label="Settings" />
           {profile?.role === "admin" && (
             <NavItem href="/admin" label="Admin" gold />
           )}

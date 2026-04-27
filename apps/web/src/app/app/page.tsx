@@ -1,14 +1,22 @@
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import type { Tables } from "@/database.types"
+import SearchFilters from "./SearchFilters"
 
 const PAGE_SIZE = 25
 
+// Escape ILIKE special characters to prevent SQL injection via pattern matching
+function escapeLike(s: string) {
+  return s.replace(/[%_\\]/g, "\\$&")
+}
+
 interface SearchParams {
   q?: string
-  category?: string
+  role?: string
+  org?: string
   country?: string
-  level?: string
+  email_status?: string
+  category?: string
   page?: string
 }
 
@@ -23,33 +31,75 @@ export default async function SearchPage({
 
   const supabase = await createClient()
 
+  // Fetch distinct countries in parallel with the main query
+  const countriesPromise = supabase
+    .from("contacts")
+    .select("country")
+    .eq("visibility_status", "published")
+    .eq("suppression_status", "active")
+    .not("country", "is", null)
+    .order("country")
+
   let query = supabase
     .from("contacts")
     .select("*", { count: "exact" })
     .eq("visibility_status", "published")
     .eq("suppression_status", "active")
 
-  if (params.q) {
-    query = query.textSearch("search_vector", params.q, { type: "websearch" })
+  // Text search: ILIKE OR across name, role, organisation
+  if (params.q?.trim()) {
+    const q = escapeLike(params.q.trim())
+    query = query.or(`name.ilike.%${q}%,role.ilike.%${q}%,organisation.ilike.%${q}%`)
   }
-  if (params.category) query = query.eq("category", params.category)
-  if (params.country) query = query.eq("country", params.country)
-  if (params.level) query = query.eq("level", params.level)
 
-  const { data: contacts, count } = await query
-    .order("name")
-    .range(offset, offset + PAGE_SIZE - 1)
+  // Filter: role contains
+  if (params.role?.trim()) {
+    query = query.ilike("role", `%${escapeLike(params.role.trim())}%`)
+  }
+
+  // Filter: organisation contains
+  if (params.org?.trim()) {
+    query = query.ilike("organisation", `%${escapeLike(params.org.trim())}%`)
+  }
+
+  // Filter: exact country match
+  if (params.country?.trim()) {
+    query = query.eq("country", params.country.trim())
+  }
+
+  // Filter: email status
+  if (params.email_status === "verified") {
+    query = query.eq("verified_status", "verified")
+  } else if (params.email_status === "unverified") {
+    query = query.neq("verified_status", "verified")
+  }
+
+  // Filter: category
+  if (params.category?.trim()) {
+    query = query.eq("category", params.category.trim())
+  }
+
+  const [{ data: contacts, count }, { data: countryRows }] = await Promise.all([
+    query.order("name").range(offset, offset + PAGE_SIZE - 1),
+    countriesPromise,
+  ])
+
+  const countries = [
+    ...new Set((countryRows ?? []).map((r) => r.country).filter(Boolean)),
+  ] as string[]
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0
   const hasResults = contacts && contacts.length > 0
-  const hasQuery = !!(params.q || params.category || params.country || params.level)
+  const hasQuery = !!(params.q || params.role || params.org || params.country || params.email_status || params.category)
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
     if (params.q) qs.set("q", params.q)
-    if (params.category) qs.set("category", params.category)
+    if (params.role) qs.set("role", params.role)
+    if (params.org) qs.set("org", params.org)
     if (params.country) qs.set("country", params.country)
-    if (params.level) qs.set("level", params.level)
+    if (params.email_status) qs.set("email_status", params.email_status)
+    if (params.category) qs.set("category", params.category)
     qs.set("page", String(p))
     return `/app?${qs.toString()}`
   }
@@ -57,61 +107,36 @@ export default async function SearchPage({
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-1">Search Contacts</h1>
+        <h1 className="text-2xl font-bold text-white mb-1">Find Contacts</h1>
         <p className="text-gray-400 text-sm">
           Search thousands of football industry professionals
         </p>
       </div>
 
-      {/* Search form */}
-      <form className="flex gap-3 mb-4">
+      {/* Search bar */}
+      <form className="flex gap-3 mb-4" method="GET" action="/app">
+        {/* Preserve active filters when submitting a new text search */}
+        {params.role && <input type="hidden" name="role" value={params.role} />}
+        {params.org && <input type="hidden" name="org" value={params.org} />}
+        {params.country && <input type="hidden" name="country" value={params.country} />}
+        {params.email_status && <input type="hidden" name="email_status" value={params.email_status} />}
+        {params.category && <input type="hidden" name="category" value={params.category} />}
         <input
           name="q"
           defaultValue={params.q}
-          placeholder="Search by name, role, organisation…"
+          placeholder="Search by name, role, or organisation…"
           className="flex-1 px-4 py-3 bg-navy-light text-white rounded-lg border border-gray-600 focus:outline-none focus:border-gold placeholder-gray-500"
         />
         <button
           type="submit"
-          className="px-6 py-3 bg-gold text-navy rounded-lg font-semibold hover:bg-gold-dark transition-colors"
+          className="px-6 py-3 bg-gold text-navy rounded-lg font-semibold hover:bg-gold-dark transition-colors whitespace-nowrap"
         >
           Search
         </button>
       </form>
 
-      {/* Filter row */}
-      <form className="flex flex-wrap gap-3 mb-6">
-        {params.q && <input type="hidden" name="q" value={params.q} />}
-        <select
-          name="category"
-          defaultValue={params.category ?? ""}
-          className="px-3 py-2 bg-navy-light text-gray-300 rounded-lg border border-gray-600 text-sm focus:outline-none focus:border-gold"
-        >
-          <option value="">All categories</option>
-          <option value="Agent">Agent</option>
-          <option value="Scout">Scout</option>
-          <option value="Coach">Coach</option>
-          <option value="Club">Club</option>
-          <option value="Media">Media</option>
-        </select>
-        <select
-          name="level"
-          defaultValue={params.level ?? ""}
-          className="px-3 py-2 bg-navy-light text-gray-300 rounded-lg border border-gray-600 text-sm focus:outline-none focus:border-gold"
-        >
-          <option value="">All levels</option>
-          <option value="International">International</option>
-          <option value="Professional">Professional</option>
-          <option value="Semi-professional">Semi-professional</option>
-          <option value="Amateur">Amateur</option>
-        </select>
-        {(params.category || params.level) && (
-          <a href="/app" className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-            Clear filters
-          </a>
-        )}
-        <button type="submit" className="hidden" />
-      </form>
+      {/* Filter panel (client component) */}
+      <SearchFilters countries={countries} />
 
       {/* Result count */}
       {hasQuery && count !== null && count !== undefined && (
@@ -157,17 +182,16 @@ export default async function SearchPage({
       ) : hasQuery ? (
         <div className="text-center py-16">
           <p className="text-gray-400 text-lg mb-2">No contacts found</p>
-          <p className="text-gray-500 text-sm">
-            Try a different search term or adjust your filters
-          </p>
+          <p className="text-gray-500 text-sm">Try a different search term or adjust your filters</p>
           <a href="/app" className="mt-4 inline-block text-gold text-sm hover:underline">
             Clear search
           </a>
         </div>
       ) : (
         <div className="text-center py-16 text-gray-500">
-          <p className="text-lg mb-2">Search for contacts</p>
-          <p className="text-sm">Type a name, organisation, or role above to get started</p>
+          <div className="text-4xl mb-4">⚽</div>
+          <p className="text-lg mb-2 text-gray-400">Find football professionals</p>
+          <p className="text-sm">Search by name, role, or organisation above, or use filters to browse by country or category</p>
         </div>
       )}
     </div>
@@ -175,33 +199,57 @@ export default async function SearchPage({
 }
 
 function ContactCard({ contact }: { contact: Tables<"contacts"> }) {
+  const location = [contact.city, contact.country].filter(Boolean).join(", ")
+
   return (
     <Link
       href={`/app/contacts/${contact.id}`}
-      className="flex items-center justify-between bg-navy-light rounded-xl px-5 py-4 hover:bg-[#354460] transition-colors"
+      className="flex items-center justify-between bg-navy-light rounded-xl px-5 py-4 hover:bg-[#354460] transition-colors group"
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 min-w-0">
+        {/* Avatar */}
         <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-sm shrink-0">
           {contact.name[0]?.toUpperCase()}
         </div>
-        <div>
-          <div className="flex items-center gap-2">
+
+        <div className="min-w-0">
+          {/* Name + verified */}
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-white font-medium">{contact.name}</span>
             {contact.verified_status === "verified" && (
-              <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">
-                Verified
+              <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded shrink-0">
+                ✓ Verified
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-400">
+          {/* Role · Organisation */}
+          <p className="text-sm text-gray-400 truncate">
             {[contact.role, contact.organisation].filter(Boolean).join(" · ")}
           </p>
+          {/* Location */}
+          {location && (
+            <p className="text-xs text-gray-500 mt-0.5">{location}</p>
+          )}
         </div>
       </div>
-      <div className="text-right text-sm text-gray-500 shrink-0">
-        <div>{contact.category}</div>
-        <div>{[contact.city, contact.country].filter(Boolean).join(", ")}</div>
+
+      {/* Right side: category + arrow */}
+      <div className="flex items-center gap-3 shrink-0 ml-4">
+        {contact.category && (
+          <span className="hidden sm:block text-xs bg-navy text-gray-400 px-2 py-1 rounded-full border border-gray-600">
+            {contact.category}
+          </span>
+        )}
+        <svg
+          className="w-4 h-4 text-gray-600 group-hover:text-gold transition-colors"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
       </div>
     </Link>
   )
 }
+
