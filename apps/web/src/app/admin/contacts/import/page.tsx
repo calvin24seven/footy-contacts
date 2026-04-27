@@ -24,30 +24,67 @@ interface ImportResult {
   errors: Array<{ row: number; message: string }>
 }
 
+/** Proper CSV line parser — handles quoted fields containing commas/newlines. */
+function parseCSVLine(line: string): string[] {
+  const result: string[] = []
+  let current = ""
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++ }
+      else inQuotes = !inQuotes
+    } else if (ch === "," && !inQuotes) {
+      result.push(current.trim())
+      current = ""
+    } else {
+      current += ch
+    }
+  }
+  result.push(current.trim())
+  return result
+}
+
+/** Normalise a CSV header the same way the server API does. */
+function normaliseHeader(h: string): string {
+  return h.trim().toLowerCase().replace(/[\s\-]+/g, "_").replace(/[^a-z_]/g, "")
+}
+
 function parseCSV(text: string): PreviewRow[] {
   const lines = text.trim().split(/\r?\n/)
   if (lines.length < 2) return []
 
-  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/[^a-z_]/g, ""))
+  const headers = parseCSVLine(lines[0]).map(normaliseHeader)
   const rows: PreviewRow[] = []
 
   for (let i = 1; i < Math.min(lines.length, 11); i++) {
-    // Preview first 10 rows
-    const values = lines[i].split(",")
-    const get = (key: string) => {
-      const idx = headers.indexOf(key)
-      return idx >= 0 ? values[idx]?.trim().replace(/^"|"$/g, "") || undefined : undefined
+    const values = parseCSVLine(lines[i])
+    const get = (...keys: string[]) => {
+      for (const key of keys) {
+        const idx = headers.indexOf(key)
+        if (idx >= 0 && values[idx]?.trim()) return values[idx].trim() || undefined
+      }
+      return undefined
     }
-    const name = get("name") ?? get("full_name") ?? get("contact_name")
+    // Name: prefer full_name, fall back to first+last concat
+    const fullName = get("full_name", "name", "contact_name")
+    const firstName = get("first_name")
+    const lastName = get("last_name")
+    const name = fullName ?? (firstName || lastName ? [firstName, lastName].filter(Boolean).join(" ") : undefined)
+
+    // Email: skip Apollo placeholder "unavailable"
+    const rawEmail = get("email", "email_address")
+    const email = rawEmail && rawEmail.toLowerCase() !== "unavailable" ? rawEmail : undefined
+
     rows.push({
       rowNumber: i,
       name: name || "(missing name)",
-      role: get("role") ?? get("job_title") ?? get("position"),
-      organisation: get("organisation") ?? get("organization") ?? get("club") ?? get("company"),
-      category: get("category") ?? get("type"),
-      country: get("country"),
-      email: get("email") ?? get("email_address"),
-      phone: get("phone") ?? get("phone_number") ?? get("mobile"),
+      role: get("title", "role", "job_title", "position", "headline"),
+      organisation: get("cleaned_company_name", "organisation", "organization", "club", "company_name", "company"),
+      category: get("category", "type"),
+      country: get("lead_country", "country"),
+      email,
+      phone: get("phone", "phone_number", "mobile", "company_phone_number"),
       error: !name ? "Missing required field: name" : undefined,
     })
   }
