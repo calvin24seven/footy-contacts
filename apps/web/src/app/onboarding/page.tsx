@@ -30,9 +30,46 @@ const LEVELS = [
   "Amateur", "Semi-professional", "Professional", "International", "Youth Academy",
 ]
 
+const COUNTRIES = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
+  "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain",
+  "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan",
+  "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria",
+  "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada",
+  "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros",
+  "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic",
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica",
+  "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea",
+  "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France",
+  "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada",
+  "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras",
+  "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya",
+  "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon",
+  "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+  "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta",
+  "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia",
+  "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
+  "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand",
+  "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway",
+  "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea",
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+  "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia",
+  "Saint Vincent and the Grenadines", "Samoa", "San Marino",
+  "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles",
+  "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands",
+  "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka",
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan",
+  "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago",
+  "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine",
+  "United Arab Emirates", "United Kingdom", "United States", "Uruguay",
+  "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
+]
+
 interface StepData {
   user_type?: string
-  full_name?: string
+  first_name?: string
+  last_name?: string
   primary_goals?: string[]
   country?: string
   city?: string
@@ -60,23 +97,35 @@ export default function OnboardingPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push("/login"); return }
 
-    const { error } = await supabase.from("profiles").update({
+    const fullName = [finalData.first_name, finalData.last_name]
+      .filter(Boolean)
+      .join(" ") || null
+
+    // upsert instead of update — ensures the row exists even if the
+    // signup trigger failed, and won't silently skip a missing row.
+    const { error: upsertError } = await supabase.from("profiles").upsert({
+      id: user.id,
       user_type: finalData.user_type ?? null,
-      full_name: finalData.full_name ?? null,
+      first_name: finalData.first_name ?? null,
+      last_name: finalData.last_name ?? null,
+      full_name: fullName,
       primary_goals: (finalData.primary_goals ?? null) as string[] | null,
       country: finalData.country ?? null,
       city: finalData.city ?? null,
       football_level: finalData.football_level ?? null,
       onboarding_completed: true,
       onboarding_step: 4,
-    }).eq("id", user.id)
+    }, { onConflict: "id" })
 
-    if (error) {
-      setError(error.message)
+    if (upsertError) {
+      setError(upsertError.message)
       setLoading(false)
-    } else {
-      router.push("/app")
+      return
     }
+
+    // Invalidate the router cache so the middleware sees the updated profile
+    router.refresh()
+    router.push("/app")
   }
 
   const totalSteps = 4
@@ -100,7 +149,7 @@ export default function OnboardingPage() {
         <div className="bg-navy-light rounded-xl p-6">
           {step === 1 && (
             <Step1
-              onNext={(v) => nextStep({ user_type: v.user_type, full_name: v.full_name })}
+              onNext={(v) => nextStep({ user_type: v.user_type, first_name: v.first_name, last_name: v.last_name })}
             />
           )}
           {step === 2 && (
@@ -126,22 +175,36 @@ export default function OnboardingPage() {
   )
 }
 
-function Step1({ onNext }: { onNext: (v: { user_type: string; full_name: string }) => void }) {
+function Step1({ onNext }: { onNext: (v: { user_type: string; first_name: string; last_name: string }) => void }) {
   const [userType, setUserType] = useState("")
-  const [fullName, setFullName] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
 
   return (
     <div>
       <h2 className="text-white text-xl font-bold mb-1">Welcome! Tell us about yourself</h2>
       <p className="text-gray-400 text-sm mb-6">This helps us personalise your experience.</p>
 
-      <label className="block text-sm text-gray-300 mb-2">Your full name</label>
-      <input
-        value={fullName}
-        onChange={(e) => setFullName(e.target.value)}
-        placeholder="e.g. James Smith"
-        className="w-full px-4 py-3 bg-navy text-white rounded-lg border border-gray-600 focus:outline-none focus:border-gold placeholder-gray-500 mb-4"
-      />
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div>
+          <label className="block text-sm text-gray-300 mb-2">First name</label>
+          <input
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="e.g. James"
+            className="w-full px-4 py-3 bg-navy text-white rounded-lg border border-gray-600 focus:outline-none focus:border-gold placeholder-gray-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-300 mb-2">Last name</label>
+          <input
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="e.g. Smith"
+            className="w-full px-4 py-3 bg-navy text-white rounded-lg border border-gray-600 focus:outline-none focus:border-gold placeholder-gray-500"
+          />
+        </div>
+      </div>
 
       <label className="block text-sm text-gray-300 mb-2">I am a…</label>
       <div className="grid grid-cols-2 gap-2 mb-6">
@@ -161,8 +224,8 @@ function Step1({ onNext }: { onNext: (v: { user_type: string; full_name: string 
       </div>
 
       <button
-        disabled={!userType || !fullName.trim()}
-        onClick={() => onNext({ user_type: userType, full_name: fullName.trim() })}
+        disabled={!userType || !firstName.trim() || !lastName.trim()}
+        onClick={() => onNext({ user_type: userType, first_name: firstName.trim(), last_name: lastName.trim() })}
         className="w-full py-3 bg-gold text-navy rounded-lg font-semibold hover:bg-gold-dark transition-colors disabled:opacity-40"
       >
         Continue
@@ -227,12 +290,16 @@ function Step3({
       <p className="text-gray-400 text-sm mb-6">We&apos;ll show you relevant contacts nearby.</p>
 
       <label className="block text-sm text-gray-300 mb-2">Country</label>
-      <input
+      <select
         value={country}
         onChange={(e) => setCountry(e.target.value)}
-        placeholder="e.g. United Kingdom"
-        className="w-full px-4 py-3 bg-navy text-white rounded-lg border border-gray-600 focus:outline-none focus:border-gold placeholder-gray-500 mb-4"
-      />
+        className="w-full px-4 py-3 bg-navy text-white rounded-lg border border-gray-600 focus:outline-none focus:border-gold mb-4 appearance-none"
+      >
+        <option value="" disabled className="text-gray-500">Select your country…</option>
+        {COUNTRIES.map((c) => (
+          <option key={c} value={c}>{c}</option>
+        ))}
+      </select>
 
       <label className="block text-sm text-gray-300 mb-2">City (optional)</label>
       <input
