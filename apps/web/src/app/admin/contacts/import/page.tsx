@@ -19,8 +19,10 @@ interface ImportResult {
   importId: string
   totalRows: number
   successfulRows: number
+  updatedRows: number
   failedRows: number
   duplicatesSkipped: number
+  suppressedRows: number
   errors: Array<{ row: number; message: string }>
 }
 
@@ -91,6 +93,61 @@ function parseCSV(text: string): PreviewRow[] {
   return rows
 }
 
+const CHUNK_SIZE = 5_000
+
+/**
+ * Count actual CSV data rows, ignoring newlines that appear inside quoted fields.
+ * After trimEnd(), the number of non-quoted \n chars equals the number of data rows.
+ */
+function countCSVRows(text: string): number {
+  let rows = 0
+  let inQuotes = false
+  const t = text.trimEnd()
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i]
+    if (ch === '"') {
+      if (inQuotes && t[i + 1] === '"') i++ // escaped quote
+      else inQuotes = !inQuotes
+    } else if (!inQuotes && ch === '\n') {
+      rows++
+    }
+    // \r is skipped silently — the following \n will be counted
+  }
+  return rows // equals data row count (header newline + D-1 data newlines = D for D rows)
+}
+
+/** Split CSV into chunks of ≤ chunkSize records, each with the header row prepended. */
+function splitCSVIntoChunks(text: string, chunkSize: number): string[] {
+  const t = text.trimEnd()
+  const firstNewline = t.indexOf('\n')
+  if (firstNewline === -1) return []
+  const header = t.slice(0, firstNewline).replace(/\r$/, '')
+  const rest = t.slice(firstNewline + 1)
+
+  const records: string[] = []
+  let start = 0
+  let inQ = false
+  for (let i = 0; i < rest.length; i++) {
+    const ch = rest[i]
+    if (ch === '"') {
+      if (inQ && rest[i + 1] === '"') i++
+      else inQ = !inQ
+    } else if (!inQ && ch === '\n') {
+      const rec = rest.slice(start, i).replace(/\r$/, '').trim()
+      if (rec) records.push(rec)
+      start = i + 1
+    }
+  }
+  const last = rest.slice(start).trim()
+  if (last) records.push(last)
+
+  const chunks: string[] = []
+  for (let i = 0; i < records.length; i += chunkSize) {
+    chunks.push(header + '\n' + records.slice(i, i + chunkSize).join('\n'))
+  }
+  return chunks
+}
+
 export default function ImportPage() {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<PreviewRow[]>([])
@@ -98,6 +155,7 @@ export default function ImportPage() {
   const [importing, setImporting] = useState(false)
   const [result, setResult] = useState<ImportResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [chunkProgress, setChunkProgress] = useState<{ current: number; total: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
@@ -115,8 +173,7 @@ export default function ImportPage() {
     const reader = new FileReader()
     reader.onload = (ev) => {
       const text = ev.target?.result as string
-      const lineCount = text.trim().split(/\r?\n/).length - 1 // exclude header
-      setTotalRows(lineCount)
+      setTotalRows(countCSVRows(text))
       setPreview(parseCSV(text))
     }
     reader.readAsText(f)
@@ -125,27 +182,73 @@ export default function ImportPage() {
   async function handleImport() {
     if (!file) return
     setImporting(true)
+    setChunkProgress(null)
     setError(null)
 
-    const formData = new FormData()
-    formData.append("file", file)
-
-    try {
-      const res = await fetch("/api/admin/import", {
-        method: "POST",
-        body: formData,
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        setError(json.error ?? "Import failed")
-      } else {
-        setResult(json)
-      }
-    } catch {
-      setError("Network error. Please try again.")
-    } finally {
+    const text = await file.text()
+    const chunks = splitCSVIntoChunks(text, CHUNK_SIZE)
+    if (chunks.length === 0) {
+      setError("No data rows found in file.")
       setImporting(false)
+      return
     }
+
+    let importId: string | null = null
+    let accSuccessful = 0, accUpdated = 0, accFailed = 0, accDuplicates = 0, accSuppressed = 0
+    const allErrors: Array<{ row: number; message: string }> = []
+
+    for (let i = 0; i < chunks.length; i++) {
+      setChunkProgress({ current: i + 1, total: chunks.length })
+      const isLast = i === chunks.length - 1
+
+      const chunkFile = new File([chunks[i]], file.name, { type: "text/csv" })
+      const fd = new FormData()
+      fd.append("file", chunkFile)
+      fd.append("total_rows", String(totalRows))
+      fd.append("is_last_chunk", String(isLast))
+      if (importId) fd.append("import_id", importId)
+      if (isLast) {
+        fd.append("acc_successful", String(accSuccessful))
+        fd.append("acc_updated", String(accUpdated))
+        fd.append("acc_failed", String(accFailed))
+        fd.append("acc_duplicates", String(accDuplicates))
+        fd.append("acc_suppressed", String(accSuppressed))
+      }
+
+      try {
+        const res = await fetch("/api/admin/import", { method: "POST", body: fd })
+        const json = await res.json()
+        if (!res.ok) {
+          setError(json.error ?? `Chunk ${i + 1} of ${chunks.length} failed`)
+          setImporting(false)
+          return
+        }
+        if (!importId) importId = json.importId
+        accSuccessful += json.chunkSuccessful ?? 0
+        accUpdated += json.chunkUpdated ?? 0
+        accFailed += json.chunkFailed ?? 0
+        accDuplicates += json.chunkDuplicatesSkipped ?? 0
+        accSuppressed += json.chunkSuppressed ?? 0
+        allErrors.push(...(json.errors ?? []))
+      } catch {
+        setError(`Network error on chunk ${i + 1} of ${chunks.length}. Please try again.`)
+        setImporting(false)
+        return
+      }
+    }
+
+    setResult({
+      importId: importId!,
+      totalRows,
+      successfulRows: accSuccessful,
+      updatedRows: accUpdated,
+      failedRows: accFailed,
+      duplicatesSkipped: accDuplicates,
+      suppressedRows: accSuppressed,
+      errors: allErrors.slice(0, 50),
+    })
+    setChunkProgress(null)
+    setImporting(false)
   }
 
   function reset() {
@@ -183,9 +286,10 @@ export default function ImportPage() {
               <p className="text-gray-400 text-sm">Import ID: {result.importId}</p>
             </div>
           </div>
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-5 gap-4 mb-6">
             <StatBox label="Total rows" value={result.totalRows} />
             <StatBox label="Imported" value={result.successfulRows} green />
+            <StatBox label="Updated" value={result.updatedRows ?? 0} />
             <StatBox label="Duplicates skipped" value={result.duplicatesSkipped ?? 0} />
             <StatBox label="Failed" value={result.failedRows} red={result.failedRows > 0} />
           </div>
@@ -312,7 +416,9 @@ export default function ImportPage() {
               className="px-6 py-3 bg-gold text-navy rounded-lg font-semibold hover:bg-gold-dark transition-colors disabled:opacity-50"
             >
               {importing
-                ? `Importing ${totalRows.toLocaleString()} rows…`
+                ? chunkProgress && chunkProgress.total > 1
+                  ? `Importing… chunk ${chunkProgress.current} of ${chunkProgress.total}`
+                  : `Importing ${totalRows.toLocaleString()} rows…`
                 : `Import ${totalRows.toLocaleString()} contacts`}
             </button>
           )}

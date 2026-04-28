@@ -283,6 +283,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // import_mode: 'skip' (default) = ignore duplicates; 'update' = update mutable fields on match
   const importMode = formData.get("import_mode") === "update" ? "update" : "skip"
 
+  // Chunked-upload fields
+  const importIdParam = formData.get("import_id") as string | null
+  const totalRowsParam = formData.get("total_rows") as string | null
+  const isLastChunk = formData.get("is_last_chunk") !== "false" // default true for single-chunk uploads
+  const accSuccessful = parseInt((formData.get("acc_successful") as string) ?? "0", 10) || 0
+  const accUpdated    = parseInt((formData.get("acc_updated")    as string) ?? "0", 10) || 0
+  const accFailed     = parseInt((formData.get("acc_failed")     as string) ?? "0", 10) || 0
+  const accDuplicates = parseInt((formData.get("acc_duplicates") as string) ?? "0", 10) || 0
+  const accSuppressed = parseInt((formData.get("acc_suppressed") as string) ?? "0", 10) || 0
+
   const text = await (file as File).text()
   const lines = text.trim().split(/\r?\n/)
   if (lines.length < 2) {
@@ -310,23 +320,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const dataLines = lines.slice(1).filter((l) => l.trim())
   const totalRows = dataLines.length
 
-  const { data: importRecord, error: importErr } = await supabase
-    .from("csv_imports")
-    .insert({
-      admin_user_id: user.id,
-      filename: (file as File).name,
-      status: "processing",
-      total_rows: totalRows,
-      import_mode: importMode,
-    })
-    .select("id")
-    .single()
+  // Reuse an existing import record (chunked upload) or create a new one
+  let importId: string
+  if (importIdParam) {
+    importId = importIdParam
+  } else {
+    const reportedTotal = totalRowsParam ? (parseInt(totalRowsParam, 10) || totalRows) : totalRows
+    const { data: importRecord, error: importErr } = await supabase
+      .from("csv_imports")
+      .insert({
+        admin_user_id: user.id,
+        filename: (file as File).name,
+        status: "processing",
+        total_rows: reportedTotal,
+        import_mode: importMode,
+      })
+      .select("id")
+      .single()
 
-  if (importErr || !importRecord) {
-    return NextResponse.json({ error: "Failed to create import record" }, { status: 500 })
+    if (importErr || !importRecord) {
+      return NextResponse.json({ error: "Failed to create import record" }, { status: 500 })
+    }
+    importId = importRecord.id
   }
-
-  const importId = importRecord.id
   let successfulRows = 0
   let updatedRows = 0
   let failedRows = 0
@@ -559,17 +575,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await supabase.from("csv_import_rows").insert(rowInserts)
   }
 
-  await supabase.from("csv_imports").update({
-    status: failedRows === totalRows ? "failed" : "completed",
-    successful_rows: successfulRows,
-    failed_rows: failedRows,
-    suppressed_rows: suppressedRows,
-    updated_rows: updatedRows,
-    completed_at: new Date().toISOString(),
-  }).eq("id", importId)
+  if (isLastChunk) {
+    await supabase.from("csv_imports").update({
+      status: "completed",
+      successful_rows: successfulRows + accSuccessful,
+      updated_rows: updatedRows + accUpdated,
+      failed_rows: failedRows + accFailed,
+      suppressed_rows: suppressedRows + accSuppressed,
+      completed_at: new Date().toISOString(),
+    }).eq("id", importId)
+  }
 
   return NextResponse.json({
-    importId, totalRows, successfulRows, updatedRows, failedRows,
-    duplicatesSkipped, suppressedRows, errors: errors.slice(0, 50),
+    importId,
+    chunkSuccessful: successfulRows,
+    chunkUpdated: updatedRows,
+    chunkFailed: failedRows,
+    chunkDuplicatesSkipped: duplicatesSkipped,
+    chunkSuppressed: suppressedRows,
+    errors: errors.slice(0, 50),
   })
 }
