@@ -93,7 +93,9 @@ function parseCSV(text: string): PreviewRow[] {
   return rows
 }
 
-const CHUNK_SIZE = 5_000
+// 3.5 MB per chunk — safely under Vercel's 4.5 MB serverless request-body hard limit.
+// Byte-aware so large Apollo rows (with embedded company descriptions) never overflow.
+const CHUNK_MAX_BYTES = 3_500_000
 
 /**
  * Count actual CSV data rows, ignoring newlines that appear inside quoted fields.
@@ -116,14 +118,18 @@ function countCSVRows(text: string): number {
   return rows // equals data row count (header newline + D-1 data newlines = D for D rows)
 }
 
-/** Split CSV into chunks of ≤ chunkSize records, each with the header row prepended. */
-function splitCSVIntoChunks(text: string, chunkSize: number): string[] {
+/**
+ * Split CSV into chunks each ≤ maxChunkBytes (UTF-8 bytes), header prepended to every chunk.
+ * Quote-aware: records with embedded newlines are never broken mid-record.
+ */
+function splitCSVIntoChunks(text: string, maxChunkBytes: number): string[] {
   const t = text.trimEnd()
   const firstNewline = t.indexOf('\n')
   if (firstNewline === -1) return []
   const header = t.slice(0, firstNewline).replace(/\r$/, '')
   const rest = t.slice(firstNewline + 1)
 
+  // Parse all records (quote-aware)
   const records: string[] = []
   let start = 0
   let inQ = false
@@ -141,9 +147,25 @@ function splitCSVIntoChunks(text: string, chunkSize: number): string[] {
   const last = rest.slice(start).trim()
   if (last) records.push(last)
 
+  // Pack records into byte-size-limited chunks
+  const encoder = new TextEncoder()
+  const headerBytes = encoder.encode(header + '\n').length
   const chunks: string[] = []
-  for (let i = 0; i < records.length; i += chunkSize) {
-    chunks.push(header + '\n' + records.slice(i, i + chunkSize).join('\n'))
+  let chunkLines: string[] = []
+  let chunkBytes = headerBytes
+
+  for (const rec of records) {
+    const recBytes = encoder.encode(rec + '\n').length
+    if (chunkBytes + recBytes > maxChunkBytes && chunkLines.length > 0) {
+      chunks.push(header + '\n' + chunkLines.join('\n'))
+      chunkLines = []
+      chunkBytes = headerBytes
+    }
+    chunkLines.push(rec)
+    chunkBytes += recBytes
+  }
+  if (chunkLines.length > 0) {
+    chunks.push(header + '\n' + chunkLines.join('\n'))
   }
   return chunks
 }
@@ -186,7 +208,7 @@ export default function ImportPage() {
     setError(null)
 
     const text = await file.text()
-    const chunks = splitCSVIntoChunks(text, CHUNK_SIZE)
+    const chunks = splitCSVIntoChunks(text, CHUNK_MAX_BYTES)
     if (chunks.length === 0) {
       setError("No data rows found in file.")
       setImporting(false)
