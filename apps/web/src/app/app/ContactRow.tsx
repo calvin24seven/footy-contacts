@@ -15,22 +15,32 @@ export type ContactListRow = {
   verified_status: string | null
 }
 
-// ── Email status badge ─────────────────────────────────────────────────────────
-function EmailBadge({ status }: { status: string | null }) {
-  if (!status || status === "unverified") return null
-  const map: Record<string, { label: string; cls: string }> = {
-    verified:  { label: "✓ Verified",  cls: "bg-green-500/20 text-green-400" },
-    catch_all: { label: "~ Catch-all", cls: "bg-amber-500/20 text-amber-400" },
-    unknown:   { label: "? Unknown",   cls: "bg-gray-500/20 text-gray-400" },
-    risky:     { label: "⚠ Risky",     cls: "bg-orange-500/20 text-orange-400" },
+// ── Email verification status icon (inside the button) ────────────────────────
+function EmailStatusIcon({ status }: { status: string | null }) {
+  if (status === "verified") {
+    return (
+      <span className="w-3.5 h-3.5 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+        <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+        </svg>
+      </span>
+    )
   }
-  const badge = map[status]
-  if (!badge) return null
-  return (
-    <span className={`text-[11px] px-1.5 py-0.5 rounded font-medium shrink-0 ${badge.cls}`}>
-      {badge.label}
-    </span>
-  )
+  if (status === "catch_all" || status === "unknown") {
+    return (
+      <span className="w-3.5 h-3.5 rounded-full bg-amber-400 flex items-center justify-center shrink-0">
+        <span className="text-[8px] text-navy font-black leading-none">?</span>
+      </span>
+    )
+  }
+  if (status === "risky") {
+    return (
+      <span className="w-3.5 h-3.5 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
+        <span className="text-[8px] text-white font-black leading-none">!</span>
+      </span>
+    )
+  }
+  return null
 }
 
 // ── Terms modal ────────────────────────────────────────────────────────────────
@@ -87,7 +97,7 @@ function EmailCell({ contactId, verifiedStatus }: { contactId: string; verifiedS
 
   // No email on file
   if (!verifiedStatus || verifiedStatus === "unverified") {
-    return <span className="text-gray-600 text-xs">No email</span>
+    return <span className="text-gray-600 text-xs px-1">No email</span>
   }
 
   async function doUnlock() {
@@ -96,7 +106,6 @@ function EmailCell({ contactId, verifiedStatus }: { contactId: string; verifiedS
     const data = await res.json() as {
       success?: boolean
       already_unlocked?: boolean
-      email?: string
       error?: string
       requires_subscription?: boolean
     }
@@ -104,7 +113,6 @@ function EmailCell({ contactId, verifiedStatus }: { contactId: string; verifiedS
     if (res.status === 402 || data.requires_subscription) { setState("paywall"); return }
     if (res.status === 429) { setState("limit"); return }
     if (data.success || data.already_unlocked) {
-      // Navigate to the contact detail page where the email is shown
       router.push(`/app/contacts/${contactId}`)
       return
     }
@@ -114,7 +122,6 @@ function EmailCell({ contactId, verifiedStatus }: { contactId: string; verifiedS
   function handleAccessClick(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    // Check if already accepted terms this session
     if (sessionStorage.getItem("fc_terms_accepted") === "1") {
       doUnlock()
     } else {
@@ -134,11 +141,7 @@ function EmailCell({ contactId, verifiedStatus }: { contactId: string; verifiedS
 
   if (state === "paywall") {
     return (
-      <Link
-        href="/app/billing"
-        onClick={(e) => e.stopPropagation()}
-        className="text-xs text-gold underline"
-      >
+      <Link href="/app/billing" onClick={(e) => e.stopPropagation()} className="text-xs text-gold underline whitespace-nowrap">
         Upgrade to unlock
       </Link>
     )
@@ -146,11 +149,7 @@ function EmailCell({ contactId, verifiedStatus }: { contactId: string; verifiedS
 
   if (state === "limit") {
     return (
-      <Link
-        href="/app/billing"
-        onClick={(e) => e.stopPropagation()}
-        className="text-xs text-yellow-400 underline"
-      >
+      <Link href="/app/billing" onClick={(e) => e.stopPropagation()} className="text-xs text-amber-400 underline whitespace-nowrap">
         Limit reached
       </Link>
     )
@@ -164,20 +163,25 @@ function EmailCell({ contactId, verifiedStatus }: { contactId: string; verifiedS
     <button
       onClick={handleAccessClick}
       disabled={state === "loading"}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/40 text-gold text-xs font-medium hover:bg-gold/10 transition-colors disabled:opacity-50 whitespace-nowrap"
+      className="flex items-center gap-1.5 px-2.5 py-2 md:py-1.5 rounded-lg border border-gold/40 text-gold text-xs font-medium hover:bg-gold/10 active:bg-gold/20 transition-colors disabled:opacity-50 whitespace-nowrap"
     >
       {state === "loading" ? (
-        <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+        <svg className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
         </svg>
       ) : (
-        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
+        <>
+          {/* Mail icon */}
+          <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          {/* Verification status dot */}
+          <EmailStatusIcon status={verifiedStatus} />
+        </>
       )}
-      {state === "loading" ? "Unlocking…" : "Access email"}
+      <span>{state === "loading" ? "Unlocking…" : "Access email"}</span>
     </button>
   )
 }
@@ -185,30 +189,23 @@ function EmailCell({ contactId, verifiedStatus }: { contactId: string; verifiedS
 // ── Main contact row ───────────────────────────────────────────────────────────
 export default function ContactRow({ contact }: { contact: ContactListRow }) {
   return (
-    <div className="grid grid-cols-[2fr_2fr_2fr_auto] items-center gap-4 px-4 py-3 bg-navy-light rounded-xl hover:bg-[#354460] transition-colors group">
-      {/* Name column */}
-      <Link href={`/app/contacts/${contact.id}`} className="flex items-center gap-3 min-w-0">
-        <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-xs shrink-0">
-          {contact.name[0]?.toUpperCase()}
-        </div>
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-white font-medium text-sm truncate">{contact.name}</span>
-            <EmailBadge status={contact.verified_status} />
-          </div>
-          {contact.country && (
-            <p className="text-xs text-gray-500 truncate">{contact.country}</p>
-          )}
-        </div>
+    <div className="grid grid-cols-[1fr_auto] md:grid-cols-[2fr_2fr_2fr_auto] items-center gap-3 md:gap-4 px-4 py-3 bg-navy-light rounded-xl hover:bg-[#354460] active:bg-[#354460] transition-colors">
+      {/* Name column — on mobile shows role+org stacked below */}
+      <Link href={`/app/contacts/${contact.id}`} className="min-w-0">
+        <p className="text-white font-medium text-sm truncate">{contact.name}</p>
+        {/* Mobile: role · company below name */}
+        <p className="text-xs text-gray-400 truncate md:hidden mt-0.5">
+          {[contact.role, contact.organisation].filter(Boolean).join(" · ") || (contact.country ?? "—")}
+        </p>
       </Link>
 
-      {/* Job title column */}
-      <Link href={`/app/contacts/${contact.id}`} className="min-w-0">
+      {/* Role column — desktop only */}
+      <Link href={`/app/contacts/${contact.id}`} className="min-w-0 hidden md:block">
         <p className="text-sm text-gray-300 truncate">{contact.role ?? "—"}</p>
       </Link>
 
-      {/* Company column */}
-      <Link href={`/app/contacts/${contact.id}`} className="min-w-0">
+      {/* Company column — desktop only */}
+      <Link href={`/app/contacts/${contact.id}`} className="min-w-0 hidden md:block">
         <p className="text-sm text-gray-300 truncate">{contact.organisation ?? "—"}</p>
       </Link>
 

@@ -92,10 +92,11 @@ export default function SearchFilters({ countries }: Props) {
   return (
     <div className="mb-6">
       {/* Filters row */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Filters row — scrollable on mobile */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
         <button
           onClick={open ? () => setOpen(false) : handleOpen}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+          className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border text-sm font-medium transition-colors shrink-0 ${
             open || activeCount > 0
               ? "border-gold bg-gold/10 text-gold"
               : "border-gray-600 text-gray-300 hover:border-gray-400"
@@ -216,11 +217,11 @@ export default function SearchFilters({ countries }: Props) {
             </select>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button
               onClick={applyFilters}
               disabled={isPending}
-              className="px-6 py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition-colors"
+              className="flex-1 sm:flex-none px-6 py-2.5 sm:py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition-colors"
             >
               {isPending ? "Applying…" : "Apply filters"}
             </button>
@@ -232,7 +233,7 @@ export default function SearchFilters({ countries }: Props) {
             </button>
             <button
               onClick={() => setOpen(false)}
-              className="px-4 py-2 text-sm text-gray-500 hover:text-white transition-colors ml-auto"
+              className="px-4 py-2 text-sm text-gray-500 hover:text-white transition-colors sm:ml-auto"
             >
               Cancel
             </button>

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
+import UnlocksWidget from "./UnlocksWidget"
 
 interface TopNavProps {
   fullName: string | null
@@ -30,7 +31,6 @@ export default function TopNav({ fullName, avatarUrl, email, isAdmin }: TopNavPr
     router.push("/login")
   }
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -44,15 +44,15 @@ export default function TopNav({ fullName, avatarUrl, email, isAdmin }: TopNavPr
   const initials = fullName?.[0]?.toUpperCase() ?? email?.[0]?.toUpperCase() ?? "U"
 
   return (
-    <header className="bg-navy border-b border-navy-light shrink-0">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-6">
+    <header className="bg-navy border-b border-navy-light shrink-0 sticky top-0 z-30">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-3 sm:gap-6">
         {/* Logo */}
-        <Link href="/app" className="text-gold font-bold text-base shrink-0 mr-2">
+        <Link href="/app" className="text-gold font-bold text-base shrink-0">
           Footy Contacts
         </Link>
 
-        {/* Primary nav */}
-        <nav className="flex items-center gap-1 flex-1">
+        {/* Primary nav — desktop only (mobile uses BottomNav) */}
+        <nav className="hidden md:flex items-center gap-1 flex-1">
           {NAV_LINKS.map(({ href, label }) => {
             const active = pathname === href || (href !== "/app" && pathname.startsWith(href))
             return (
@@ -79,8 +79,14 @@ export default function TopNav({ fullName, avatarUrl, email, isAdmin }: TopNavPr
           )}
         </nav>
 
-        {/* Profile dropdown */}
-        <div className="relative" ref={dropdownRef}>
+        {/* Spacer — pushes right-side items to the edge on mobile */}
+        <div className="flex-1 md:flex-none" />
+
+        {/* Unlocks widget — all screen sizes */}
+        <UnlocksWidget />
+
+        {/* Profile dropdown — desktop only (mobile has BottomNav More sheet) */}
+        <div className="relative hidden md:block" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((o) => !o)}
             className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-navy-light transition-colors"
@@ -93,7 +99,7 @@ export default function TopNav({ fullName, avatarUrl, email, isAdmin }: TopNavPr
                 {initials}
               </div>
             )}
-            <span className="text-sm text-gray-300 hidden sm:block max-w-[120px] truncate">
+            <span className="text-sm text-gray-300 max-w-[120px] truncate">
               {fullName ?? email}
             </span>
             <svg

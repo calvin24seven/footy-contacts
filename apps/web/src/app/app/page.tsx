@@ -98,16 +98,16 @@ export default async function SearchPage({
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white mb-1">Find Contacts</h1>
+    <div className="px-4 sm:px-6 pt-4 sm:pt-6 max-w-5xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-white mb-0.5">Find Contacts</h1>
         <p className="text-gray-400 text-sm">
           Search thousands of football industry professionals
         </p>
       </div>
 
-      {/* Search bar */}
-      <form className="flex gap-3 mb-4" method="GET" action="/app">
+      {/* Search bar — stacks on mobile */}
+      <form className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4" method="GET" action="/app">
         {/* Preserve active filters when submitting a new text search */}
         {params.role && <input type="hidden" name="role" value={params.role} />}
         {params.org && <input type="hidden" name="org" value={params.org} />}
@@ -118,11 +118,11 @@ export default async function SearchPage({
           name="q"
           defaultValue={params.q}
           placeholder="Search by name, role, or organisation…"
-          className="flex-1 px-4 py-3 bg-navy-light text-white rounded-lg border border-gray-600 focus:outline-none focus:border-gold placeholder-gray-500"
+          className="flex-1 px-4 py-3 bg-navy-light text-white rounded-lg border border-gray-600 focus:outline-none focus:border-gold placeholder-gray-500 text-sm"
         />
         <button
           type="submit"
-          className="px-6 py-3 bg-gold text-navy rounded-lg font-semibold hover:bg-gold-dark transition-colors whitespace-nowrap"
+          className="px-6 py-3 bg-gold text-navy rounded-lg font-semibold hover:bg-gold-dark transition-colors text-sm"
         >
           Search
         </button>
@@ -142,8 +142,8 @@ export default async function SearchPage({
       {/* Results */}
       {hasResults ? (
         <>
-          {/* Column headers */}
-          <div className="grid grid-cols-[2fr_2fr_2fr_auto] gap-4 px-4 mb-1">
+          {/* Column headers — desktop only */}
+          <div className="hidden md:grid grid-cols-[2fr_2fr_2fr_auto] gap-4 px-4 mb-1">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</span>
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Job title</span>
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company</span>
