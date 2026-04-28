@@ -129,6 +129,28 @@ function parseCSVLine(line: string): string[] {
   return result
 }
 
+/** Split CSV text into records, ignoring newlines inside quoted fields. */
+function splitCSVRecords(text: string): string[] {
+  const records: string[] = []
+  const t = text.trimEnd()
+  let start = 0
+  let inQ = false
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i]
+    if (ch === '"') {
+      if (inQ && t[i + 1] === '"') i++
+      else inQ = !inQ
+    } else if (!inQ && ch === '\n') {
+      const rec = t.slice(start, i).replace(/\r$/, '')
+      if (rec.trim()) records.push(rec)
+      start = i + 1
+    }
+  }
+  const last = t.slice(start).trimEnd()
+  if (last.trim()) records.push(last)
+  return records
+}
+
 function buildContact(
   headerMap: Array<string | null>,
   rawHeaders: string[],
@@ -138,6 +160,7 @@ function buildContact(
     visibility_status: "published",
     suppression_status: "active",
     source: "csv_import",
+    verified_status: "unverified",
   }
 
   let firstName = ""
@@ -146,7 +169,6 @@ function buildContact(
   let websiteFallback = ""
   let xFallback = ""
   let phoneFallback = ""
-  let emailStatus = ""
 
   headerMap.forEach((canonical, idx) => {
     if (!canonical) return
@@ -160,7 +182,6 @@ function buildContact(
       case "_website_fallback": if (!websiteFallback) websiteFallback = val; break
       case "_x_fallback": if (!xFallback) xFallback = val; break
       case "_phone_fallback": if (!phoneFallback) phoneFallback = val; break
-      case "_email_status": emailStatus = val.toLowerCase(); break
       case "_description": {
         if (!contact.notes && isEnglishLike(val)) {
           // Take first 500 chars; stop at a sentence boundary if possible
@@ -213,14 +234,6 @@ function buildContact(
   if (!contact.website && websiteFallback) contact.website = websiteFallback
   if (!contact.x_url && xFallback) contact.x_url = xFallback
   if (!contact.phone && phoneFallback) contact.phone = phoneFallback
-
-  // Email status → verified_status; if unavailable, clear email
-  if (emailStatus === "verified") {
-    contact.verified_status = "verified"
-  } else if (emailStatus === "unavailable" || emailStatus === "catch_all" || emailStatus === "invalid") {
-    contact.email = null
-    contact.verified_status = "unverified"
-  }
 
   // Normalise linkedin_url: lowercase, strip trailing slash
   if (typeof contact.linkedin_url === "string") {
@@ -295,7 +308,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const accSuppressed = parseInt((formData.get("acc_suppressed") as string) ?? "0", 10) || 0
 
   const text = await (file as File).text()
-  const lines = text.trim().split(/\r?\n/)
+  const lines = splitCSVRecords(text)
   if (lines.length < 2) {
     return NextResponse.json({ error: "CSV has no data rows" }, { status: 400 })
   }
