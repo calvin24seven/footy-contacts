@@ -255,6 +255,11 @@ export type Database = {
           visibility_status: string
           website: string | null
           x_url: string | null
+          has_email: boolean
+          has_phone: boolean
+          has_linkedin: boolean
+          role_category: string | null
+          organisation_id: string | null
         }
         Insert: {
           category?: string | null
@@ -286,6 +291,8 @@ export type Database = {
           visibility_status?: string
           website?: string | null
           x_url?: string | null
+          role_category?: string | null
+          organisation_id?: string | null
         }
         Update: {
           category?: string | null
@@ -317,6 +324,51 @@ export type Database = {
           visibility_status?: string
           website?: string | null
           x_url?: string | null
+          role_category?: string | null
+          organisation_id?: string | null
+        }
+        Relationships: []
+      }
+      organisations: {
+        Row: {
+          id: string
+          name: string
+          normalised_name: string
+          org_type: string | null
+          logo_url: string | null
+          website: string | null
+          country: string | null
+          city: string | null
+          league: string | null
+          level: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          org_type?: string | null
+          logo_url?: string | null
+          website?: string | null
+          country?: string | null
+          city?: string | null
+          league?: string | null
+          level?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          org_type?: string | null
+          logo_url?: string | null
+          website?: string | null
+          country?: string | null
+          city?: string | null
+          league?: string | null
+          level?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }

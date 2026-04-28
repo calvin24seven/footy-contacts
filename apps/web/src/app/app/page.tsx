@@ -1,14 +1,14 @@
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import SearchFilters from "./SearchFilters"
+import SearchBar from "./SearchBar"
 import ContactRow, { type ContactListRow } from "./ContactRow"
 
 const PAGE_SIZE = 25
 
-// Only the columns ContactRow needs — avoids fetching 870-byte full rows
-const CONTACT_COLUMNS = "id, name, role, organisation, category, country, city, verified_status" as const
+const CONTACT_COLUMNS =
+  "id, name, role, organisation, category, country, city, verified_status, has_email, has_phone, has_linkedin, role_category" as const
 
-// Escape ILIKE special characters to prevent SQL injection via pattern matching
 function escapeLike(s: string) {
   return s.replace(/[%_\\]/g, "\\$&")
 }
@@ -20,6 +20,8 @@ interface SearchParams {
   country?: string
   email_status?: string
   category?: string
+  has_phone?: string
+  sort?: string
   page?: string
 }
 
@@ -34,7 +36,6 @@ export default async function SearchPage({
 
   const supabase = await createClient()
 
-  // Countries for the filter dropdown — uses partial index (contacts_app_country_idx)
   const countriesPromise = supabase
     .from("contacts")
     .select("country")
@@ -43,7 +44,6 @@ export default async function SearchPage({
     .not("country", "is", null)
     .order("country")
 
-  // Always show contacts — browse-all by default, filtered when params set
   let query = supabase
     .from("contacts")
     .select(CONTACT_COLUMNS, { count: "exact" })
@@ -65,9 +65,9 @@ export default async function SearchPage({
   }
   if (params.email_status) {
     if (params.email_status === "has_email") {
-      query = query.not("email", "is", null) as typeof query
+      query = query.eq("has_email", true) as typeof query
     } else if (params.email_status === "no_email") {
-      query = query.is("email", null) as typeof query
+      query = query.eq("has_email", false) as typeof query
     } else {
       query = query.eq("verified_status", params.email_status)
     }
@@ -75,13 +75,28 @@ export default async function SearchPage({
   if (params.category?.trim()) {
     query = query.eq("category", params.category.trim())
   }
+  if (params.has_phone === "1") {
+    query = query.eq("has_phone", true) as typeof query
+  }
+
+  // Sort
+  const sort = params.sort ?? "name_asc"
+  if (sort === "recently_added") {
+    query = query.order("created_at", { ascending: false })
+  } else if (sort === "recently_verified") {
+    query = query.order("last_verified_at", { ascending: false, nullsFirst: false })
+  } else {
+    query = query.order("name")
+  }
 
   const [{ data: contacts, count }, { data: countryRows }] = await Promise.all([
-    query.order("name").range(offset, offset + PAGE_SIZE - 1),
+    query.range(offset, offset + PAGE_SIZE - 1),
     countriesPromise,
   ])
 
-  const countries = [...new Set((countryRows ?? []).map((r) => r.country).filter(Boolean))] as string[]
+  const countries = [
+    ...new Set((countryRows ?? []).map((r) => r.country).filter(Boolean)),
+  ] as string[]
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0
   const hasResults = contacts && contacts.length > 0
 
@@ -93,100 +108,115 @@ export default async function SearchPage({
     if (params.country) qs.set("country", params.country)
     if (params.email_status) qs.set("email_status", params.email_status)
     if (params.category) qs.set("category", params.category)
+    if (params.has_phone) qs.set("has_phone", params.has_phone)
+    if (params.sort) qs.set("sort", params.sort)
     qs.set("page", String(p))
     return `/app?${qs.toString()}`
   }
 
+  const sortLabel: Record<string, string> = {
+    name_asc: "Name A–Z",
+    recently_added: "Recently added",
+    recently_verified: "Recently verified",
+  }
+
   return (
-    <div className="px-4 sm:px-6 pt-4 sm:pt-6 max-w-5xl mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-white mb-0.5">Find Contacts</h1>
-        <p className="text-gray-400 text-sm">
-          Search thousands of football industry professionals
-        </p>
+    <div className="max-w-5xl mx-auto">
+      {/* ── Sticky search zone ─────────────────────────────────────────────── */}
+      <div className="sticky top-14 z-20 bg-navy-dark/95 backdrop-blur-sm border-b border-navy-light/40 px-4 sm:px-6 pt-4 pb-3">
+        {/* Title row */}
+        <div className="flex items-baseline justify-between mb-3">
+          <h1 className="text-lg font-bold text-white">Find Contacts</h1>
+          {count !== null && count !== undefined && (
+            <p className="text-xs text-gray-500">
+              {count.toLocaleString()} found
+            </p>
+          )}
+        </div>
+
+        {/* Live search bar */}
+        <SearchBar initialQ={params.q} />
+
+        {/* Filters + sort */}
+        <SearchFilters countries={countries} currentSort={sort} />
       </div>
 
-      {/* Search bar — stacks on mobile */}
-      <form className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4" method="GET" action="/app">
-        {/* Preserve active filters when submitting a new text search */}
-        {params.role && <input type="hidden" name="role" value={params.role} />}
-        {params.org && <input type="hidden" name="org" value={params.org} />}
-        {params.country && <input type="hidden" name="country" value={params.country} />}
-        {params.email_status && <input type="hidden" name="email_status" value={params.email_status} />}
-        {params.category && <input type="hidden" name="category" value={params.category} />}
-        <input
-          name="q"
-          defaultValue={params.q}
-          placeholder="Search by name, role, or organisation…"
-          className="flex-1 px-4 py-3 bg-navy-light text-white rounded-lg border border-gray-600 focus:outline-none focus:border-gold placeholder-gray-500 text-sm"
-        />
-        <button
-          type="submit"
-          className="px-6 py-3 bg-gold text-navy rounded-lg font-semibold hover:bg-gold-dark transition-colors text-sm"
-        >
-          Search
-        </button>
-      </form>
-
-      {/* Filter panel (client component) */}
-      <SearchFilters countries={countries} />
-
-      {/* Result count */}
-      {count !== null && count !== undefined && (
-        <p className="text-sm text-gray-400 mb-4">
-          {count.toLocaleString()} contact{count !== 1 ? "s" : ""}
-          {totalPages > 1 && ` · Page ${page} of ${totalPages}`}
-        </p>
-      )}
-
-      {/* Results */}
-      {hasResults ? (
-        <>
-          {/* Column headers — desktop only */}
-          <div className="hidden md:grid grid-cols-[2fr_2fr_2fr_auto] gap-4 px-4 mb-1">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</span>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Job title</span>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company</span>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Email</span>
+      {/* ── Results area ───────────────────────────────────────────────────── */}
+      <div className="px-4 sm:px-6 py-4">
+        {/* Result meta bar */}
+        {count !== null && count !== undefined && hasResults && (
+          <div className="flex items-center justify-between mb-3 text-xs text-gray-500">
+            <span>
+              {count.toLocaleString()} contact{count !== 1 ? "s" : ""}
+              {totalPages > 1 && ` · page ${page} of ${totalPages}`}
+            </span>
+            <span>Sorted by {sortLabel[sort] ?? sort}</span>
           </div>
+        )}
 
-          <div className="flex flex-col gap-1 mb-6">
-            {(contacts ?? []).map((contact) => (
-              <ContactRow key={contact.id} contact={contact as ContactListRow} />
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2">
-              {page > 1 && (
-                <Link
-                  href={pageUrl(page - 1)}
-                  className="px-4 py-2 bg-navy-light text-gray-300 rounded-lg text-sm hover:bg-navy transition-colors"
-                >
-                  ← Previous
-                </Link>
-              )}
-              <span className="text-sm text-gray-400 px-2">
-                Page {page} of {totalPages}
-              </span>
-              {page < totalPages && (
-                <Link
-                  href={pageUrl(page + 1)}
-                  className="px-4 py-2 bg-navy-light text-gray-300 rounded-lg text-sm hover:bg-navy transition-colors"
-                >
-                  Next →
-                </Link>
-              )}
+        {hasResults ? (
+          <>
+            <div className="flex flex-col gap-1 mb-6">
+              {(contacts ?? []).map((contact) => (
+                <ContactRow key={contact.id} contact={contact as ContactListRow} />
+              ))}
             </div>
-          )}
-        </>
-      ) : (
-        <div className="text-center py-16">
-          <p className="text-gray-400 text-lg mb-2">No contacts found</p>
-          <p className="text-gray-500 text-sm">Try a different search term or adjust your filters</p>
-          <a href="/app" className="mt-4 inline-block text-gold text-sm hover:underline">Clear filters</a>
-        </div>
-      )}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 pb-4">
+                {page > 1 && (
+                  <Link
+                    href={pageUrl(page - 1)}
+                    className="px-4 py-2 bg-navy-light text-gray-300 rounded-lg text-sm hover:bg-navy transition-colors"
+                  >
+                    ← Previous
+                  </Link>
+                )}
+                <span className="text-sm text-gray-500">
+                  {page} / {totalPages}
+                </span>
+                {page < totalPages && (
+                  <Link
+                    href={pageUrl(page + 1)}
+                    className="px-4 py-2 bg-navy-light text-gray-300 rounded-lg text-sm hover:bg-navy transition-colors"
+                  >
+                    Next →
+                  </Link>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-16 px-4">
+            <div className="w-12 h-12 rounded-full bg-navy-light flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <p className="text-white font-semibold mb-1">No contacts found</p>
+            {params.q ? (
+              <>
+                <p className="text-gray-400 text-sm mb-4">
+                  No results for &ldquo;{params.q}&rdquo;
+                </p>
+                <div className="text-xs text-gray-500 space-y-1 mb-6">
+                  <p>Try removing filters, broadening your search, or checking the spelling.</p>
+                </div>
+              </>
+            ) : (
+              <p className="text-gray-400 text-sm mb-6">
+                Try adjusting or clearing your filters.
+              </p>
+            )}
+            <a
+              href="/app"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy-light text-gold rounded-lg text-sm hover:bg-navy transition-colors"
+            >
+              Clear all filters
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

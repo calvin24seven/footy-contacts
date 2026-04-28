@@ -8,9 +8,10 @@ type ListRow = Tables<"lists">
 
 interface Props {
   contactId: string
+  compact?: boolean
 }
 
-export default function SaveToListButton({ contactId }: Props) {
+export default function SaveToListButton({ contactId, compact = false }: Props) {
   const [open, setOpen] = useState(false)
   const [lists, setLists] = useState<ListRow[]>([])
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
@@ -119,17 +120,41 @@ export default function SaveToListButton({ contactId }: Props) {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-          isSaved
-            ? "bg-gold/20 text-gold border border-gold/30 hover:bg-gold/30"
-            : "bg-navy text-gray-300 border border-gray-600 hover:border-gray-400"
-        }`}
-      >
-        <span>{isSaved ? "✓" : "+"}</span>
-        {isSaved ? "Saved" : "Save to list"}
-      </button>
+      {compact ? (
+        // Icon-only version for contact rows
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((o) => !o) }}
+          title={isSaved ? "Saved to list" : "Save to list"}
+          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+            isSaved
+              ? "text-gold bg-gold/10 hover:bg-gold/20"
+              : "text-gray-500 hover:text-gray-300 hover:bg-navy"
+          }`}
+          aria-label={isSaved ? "Saved to list" : "Save to list"}
+        >
+          {isSaved ? (
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M5 4a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 20V4z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+          )}
+        </button>
+      ) : (
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            isSaved
+              ? "bg-gold/20 text-gold border border-gold/30 hover:bg-gold/30"
+              : "bg-navy text-gray-300 border border-gray-600 hover:border-gray-400"
+          }`}
+        >
+          <span>{isSaved ? "✓" : "+"}</span>
+          {isSaved ? "Saved" : "Save to list"}
+        </button>
+      )}
 
       {open && (
         <div className="absolute right-0 top-full mt-1 w-60 bg-navy-light border border-gray-700 rounded-xl shadow-xl z-10">
