@@ -1,9 +1,22 @@
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import type { Tables } from "@/database.types"
 import SearchFilters from "./SearchFilters"
 
 const PAGE_SIZE = 25
+
+// Only the columns ContactCard needs — avoids fetching 870-byte rows
+const CONTACT_COLUMNS = "id, name, role, organisation, category, country, city, verified_status" as const
+
+type ContactListRow = {
+  id: string
+  name: string
+  role: string | null
+  organisation: string | null
+  category: string | null
+  country: string | null
+  city: string | null
+  verified_status: string | null
+}
 
 // Escape ILIKE special characters to prevent SQL injection via pattern matching
 function escapeLike(s: string) {
@@ -26,12 +39,13 @@ export default async function SearchPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
+  const hasQuery = !!(params.q || params.role || params.org || params.country || params.email_status || params.category)
   const page = Math.max(1, parseInt(params.page ?? "1", 10))
   const offset = (page - 1) * PAGE_SIZE
 
   const supabase = await createClient()
 
-  // Fetch distinct countries in parallel with the main query
+  // Countries for the filter dropdown — always needed, uses partial index (contacts_app_country_idx)
   const countriesPromise = supabase
     .from("contacts")
     .select("country")
@@ -40,62 +54,59 @@ export default async function SearchPage({
     .not("country", "is", null)
     .order("country")
 
-  let query = supabase
-    .from("contacts")
-    .select("*", { count: "exact" })
-    .eq("visibility_status", "published")
-    .eq("suppression_status", "active")
+  // Only run the contacts query when the user has actually searched/filtered.
+  // The initial page state shows a "search prompt" — no need to hit the DB.
+  let contacts: ContactListRow[] | null = null
+  let count: number | null = null
 
-  // Text search: ILIKE OR across name, role, organisation
-  if (params.q?.trim()) {
-    const q = escapeLike(params.q.trim())
-    query = query.or(`name.ilike.%${q}%,role.ilike.%${q}%,organisation.ilike.%${q}%`)
-  }
+  if (hasQuery) {
+    let query = supabase
+      .from("contacts")
+      .select(CONTACT_COLUMNS, { count: "exact" })
+      .eq("visibility_status", "published")
+      .eq("suppression_status", "active")
 
-  // Filter: role contains
-  if (params.role?.trim()) {
-    query = query.ilike("role", `%${escapeLike(params.role.trim())}%`)
-  }
-
-  // Filter: organisation contains
-  if (params.org?.trim()) {
-    query = query.ilike("organisation", `%${escapeLike(params.org.trim())}%`)
-  }
-
-  // Filter: exact country match
-  if (params.country?.trim()) {
-    query = query.eq("country", params.country.trim())
-  }
-
-  // Filter: email status
-  if (params.email_status) {
-    if (params.email_status === "has_email") {
-      query = query.not("email", "is", null) as typeof query
-    } else if (params.email_status === "no_email") {
-      query = query.is("email", null) as typeof query
-    } else {
-      // verified | catch_all | unknown | risky | unverified
-      query = query.eq("verified_status", params.email_status)
+    if (params.q?.trim()) {
+      const q = escapeLike(params.q.trim())
+      query = query.or(`name.ilike.%${q}%,role.ilike.%${q}%,organisation.ilike.%${q}%`)
     }
+    if (params.role?.trim()) {
+      query = query.ilike("role", `%${escapeLike(params.role.trim())}%`)
+    }
+    if (params.org?.trim()) {
+      query = query.ilike("organisation", `%${escapeLike(params.org.trim())}%`)
+    }
+    if (params.country?.trim()) {
+      query = query.eq("country", params.country.trim())
+    }
+    if (params.email_status) {
+      if (params.email_status === "has_email") {
+        query = query.not("email", "is", null) as typeof query
+      } else if (params.email_status === "no_email") {
+        query = query.is("email", null) as typeof query
+      } else {
+        query = query.eq("verified_status", params.email_status)
+      }
+    }
+    if (params.category?.trim()) {
+      query = query.eq("category", params.category.trim())
+    }
+
+    const result = await Promise.all([
+      query.order("name").range(offset, offset + PAGE_SIZE - 1),
+      countriesPromise,
+    ])
+    contacts = result[0].data as ContactListRow[] | null
+    count = result[0].count
+    const { data: countryRows } = result[1]
+    var countries = [...new Set((countryRows ?? []).map((r) => r.country).filter(Boolean))] as string[]
+  } else {
+    const { data: countryRows } = await countriesPromise
+    var countries = [...new Set((countryRows ?? []).map((r) => r.country).filter(Boolean))] as string[]
   }
-
-  // Filter: category
-  if (params.category?.trim()) {
-    query = query.eq("category", params.category.trim())
-  }
-
-  const [{ data: contacts, count }, { data: countryRows }] = await Promise.all([
-    query.order("name").range(offset, offset + PAGE_SIZE - 1),
-    countriesPromise,
-  ])
-
-  const countries = [
-    ...new Set((countryRows ?? []).map((r) => r.country).filter(Boolean)),
-  ] as string[]
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0
   const hasResults = contacts && contacts.length > 0
-  const hasQuery = !!(params.q || params.role || params.org || params.country || params.email_status || params.category)
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
@@ -155,7 +166,7 @@ export default async function SearchPage({
       {hasResults ? (
         <>
           <div className="grid gap-3 mb-6">
-            {contacts.map((contact) => (
+            {(contacts ?? []).map((contact) => (
               <ContactCard key={contact.id} contact={contact} />
             ))}
           </div>
@@ -203,7 +214,7 @@ export default async function SearchPage({
   )
 }
 
-function ContactCard({ contact }: { contact: Tables<"contacts"> }) {
+function ContactCard({ contact }: { contact: ContactListRow }) {
   const location = [contact.city, contact.country].filter(Boolean).join(", ")
 
   return (

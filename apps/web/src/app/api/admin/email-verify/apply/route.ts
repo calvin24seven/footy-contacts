@@ -130,7 +130,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const batch = invalidEmails.slice(i, i + BATCH)
     const { data } = await supabase
       .from("contacts")
-      .update({ email: null, verified_status: "unverified", last_verified_at: now, cron_queued_at: null })
+      .update({ email: null, verified_status: "unverified", suppression_status: "suppressed", last_verified_at: now, cron_queued_at: null })
       .in("email", batch)
       .select("id")
     clearedCount += (data?.length ?? 0)
