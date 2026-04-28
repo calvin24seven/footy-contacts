@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/server"
+import { getSecret } from "@/lib/secrets"
 
 const REOON_API_BASE = "https://emailverifier.reoon.com/api/v1"
 
@@ -20,8 +21,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     .from("profiles").select("role").eq("id", user.id).single()
   if (profile?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const { data: apiKey, error: secretErr } = await supabase.rpc("get_admin_secret", { name: "reoon_api_key" })
-  if (secretErr || !apiKey) return NextResponse.json({ error: "Reoon API key not configured in Vault" }, { status: 503 })
+  let apiKey: string
+  try {
+    apiKey = await getSecret("reoon_api_key")
+  } catch {
+    return NextResponse.json({ error: "Reoon API key not configured in Vault" }, { status: 503 })
+  }
 
   const { taskId } = (await req.json()) as { taskId: string }
   if (!taskId) return NextResponse.json({ error: "Missing taskId" }, { status: 400 })
@@ -106,7 +111,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     unverifiedCount += (data?.length ?? 0)
   }
 
-  // Clear truly invalid emails
+  // Clear truly invalid emails and add them to the suppression blacklist
   for (let i = 0; i < invalidEmails.length; i += BATCH) {
     const batch = invalidEmails.slice(i, i + BATCH)
     const { data } = await supabase
@@ -115,6 +120,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       .in("email", batch)
       .select("id")
     clearedCount += (data?.length ?? 0)
+
+    // Add to suppression blacklist so future imports skip these emails
+    await supabase
+      .from("email_suppressions")
+      .upsert(
+        batch.map(email => ({ email, reason: "reoon_invalid", added_by: user.id })),
+        { onConflict: "email", ignoreDuplicates: true }
+      )
   }
 
   // Mark task as applied

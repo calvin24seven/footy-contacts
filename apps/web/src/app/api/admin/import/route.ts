@@ -222,12 +222,44 @@ function buildContact(
     contact.verified_status = "unverified"
   }
 
+  // Normalise linkedin_url: lowercase, strip trailing slash
+  if (typeof contact.linkedin_url === "string") {
+    const cleaned = contact.linkedin_url.toLowerCase().replace(/\/$/, "").trim()
+    contact.linkedin_url = cleaned || null
+  }
+
   // Translate non-English job titles
   if (typeof contact.role === "string") {
     contact.role = cleanRole(contact.role)
   }
 
   return contact
+}
+
+// Fields updated on existing contacts when import_mode=update
+const UPDATABLE_FIELDS = [
+  "role", "organisation", "city", "country", "region",
+  "phone", "linkedin_url", "x_url", "instagram_url", "website",
+  "email", "level", "category",
+]
+
+type ExistingContact = {
+  id: string
+  email: string | null
+  linkedin_url: string | null
+  role: string | null
+  organisation: string | null
+}
+
+type MatchType = "new" | "suppressed" | "email_match" | "linkedin_match" | "name_org_match"
+
+interface ContactEntry {
+  contact: Record<string, unknown>
+  rowNumber: number
+  rawData: Record<string, string>
+  matchType: MatchType
+  matchReason: string
+  existingContact?: ExistingContact
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -247,6 +279,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!file || typeof file === "string") {
     return NextResponse.json({ error: "No file provided" }, { status: 400 })
   }
+
+  // import_mode: 'skip' (default) = ignore duplicates; 'update' = update mutable fields on match
+  const importMode = formData.get("import_mode") === "update" ? "update" : "skip"
 
   const text = await (file as File).text()
   const lines = text.trim().split(/\r?\n/)
@@ -282,6 +317,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       filename: (file as File).name,
       status: "processing",
       total_rows: totalRows,
+      import_mode: importMode,
     })
     .select("id")
     .single()
@@ -292,19 +328,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const importId = importRecord.id
   let successfulRows = 0
+  let updatedRows = 0
   let failedRows = 0
   let duplicatesSkipped = 0
+  let suppressedRows = 0
   const errors: Array<{ row: number; message: string }> = []
 
   const BATCH_SIZE = 500
   for (let batchStart = 0; batchStart < dataLines.length; batchStart += BATCH_SIZE) {
     const batch = dataLines.slice(batchStart, batchStart + BATCH_SIZE)
-    const contactInserts: Array<Record<string, unknown>> = []
+    const entries: ContactEntry[] = []
     const rowInserts: Array<{
       csv_import_id: string; row_number: number; raw_data: Record<string, string>;
-      status: string; error_message?: string
+      status: string; error_message?: string; contact_id?: string | null
     }> = []
 
+    // ── Build contacts from CSV rows ──────────────────────────────────────────
     for (let i = 0; i < batch.length; i++) {
       const rowNumber = batchStart + i + 1
       const values = parseCSVLine(batch[i])
@@ -324,67 +363,197 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         continue
       }
 
-      contactInserts.push(contact)
-      rowInserts.push({ csv_import_id: importId, row_number: rowNumber, raw_data: raw, status: "pending" })
+      entries.push({ contact, rowNumber, rawData: raw, matchType: "new", matchReason: "" })
     }
 
-    if (contactInserts.length > 0) {
-      // Duplicate detection: check emails that already exist in contacts
-      const emailsToCheck = contactInserts
-        .map((c) => c.email as string | undefined)
-        .filter((e): e is string => !!e)
+    if (entries.length === 0) {
+      if (rowInserts.length > 0) await supabase.from("csv_import_rows").insert(rowInserts)
+      continue
+    }
 
-      let existingEmails = new Set<string>()
-      if (emailsToCheck.length > 0) {
-        const { data: existing } = await supabase
-          .from("contacts")
-          .select("email")
-          .in("email", emailsToCheck)
-        existingEmails = new Set((existing ?? []).map((c) => (c.email as string).toLowerCase()))
+    // ── Signal 1: Email suppression blacklist ─────────────────────────────────
+    const allEmails = entries
+      .map(e => (e.contact.email as string | undefined)?.toLowerCase())
+      .filter((e): e is string => !!e)
+
+    let suppressedEmailSet = new Set<string>()
+    if (allEmails.length > 0) {
+      const { data: suppressed } = await supabase
+        .from("email_suppressions")
+        .select("email")
+        .in("email", allEmails)
+      suppressedEmailSet = new Set((suppressed ?? []).map(s => s.email.toLowerCase()))
+    }
+
+    // ── Signal 2: Existing contacts by email ─────────────────────────────────
+    const nonSuppressedEmails = allEmails.filter(e => !suppressedEmailSet.has(e))
+    const emailToExisting = new Map<string, ExistingContact>()
+    if (nonSuppressedEmails.length > 0) {
+      const { data: existing } = await supabase
+        .from("contacts")
+        .select("id, email, linkedin_url, role, organisation")
+        .in("email", nonSuppressedEmails)
+      for (const c of existing ?? []) {
+        if (c.email) emailToExisting.set(c.email.toLowerCase(), c as ExistingContact)
       }
+    }
 
-      const uniqueInserts: Array<Record<string, unknown>> = []
-      const pendingRowInserts = rowInserts.filter((r) => r.status === "pending")
-      let dupeIdx = 0
+    // ── Signal 3: Existing contacts by LinkedIn URL ───────────────────────────
+    // Only for entries not already matched by email
+    const linkedinUrls = entries
+      .filter(e => {
+        const email = (e.contact.email as string | undefined)?.toLowerCase()
+        return e.contact.linkedin_url && (!email || !emailToExisting.has(email))
+      })
+      .map(e => (e.contact.linkedin_url as string).toLowerCase())
+      .filter((v, i, a) => v && a.indexOf(v) === i)
 
-      for (const contact of contactInserts) {
-        const email = (contact.email as string | undefined)?.toLowerCase()
-        if (email && existingEmails.has(email)) {
-          // Mark this row as duplicate
-          const rowInsert = pendingRowInserts[dupeIdx]
-          if (rowInsert) {
-            rowInsert.status = "duplicate"
-            rowInsert.error_message = `Duplicate email: ${email}`
-          }
-          failedRows++
-          errors.push({ row: batchStart + dupeIdx + 1, message: `Duplicate email: ${email}` })
-          duplicatesSkipped++
-        } else {
-          uniqueInserts.push(contact)
-        }
-        dupeIdx++
+    const linkedinToExisting = new Map<string, ExistingContact>()
+    if (linkedinUrls.length > 0) {
+      const { data: existing } = await supabase
+        .from("contacts")
+        .select("id, email, linkedin_url, role, organisation")
+        .in("linkedin_url", linkedinUrls)
+      for (const c of existing ?? []) {
+        if (c.linkedin_url) linkedinToExisting.set(c.linkedin_url.toLowerCase(), c as ExistingContact)
       }
+    }
 
-      if (uniqueInserts.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: bulkErr } = await (supabase.from("contacts") as any).insert(uniqueInserts)
-        if (bulkErr) {
-          failedRows += uniqueInserts.length
-          rowInserts.forEach((r) => {
-            if (r.status === "pending") {
-              r.status = "error"
-              r.error_message = bulkErr.message
-              errors.push({ row: r.row_number, message: bulkErr.message })
-            }
-          })
-        } else {
-          successfulRows += uniqueInserts.length
-          rowInserts.forEach((r) => { if (r.status === "pending") r.status = "success" })
+    // ── Classify each entry (email → linkedin → name+org → new) ──────────────
+    for (const entry of entries) {
+      const email = (entry.contact.email as string | undefined)?.toLowerCase()
+      const linkedin = (entry.contact.linkedin_url as string | undefined)?.toLowerCase()
+
+      if (email && suppressedEmailSet.has(email)) {
+        entry.matchType = "suppressed"
+        entry.matchReason = `Suppressed email: ${email}`
+      } else if (email && emailToExisting.has(email)) {
+        entry.matchType = "email_match"
+        entry.matchReason = `Duplicate email: ${email}`
+        entry.existingContact = emailToExisting.get(email)
+      } else if (linkedin && linkedinToExisting.has(linkedin)) {
+        entry.matchType = "linkedin_match"
+        entry.matchReason = `Duplicate LinkedIn: ${linkedin}`
+        entry.existingContact = linkedinToExisting.get(linkedin)
+      }
+      // name+org match handled below (requires individual queries)
+    }
+
+    // ── Signal 4: Name + organisation (only when both present, not yet matched) ─
+    for (const entry of entries) {
+      if (entry.matchType !== "new") continue
+      const name = (entry.contact.name as string | undefined)?.trim()
+      const org = (entry.contact.organisation as string | undefined)?.trim()
+      if (!name || !org) continue
+      const { data } = await supabase
+        .from("contacts")
+        .select("id, email, linkedin_url, role, organisation")
+        .ilike("name", name)
+        .ilike("organisation", org)
+        .limit(1)
+      if (data?.[0]) {
+        entry.matchType = "name_org_match"
+        entry.matchReason = `Duplicate name+org: ${name} @ ${org}`
+        entry.existingContact = data[0] as ExistingContact
+      }
+    }
+
+    // ── Separate: new inserts vs duplicates/suppressions ─────────────────────
+    const toInsert: ContactEntry[] = []
+    const toUpdate: ContactEntry[] = []
+
+    for (const entry of entries) {
+      if (entry.matchType === "suppressed") {
+        suppressedRows++
+        rowInserts.push({
+          csv_import_id: importId, row_number: entry.rowNumber, raw_data: entry.rawData,
+          status: "suppressed", error_message: entry.matchReason,
+        })
+      } else if (entry.matchType === "new") {
+        toInsert.push(entry)
+        rowInserts.push({
+          csv_import_id: importId, row_number: entry.rowNumber, raw_data: entry.rawData,
+          status: "pending",
+        })
+      } else if (importMode === "update" && entry.existingContact) {
+        toUpdate.push(entry)
+        rowInserts.push({
+          csv_import_id: importId, row_number: entry.rowNumber, raw_data: entry.rawData,
+          status: "pending", contact_id: entry.existingContact.id,
+        })
+      } else {
+        duplicatesSkipped++
+        rowInserts.push({
+          csv_import_id: importId, row_number: entry.rowNumber, raw_data: entry.rawData,
+          status: "duplicate", error_message: entry.matchReason,
+        })
+      }
+    }
+
+    // ── Bulk insert new contacts ──────────────────────────────────────────────
+    if (toInsert.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: inserted, error: bulkErr } = await (supabase.from("contacts") as any)
+        .insert(toInsert.map(e => e.contact))
+        .select("id")
+      if (bulkErr) {
+        failedRows += toInsert.length
+        for (const entry of toInsert) {
+          const rowInsert = rowInserts.find(r => r.row_number === entry.rowNumber && r.status === "pending")
+          if (rowInsert) { rowInsert.status = "error"; rowInsert.error_message = bulkErr.message }
+          errors.push({ row: entry.rowNumber, message: bulkErr.message })
         }
       } else {
-        // All were duplicates — mark any remaining pending as duplicate
-        rowInserts.forEach((r) => { if (r.status === "pending") r.status = "duplicate" })
+        successfulRows += toInsert.length
+        const ids: Array<{ id: string }> = inserted ?? []
+        toInsert.forEach((entry, i) => {
+          const rowInsert = rowInserts.find(r => r.row_number === entry.rowNumber && r.status === "pending")
+          if (rowInsert) { rowInsert.status = "success"; rowInsert.contact_id = ids[i]?.id ?? null }
+        })
       }
+    }
+
+    // ── Update existing contacts (import_mode=update) ─────────────────────────
+    for (const entry of toUpdate) {
+      const existing = entry.existingContact!
+      const incoming = entry.contact
+      const rowInsert = rowInserts.find(r => r.row_number === entry.rowNumber && r.status === "pending")
+
+      // Snapshot old role/org before updating if they changed — for history log
+      const newRole = incoming.role as string | undefined
+      const newOrg = incoming.organisation as string | undefined
+      if ((newRole && newRole !== existing.role) || (newOrg && newOrg !== existing.organisation)) {
+        await supabase.from("contact_role_history").insert({
+          contact_id: existing.id,
+          role: existing.role,
+          organisation: existing.organisation,
+          source: "csv_import",
+          import_id: importId,
+        })
+      }
+
+      // Build update payload: only fields present and non-empty in the incoming row
+      const updatePayload: Record<string, unknown> = {}
+      for (const field of UPDATABLE_FIELDS) {
+        const val = incoming[field]
+        if (val !== undefined && val !== null && val !== "") updatePayload[field] = val
+      }
+
+      if (Object.keys(updatePayload).length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: updateErr } = await (supabase.from("contacts") as any)
+          .update(updatePayload)
+          .eq("id", existing.id)
+        if (updateErr) {
+          failedRows++
+          if (rowInsert) { rowInsert.status = "error"; rowInsert.error_message = updateErr.message }
+          errors.push({ row: entry.rowNumber, message: updateErr.message })
+          continue
+        }
+      }
+
+      updatedRows++
+      if (rowInsert) rowInsert.status = "updated"
     }
 
     await supabase.from("csv_import_rows").insert(rowInserts)
@@ -394,8 +563,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     status: failedRows === totalRows ? "failed" : "completed",
     successful_rows: successfulRows,
     failed_rows: failedRows,
+    suppressed_rows: suppressedRows,
+    updated_rows: updatedRows,
     completed_at: new Date().toISOString(),
   }).eq("id", importId)
 
-  return NextResponse.json({ importId, totalRows, successfulRows, failedRows, duplicatesSkipped, errors: errors.slice(0, 50) })
+  return NextResponse.json({
+    importId, totalRows, successfulRows, updatedRows, failedRows,
+    duplicatesSkipped, suppressedRows, errors: errors.slice(0, 50),
+  })
 }

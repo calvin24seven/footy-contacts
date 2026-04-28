@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/server"
+import { getSecret } from "@/lib/secrets"
 
 const REOON_API_BASE = "https://emailverifier.reoon.com/api/v1"
 
@@ -13,8 +14,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     .from("profiles").select("role").eq("id", user.id).single()
   if (profile?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const { data: apiKey, error: secretErr } = await supabase.rpc("get_admin_secret", { name: "reoon_api_key" })
-  if (secretErr || !apiKey) return NextResponse.json({ error: "Reoon API key not configured in Vault" }, { status: 503 })
+  let apiKey: string
+  try {
+    apiKey = await getSecret("reoon_api_key")
+  } catch {
+    return NextResponse.json({ error: "Reoon API key not configured in Vault" }, { status: 503 })
+  }
 
   const taskId = req.nextUrl.searchParams.get("id")
   if (!taskId) return NextResponse.json({ error: "Missing id param" }, { status: 400 })

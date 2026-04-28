@@ -102,6 +102,60 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_role_history: {
+        Row: {
+          id: string
+          contact_id: string
+          role: string | null
+          organisation: string | null
+          recorded_at: string
+          source: string
+          import_id: string | null
+        }
+        Insert: {
+          id?: string
+          contact_id: string
+          role?: string | null
+          organisation?: string | null
+          recorded_at?: string
+          source?: string
+          import_id?: string | null
+        }
+        Update: {
+          id?: string
+          contact_id?: string
+          role?: string | null
+          organisation?: string | null
+          recorded_at?: string
+          source?: string
+          import_id?: string | null
+        }
+        Relationships: []
+      }
+      email_suppressions: {
+        Row: {
+          id: string
+          email: string
+          reason: string
+          added_at: string
+          added_by: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          reason?: string
+          added_at?: string
+          added_by?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          reason?: string
+          added_at?: string
+          added_by?: string | null
+        }
+        Relationships: []
+      }
       contact_reports: {
         Row: {
           contact_id: string
@@ -302,9 +356,12 @@ export type Database = {
           failed_rows: number | null
           filename: string
           id: string
+          import_mode: string
           status: string
           successful_rows: number | null
+          suppressed_rows: number | null
           total_rows: number | null
+          updated_rows: number | null
         }
         Insert: {
           admin_user_id: string
@@ -313,9 +370,12 @@ export type Database = {
           failed_rows?: number | null
           filename: string
           id?: string
+          import_mode?: string
           status?: string
           successful_rows?: number | null
+          suppressed_rows?: number | null
           total_rows?: number | null
+          updated_rows?: number | null
         }
         Update: {
           admin_user_id?: string
@@ -324,9 +384,12 @@ export type Database = {
           failed_rows?: number | null
           filename?: string
           id?: string
+          import_mode?: string
           status?: string
           successful_rows?: number | null
+          suppressed_rows?: number | null
           total_rows?: number | null
+          updated_rows?: number | null
         }
         Relationships: []
       }
