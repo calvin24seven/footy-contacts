@@ -757,6 +757,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           city: string | null
+          bonus_unlock_credits: number
           country: string | null
           created_at: string
           current_club: string | null
@@ -784,6 +785,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bonus_unlock_credits?: number
           city?: string | null
           country?: string | null
           created_at?: string
@@ -812,6 +814,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bonus_unlock_credits?: number
           city?: string | null
           country?: string | null
           created_at?: string
@@ -1015,6 +1018,7 @@ export type Database = {
       get_admin_secret: { Args: { name: string }; Returns: string }
       unlock_contact: { Args: { p_contact_id: string }; Returns: Json }
       get_unlock_usage: { Args: Record<string, never>; Returns: Json }
+      increment_bonus_credits: { Args: { p_user_id: string; p_amount: number }; Returns: undefined }
       log_export: {
         Args: {
           p_contact_count: number
