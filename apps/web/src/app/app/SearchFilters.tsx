@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
 
-const CATEGORIES = ["Agent", "Scout", "Coach", "Club", "Media", "Other"]
+const CATEGORIES = ["Agent", "Scout", "Coach", "Club Official", "Performance", "Medical", "Academy", "Player", "Media"]
 
 const SORT_OPTIONS = [
   { value: "name_asc", label: "Name A–Z" },

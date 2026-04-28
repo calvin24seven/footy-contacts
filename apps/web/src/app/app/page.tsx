@@ -3,6 +3,7 @@ import Link from "next/link"
 import SearchFilters from "./SearchFilters"
 import SearchBar from "./SearchBar"
 import ContactsList from "./ContactsList"
+import WelcomeBanner from "./WelcomeBanner"
 import { type ContactListRow } from "./ContactRow"
 
 const PAGE_SIZE = 25
@@ -36,6 +37,17 @@ export default async function SearchPage({
   const offset = (page - 1) * PAGE_SIZE
 
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: activeSub } = user
+    ? await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("user_id", user.id)
+        .in("status", ["active", "trialing"])
+        .maybeSingle()
+    : { data: null }
+  const isFree = !activeSub
 
   const countriesPromise = supabase
     .from("contacts")
@@ -123,6 +135,9 @@ export default async function SearchPage({
 
   return (
     <div className="max-w-5xl mx-auto">
+      {/* ── Welcome banner (free users only, client-side dismissible) ─────── */}
+      {isFree && <WelcomeBanner />}
+
       {/* ── Sticky search zone ─────────────────────────────────────────────── */}
       <div className="sticky top-14 z-20 bg-navy-dark/95 backdrop-blur-sm border-b border-navy-light/40 px-4 sm:px-6 pt-4 pb-3">
         {/* Title row */}
@@ -161,6 +176,24 @@ export default async function SearchPage({
             <div className="mb-5">
               <ContactsList contacts={(contacts ?? []) as ContactListRow[]} />
             </div>
+
+            {/* Free upgrade prompt — shown when results are capped */}
+            {isFree && count !== null && count > PAGE_SIZE && (
+              <div className="flex items-center justify-between gap-4 px-4 py-3.5 bg-gold/[0.06] border border-gold/20 rounded-xl mb-4 text-sm">
+                <p className="text-gray-300">
+                  Showing <span className="font-semibold text-white">{PAGE_SIZE}</span> of{" "}
+                  <span className="font-semibold text-white">{count.toLocaleString()}</span>{" "}
+                  contacts.{" "}
+                  <span className="text-gray-400">Upgrade to Pro for full access.</span>
+                </p>
+                <Link
+                  href="/app/billing"
+                  className="shrink-0 px-3.5 py-2 bg-gold text-[#080c17] rounded-lg font-bold text-xs hover:bg-yellow-400 transition-colors"
+                >
+                  Upgrade
+                </Link>
+              </div>
+            )}
 
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-3 pb-4">

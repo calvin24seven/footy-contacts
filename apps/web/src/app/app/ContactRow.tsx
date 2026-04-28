@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import SaveToListButton from "@/components/SaveToListButton"
+import UnlockWallModal from "./UnlockWallModal"
 
 export type ContactListRow = {
   id: string
@@ -22,12 +23,17 @@ export type ContactListRow = {
 
 // ── Org / category avatar ─────────────────────────────────────────────────────
 const CATEGORY_COLORS: Record<string, string> = {
-  Agent:  "bg-purple-900/60 text-purple-300",
-  Scout:  "bg-blue-900/60 text-blue-300",
-  Coach:  "bg-teal-900/60 text-teal-300",
-  Club:   "bg-gold/15 text-gold",
-  Media:  "bg-pink-900/60 text-pink-300",
-  Other:  "bg-gray-700 text-gray-300",
+  "Agent":        "bg-purple-900/60 text-purple-300",
+  "Scout":        "bg-blue-900/60 text-blue-300",
+  "Coach":        "bg-teal-900/60 text-teal-300",
+  "Club Official":"bg-gold/15 text-gold",
+  "Club":         "bg-gold/15 text-gold",
+  "Performance":  "bg-orange-900/60 text-orange-300",
+  "Medical":      "bg-red-900/60 text-red-300",
+  "Academy":      "bg-indigo-900/60 text-indigo-300",
+  "Player":       "bg-emerald-900/60 text-emerald-300",
+  "Media":        "bg-pink-900/60 text-pink-300",
+  "Other":        "bg-gray-700 text-gray-300",
 }
 
 function OrgAvatar({ name, category }: { name: string | null; category: string | null }) {
@@ -164,22 +170,9 @@ export function ContactCTA({
 
   if (state === "terms") return <TermsModal onAccept={handleAcceptTerms} onClose={() => setState("idle")} />
 
-  if (state === "paywall") return (
-    <Link href="/app/billing" onClick={(e) => e.stopPropagation()}
-      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gold/30 bg-gold/5 text-gold text-xs font-medium hover:bg-gold/15 transition-colors whitespace-nowrap">
-      <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-      </svg>
-      Upgrade
-    </Link>
-  )
+  if (state === "paywall") return <UnlockWallModal type="paywall" onClose={() => setState("idle")} />
 
-  if (state === "limit") return (
-    <Link href="/app/billing" onClick={(e) => e.stopPropagation()}
-      className="px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-400 text-xs font-medium hover:bg-amber-500/10 transition-colors whitespace-nowrap">
-      Limit reached
-    </Link>
-  )
+  if (state === "limit") return <UnlockWallModal type="limit" onClose={() => setState("idle")} />
 
   if (state === "error") return <span className="text-xs text-red-400 px-1">Error — retry</span>
 
