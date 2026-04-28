@@ -228,6 +228,7 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string
+          cron_queued_at: string | null
           data_confidence_score: number | null
           email: string | null
           id: string
@@ -258,6 +259,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          cron_queued_at?: string | null
           data_confidence_score?: number | null
           email?: string | null
           id?: string
@@ -288,6 +290,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          cron_queued_at?: string | null
           data_confidence_score?: number | null
           email?: string | null
           id?: string
@@ -357,6 +360,7 @@ export type Database = {
           filename: string
           id: string
           import_mode: string
+          skipped_rows: number | null
           status: string
           successful_rows: number | null
           suppressed_rows: number | null
@@ -371,6 +375,7 @@ export type Database = {
           filename: string
           id?: string
           import_mode?: string
+          skipped_rows?: number | null
           status?: string
           successful_rows?: number | null
           suppressed_rows?: number | null
@@ -385,11 +390,60 @@ export type Database = {
           filename?: string
           id?: string
           import_mode?: string
+          skipped_rows?: number | null
           status?: string
           successful_rows?: number | null
           suppressed_rows?: number | null
           total_rows?: number | null
           updated_rows?: number | null
+        }
+        Relationships: []
+      }
+      email_verification_tasks: {
+        Row: {
+          completed_at: string | null
+          count_duplicates_removed: number | null
+          count_processing: number | null
+          count_submitted: number | null
+          created_at: string
+          created_by: string
+          error_message: string | null
+          id: string
+          progress_percentage: number | null
+          reoon_task_id: string
+          results_applied: boolean | null
+          status: string
+          task_name: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          count_duplicates_removed?: number | null
+          count_processing?: number | null
+          count_submitted?: number | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          progress_percentage?: number | null
+          reoon_task_id: string
+          results_applied?: boolean | null
+          status?: string
+          task_name?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          count_duplicates_removed?: number | null
+          count_processing?: number | null
+          count_submitted?: number | null
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          id?: string
+          progress_percentage?: number | null
+          reoon_task_id?: string
+          results_applied?: boolean | null
+          status?: string
+          task_name?: string | null
         }
         Relationships: []
       }

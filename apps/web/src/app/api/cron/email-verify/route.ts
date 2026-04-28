@@ -10,12 +10,13 @@ const REOON_API_BASE = "https://emailverifier.reoon.com/api/v1"
  * Called weekly (Monday 06:00 UTC) by Vercel Cron.
  * Submits genuinely new unverified contacts to Reoon — only those never touched.
  *
- * Called monthly (1st of month 06:30 UTC) with body { scope: "stale" } to
- * re-verify catch_all + unknown contacts whose last check was >30 days ago.
+ * Called monthly (1st of month 06:30 UTC) at /api/cron/email-verify?scope=stale
+ * to re-verify catch_all + unknown contacts whose last check was >30 days ago.
  *
  * Auth: Vercel Cron sends Authorization: Bearer <CRON_SECRET> header.
+ * Note: Vercel Cron sends GET requests — no request body is available.
  */
-export async function POST(req: NextRequest): Promise<NextResponse> {
+export async function GET(req: NextRequest): Promise<NextResponse> {
   // Verify cron secret
   const auth = req.headers.get("authorization") ?? ""
   let cronSecret: string
@@ -35,8 +36,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "REOON_API_KEY not configured" }, { status: 503 })
   }
 
-  const body = await req.json().catch(() => ({})) as { scope?: string }
-  const scope = body.scope === "stale" ? "stale" : "new"
+  const scope = req.nextUrl.searchParams.get("scope") === "stale" ? "stale" : "new"
 
   const supabase = await createAdminClient()
   const PAGE_SIZE = 1000

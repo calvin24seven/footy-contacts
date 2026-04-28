@@ -7,7 +7,7 @@
       "schedule": "30 6 * * 1"
     },
     {
-      "path": "/api/cron/email-verify",
+      "path": "/api/cron/email-verify?scope=stale",
       "schedule": "30 6 1 * *"
     }
   ]
