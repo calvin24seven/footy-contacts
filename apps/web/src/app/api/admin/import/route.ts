@@ -245,6 +245,7 @@ const UPDATABLE_FIELDS = [
 
 type ExistingContact = {
   id: string
+  name?: string | null
   email: string | null
   linkedin_url: string | null
   role: string | null
@@ -350,7 +351,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let suppressedRows = 0
   const errors: Array<{ row: number; message: string }> = []
 
-  const BATCH_SIZE = 500
+  const BATCH_SIZE = 2000
   for (let batchStart = 0; batchStart < dataLines.length; batchStart += BATCH_SIZE) {
     const batch = dataLines.slice(batchStart, batchStart + BATCH_SIZE)
     const entries: ContactEntry[] = []
@@ -455,22 +456,47 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       // name+org match handled below (requires individual queries)
     }
 
-    // ── Signal 4: Name + organisation (only when both present, not yet matched) ─
-    for (const entry of entries) {
-      if (entry.matchType !== "new") continue
-      const name = (entry.contact.name as string | undefined)?.trim()
-      const org = (entry.contact.organisation as string | undefined)?.trim()
-      if (!name || !org) continue
-      const { data } = await supabase
-        .from("contacts")
-        .select("id, email, linkedin_url, role, organisation")
-        .ilike("name", name)
-        .ilike("organisation", org)
-        .limit(1)
-      if (data?.[0]) {
-        entry.matchType = "name_org_match"
-        entry.matchReason = `Duplicate name+org: ${name} @ ${org}`
-        entry.existingContact = data[0] as ExistingContact
+    // ── Signal 4: Name + organisation — batched OR lookup ───────────────────────
+    // Replaces N sequential round-trips with ceil(uniqueNames/100) queries.
+    // Fetch by name in bulk, then match organisation in memory.
+    const nameOrgEntries = entries.filter(e => {
+      if (e.matchType !== "new") return false
+      const n = (e.contact.name as string | undefined)?.trim()
+      const o = (e.contact.organisation as string | undefined)?.trim()
+      return !!(n && o)
+    })
+    if (nameOrgEntries.length > 0) {
+      // Names containing PostgREST OR-filter breaking chars are skipped (very rare in contact data)
+      const safeForFilter = (s: string) => !/[(),]/.test(s)
+      const uniqueNames = [
+        ...new Set(nameOrgEntries.map(e => (e.contact.name as string).trim()).filter(safeForFilter))
+      ]
+      const nameToContacts = new Map<string, ExistingContact[]>()
+      const NAME_OR_BATCH = 100
+      for (let ni = 0; ni < uniqueNames.length; ni += NAME_OR_BATCH) {
+        const nameBatch = uniqueNames.slice(ni, ni + NAME_OR_BATCH)
+        const orFilter = nameBatch.map(n => `name.ilike.${n}`).join(",")
+        const { data: candidates } = await supabase
+          .from("contacts")
+          .select("id, name, email, linkedin_url, role, organisation")
+          .or(orFilter)
+        for (const c of (candidates ?? [])) {
+          const key = (c.name as string | null)?.toLowerCase()
+          if (!key) continue
+          if (!nameToContacts.has(key)) nameToContacts.set(key, [])
+          nameToContacts.get(key)!.push(c as ExistingContact)
+        }
+      }
+      for (const entry of nameOrgEntries) {
+        const name = (entry.contact.name as string).trim()
+        const org = (entry.contact.organisation as string).trim()
+        const candidates = nameToContacts.get(name.toLowerCase()) ?? []
+        const match = candidates.find(c => c.organisation?.toLowerCase() === org.toLowerCase())
+        if (match) {
+          entry.matchType = "name_org_match"
+          entry.matchReason = `Duplicate name+org: ${name} @ ${org}`
+          entry.existingContact = match
+        }
       }
     }
 
@@ -530,32 +556,45 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     // ── Update existing contacts (import_mode=update) ─────────────────────────
-    for (const entry of toUpdate) {
-      const existing = entry.existingContact!
-      const incoming = entry.contact
-      const rowInsert = rowInserts.find(r => r.row_number === entry.rowNumber && r.status === "pending")
+    if (toUpdate.length > 0) {
+      // Build a row-number → rowInsert map to avoid O(n²) .find() inside parallel callbacks
+      const rowInsertByRow = new Map(rowInserts.map(r => [r.row_number, r]))
 
-      // Snapshot old role/org before updating if they changed — for history log
-      const newRole = incoming.role as string | undefined
-      const newOrg = incoming.organisation as string | undefined
-      if ((newRole && newRole !== existing.role) || (newOrg && newOrg !== existing.organisation)) {
-        await supabase.from("contact_role_history").insert({
-          contact_id: existing.id,
-          role: existing.role,
-          organisation: existing.organisation,
-          source: "csv_import",
-          import_id: importId,
-        })
+      // Batch all role-history inserts into a single DB call
+      const historyInserts: Array<Record<string, unknown>> = []
+      for (const entry of toUpdate) {
+        const existing = entry.existingContact!
+        const newRole = entry.contact.role as string | undefined
+        const newOrg = entry.contact.organisation as string | undefined
+        if ((newRole && newRole !== existing.role) || (newOrg && newOrg !== existing.organisation)) {
+          historyInserts.push({
+            contact_id: existing.id,
+            role: existing.role,
+            organisation: existing.organisation,
+            source: "csv_import",
+            import_id: importId,
+          })
+        }
+      }
+      if (historyInserts.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("contact_role_history") as any).insert(historyInserts)
       }
 
-      // Build update payload: only fields present and non-empty in the incoming row
-      const updatePayload: Record<string, unknown> = {}
-      for (const field of UPDATABLE_FIELDS) {
-        const val = incoming[field]
-        if (val !== undefined && val !== null && val !== "") updatePayload[field] = val
-      }
-
-      if (Object.keys(updatePayload).length > 0) {
+      // Parallel updates — JS is single-threaded so counter mutations at await boundaries are safe
+      await Promise.all(toUpdate.map(async (entry) => {
+        const existing = entry.existingContact!
+        const rowInsert = rowInsertByRow.get(entry.rowNumber)
+        const updatePayload: Record<string, unknown> = {}
+        for (const field of UPDATABLE_FIELDS) {
+          const val = entry.contact[field]
+          if (val !== undefined && val !== null && val !== "") updatePayload[field] = val
+        }
+        if (Object.keys(updatePayload).length === 0) {
+          updatedRows++
+          if (rowInsert) rowInsert.status = "updated"
+          return
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error: updateErr } = await (supabase.from("contacts") as any)
           .update(updatePayload)
@@ -564,12 +603,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           failedRows++
           if (rowInsert) { rowInsert.status = "error"; rowInsert.error_message = updateErr.message }
           errors.push({ row: entry.rowNumber, message: updateErr.message })
-          continue
+        } else {
+          updatedRows++
+          if (rowInsert) rowInsert.status = "updated"
         }
-      }
-
-      updatedRows++
-      if (rowInsert) rowInsert.status = "updated"
+      }))
     }
 
     await supabase.from("csv_import_rows").insert(rowInserts)
