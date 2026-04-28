@@ -58,10 +58,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const reoonData = (await reoonRes.json()) as {
     status: string
-    results?: ReoonResult[]
+    results?: Record<string, ReoonResult>
   }
 
-  const results = reoonData.results ?? []
+  // results is an object keyed by email address, not an array
+  const resultsObj = reoonData.results ?? {}
+  const results = Object.values(resultsObj)
   if (results.length === 0) {
     return NextResponse.json({ error: "No results returned from Reoon" }, { status: 400 })
   }
