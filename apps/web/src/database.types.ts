@@ -234,6 +234,7 @@ export type Database = {
           email: string | null
           id: string
           instagram_url: string | null
+          cron_queued_at: string | null
           last_verified_at: string | null
           level: string | null
           linkedin_url: string | null
@@ -260,6 +261,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          cron_queued_at?: string | null
           data_confidence_score?: number | null
           email?: string | null
           id?: string
@@ -290,6 +292,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string
+          cron_queued_at?: string | null
           data_confidence_score?: number | null
           email?: string | null
           id?: string
@@ -360,6 +363,7 @@ export type Database = {
           id: string
           import_mode: string
           status: string
+          skipped_rows: number | null
           successful_rows: number | null
           suppressed_rows: number | null
           total_rows: number | null
@@ -373,6 +377,7 @@ export type Database = {
           filename: string
           id?: string
           import_mode?: string
+          skipped_rows?: number | null
           status?: string
           successful_rows?: number | null
           suppressed_rows?: number | null
@@ -387,6 +392,7 @@ export type Database = {
           filename?: string
           id?: string
           import_mode?: string
+          skipped_rows?: number | null
           status?: string
           successful_rows?: number | null
           suppressed_rows?: number | null
@@ -420,7 +426,7 @@ export type Database = {
           count_processing?: number | null
           count_duplicates_removed?: number | null
           progress_percentage?: number | null
-          created_by: string
+          created_by?: string | null
           created_at?: string
           completed_at?: string | null
           error_message?: string | null

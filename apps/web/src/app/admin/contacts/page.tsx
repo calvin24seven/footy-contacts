@@ -55,8 +55,11 @@ export default async function AdminContactsPage({
     archived: "bg-gray-800 text-gray-400",
   }
   const verifiedColors: Record<string, string> = {
-    verified: "bg-blue-900/40 text-blue-300",
-    unverified: "bg-orange-900/40 text-orange-300",
+    verified: "bg-green-900/40 text-green-300",
+    catch_all: "bg-yellow-900/40 text-yellow-300",
+    unknown: "bg-gray-800 text-gray-300",
+    risky: "bg-orange-900/40 text-orange-300",
+    unverified: "bg-navy text-gray-500",
   }
 
   return (
@@ -90,8 +93,11 @@ export default async function AdminContactsPage({
           <option value="archived">Archived</option>
         </select>
         <select name="verified" defaultValue={verified} className="input-base text-sm py-2 w-36">
-          <option value="">All verified</option>
+          <option value="">All statuses</option>
           <option value="verified">Verified</option>
+          <option value="catch_all">Catch-all</option>
+          <option value="unknown">Unknown</option>
+          <option value="risky">Risky</option>
           <option value="unverified">Unverified</option>
         </select>
         <button type="submit" className="btn-secondary text-sm">Filter</button>

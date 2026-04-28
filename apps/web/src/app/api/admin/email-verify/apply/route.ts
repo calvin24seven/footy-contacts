@@ -6,7 +6,8 @@ const REOON_API_BASE = "https://emailverifier.reoon.com/api/v1"
 
 interface ReoonResult {
   email: string
-  status: string // 'safe' | 'risky' | 'invalid' | 'unknown' | 'catch_all' | etc.
+  // Reoon statuses: 'safe' | 'catch_all' | 'unknown' | 'risky' | 'invalid'
+  status: "safe" | "catch_all" | "unknown" | "risky" | "invalid" | string
   is_deliverable?: boolean
   is_valid_syntax?: boolean
 }
@@ -68,20 +69,36 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "No results returned from Reoon" }, { status: 400 })
   }
 
-  // Partition into verified vs unverified
-  const safeEmails: string[] = []
-  const unsafeEmails: string[] = []
-  const invalidEmails: string[] = [] // invalid syntax + not deliverable → clear email
+  // Map Reoon status → our DB verified_status value.
+  // 'safe'      → 'verified'   (confirmed deliverable)
+  // 'catch_all' → 'catch_all'  (domain accepts all, can't confirm mailbox)
+  // 'unknown'   → 'unknown'    (server timeout / greylisted)
+  // 'risky'     → 'risky'      (role address, spam-trap risk, etc.)
+  // 'invalid'   → clear email, add to suppressions
+  type VerifiedStatus = "verified" | "catch_all" | "unknown" | "risky" | "unverified"
+
+  const statusBuckets = new Map<VerifiedStatus, string[]>([
+    ["verified", []],
+    ["catch_all", []],
+    ["unknown", []],
+    ["risky", []],
+  ])
+  const invalidEmails: string[] = []
 
   for (const r of results) {
     if (!r.email) continue
     const email = r.email.toLowerCase().trim()
     if (r.status === "safe") {
-      safeEmails.push(email)
-    } else if (r.is_valid_syntax === false && r.is_deliverable === false) {
-      invalidEmails.push(email)
+      statusBuckets.get("verified")!.push(email)
+    } else if (r.status === "catch_all") {
+      statusBuckets.get("catch_all")!.push(email)
+    } else if (r.status === "unknown") {
+      statusBuckets.get("unknown")!.push(email)
+    } else if (r.status === "risky") {
+      statusBuckets.get("risky")!.push(email)
     } else {
-      unsafeEmails.push(email)
+      // 'invalid' or anything else with bad syntax/deliverability → clear the email
+      invalidEmails.push(email)
     }
   }
 
@@ -90,27 +107,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let unverifiedCount = 0
   let clearedCount = 0
 
-  // Update verified contacts in batches
+  // Update each status bucket in batches
   const BATCH = 500
-  for (let i = 0; i < safeEmails.length; i += BATCH) {
-    const batch = safeEmails.slice(i, i + BATCH)
-    const { data } = await supabase
-      .from("contacts")
-      .update({ verified_status: "verified", last_verified_at: now })
-      .in("email", batch)
-      .select("id")
-    verifiedCount += (data?.length ?? 0)
-  }
-
-  // Update unverified contacts
-  for (let i = 0; i < unsafeEmails.length; i += BATCH) {
-    const batch = unsafeEmails.slice(i, i + BATCH)
-    const { data } = await supabase
-      .from("contacts")
-      .update({ verified_status: "unverified", last_verified_at: now })
-      .in("email", batch)
-      .select("id")
-    unverifiedCount += (data?.length ?? 0)
+  for (const [dbStatus, emails] of statusBuckets.entries()) {
+    for (let i = 0; i < emails.length; i += BATCH) {
+      const batch = emails.slice(i, i + BATCH)
+      const { data } = await supabase
+        .from("contacts")
+        .update({ verified_status: dbStatus, last_verified_at: now, cron_queued_at: null })
+        .in("email", batch)
+        .select("id")
+      if (dbStatus === "verified") {
+        verifiedCount += (data?.length ?? 0)
+      } else {
+        unverifiedCount += (data?.length ?? 0)
+      }
+    }
   }
 
   // Clear truly invalid emails and add them to the suppression blacklist
@@ -118,7 +130,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const batch = invalidEmails.slice(i, i + BATCH)
     const { data } = await supabase
       .from("contacts")
-      .update({ email: null, verified_status: "unverified", last_verified_at: now })
+      .update({ email: null, verified_status: "unverified", last_verified_at: now, cron_queued_at: null })
       .in("email", batch)
       .select("id")
     clearedCount += (data?.length ?? 0)

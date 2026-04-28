@@ -1,4 +1,14 @@
 {
   "buildCommand": "cd ../.. && pnpm turbo build --filter=web",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile"
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "crons": [
+    {
+      "path": "/api/cron/email-verify",
+      "schedule": "30 6 * * 1"
+    },
+    {
+      "path": "/api/cron/email-verify",
+      "schedule": "30 6 1 * *"
+    }
+  ]
 }
