@@ -21,26 +21,43 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "REOON_API_KEY environment variable is not set. Add it to Vercel Environment Variables." }, { status: 503 })
   }
 
-  const { scope = "unverified", limit = 50000 } = (await req.json()) as {
+  const { scope = "unverified" } = (await req.json()) as {
     scope?: "unverified" | "all"
-    limit?: number
   }
 
-  // Fetch contact emails from DB
-  let query = supabase
-    .from("contacts")
-    .select("id, email")
-    .not("email", "is", null)
-    .limit(Math.min(limit, 50000))
+  // Paginate through contacts in 1000-row pages (PostgREST max_rows default is 1000).
+  // Collect all matching emails up to Reoon's 50,000 per-task limit.
+  const MAX_EMAILS = 50000
+  const PAGE_SIZE = 1000
+  const emails: string[] = []
+  let page = 0
 
-  if (scope === "unverified") {
-    query = query.neq("verified_status", "verified")
+  while (emails.length < MAX_EMAILS) {
+    const from = page * PAGE_SIZE
+    const to = from + PAGE_SIZE - 1
+
+    let pageQuery = supabase
+      .from("contacts")
+      .select("email")
+      .not("email", "is", null)
+      .order("id")
+      .range(from, to)
+
+    if (scope === "unverified") {
+      pageQuery = pageQuery.neq("verified_status", "verified")
+    }
+
+    const { data: pageData, error: pageErr } = await pageQuery
+    if (pageErr) return NextResponse.json({ error: pageErr.message }, { status: 500 })
+    if (!pageData || pageData.length === 0) break
+
+    for (const c of pageData) {
+      if (c.email) emails.push(c.email as string)
+    }
+    if (pageData.length < PAGE_SIZE) break // last page reached
+    page++
   }
 
-  const { data: contacts, error: fetchErr } = await query
-  if (fetchErr) return NextResponse.json({ error: fetchErr.message }, { status: 500 })
-
-  const emails = (contacts ?? []).map((c) => c.email as string)
   if (emails.length === 0) {
     return NextResponse.json({ error: "No emails to verify matching that scope" }, { status: 400 })
   }
