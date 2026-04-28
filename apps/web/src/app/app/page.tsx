@@ -70,9 +70,9 @@ export default async function SearchPage({
   // Filter: email status
   if (params.email_status) {
     if (params.email_status === "has_email") {
-      query = query.not("email", "is", null)
+      query = query.not("email", "is", null) as typeof query
     } else if (params.email_status === "no_email") {
-      query = query.is("email", null)
+      query = query.is("email", null) as typeof query
     } else {
       // verified | catch_all | unknown | risky | unverified
       query = query.eq("verified_status", params.email_status)
