@@ -16,9 +16,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   let apiKey: string
   try {
-    apiKey = await getSecret("reoon_api_key")
+    apiKey = getSecret("reoon_api_key")
   } catch {
-    return NextResponse.json({ error: "Reoon API key not configured in Vault" }, { status: 503 })
+    return NextResponse.json({ error: "REOON_API_KEY environment variable is not set. Add it to Vercel Environment Variables." }, { status: 503 })
   }
 
   const taskId = req.nextUrl.searchParams.get("id")

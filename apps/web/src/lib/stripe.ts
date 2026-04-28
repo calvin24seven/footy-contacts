@@ -9,7 +9,7 @@ let _stripe: Stripe | null = null
  */
 export async function getStripe(): Promise<Stripe> {
   if (_stripe) return _stripe
-  const key = await getSecret("stripe_secret_key")
+  const key = getSecret("stripe_secret_key")
   _stripe = new Stripe(key, {
     apiVersion: "2026-04-22.dahlia",
     typescript: true,

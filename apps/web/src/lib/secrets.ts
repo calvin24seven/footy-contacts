@@ -1,40 +1,36 @@
 /**
- * Vault secret accessor — the standard way to get secrets in this workspace.
+ * Secret accessor for Next.js server-side code (API routes, server components).
  *
- * All application secrets (Stripe keys, API keys, etc.) live in Supabase Vault.
- * The only env vars required are:
- *   - NEXT_PUBLIC_SUPABASE_URL
- *   - NEXT_PUBLIC_SUPABASE_ANON_KEY
- *   - SUPABASE_SERVICE_ROLE_KEY  (bootstrap key to access Vault)
+ * All application secrets live in Vercel Environment Variables (or .env.local for local dev).
+ * Convention: secret name uses snake_case → env var is the same in SCREAMING_SNAKE_CASE.
+ *   getSecret("reoon_api_key")      → process.env.REOON_API_KEY
+ *   getSecret("stripe_secret_key")  → process.env.STRIPE_SECRET_KEY
  *
- * Usage:
- *   const key = await getSecret("stripe_secret_key")
+ * DO NOT use this from client components — server-side only.
  *
- * Store secrets in Vault via SQL:
- *   SELECT vault.create_secret('value', 'secret_name', 'description');
+ * Required env vars (set in Vercel dashboard → Settings → Environment Variables,
+ * and in apps/web/.env.local for local dev):
+ *   REOON_API_KEY
+ *   STRIPE_SECRET_KEY
+ *   STRIPE_WEBHOOK_SECRET
  */
 
-import { createAdminClient } from "./supabase/admin"
-
-// Module-level cache — persists within a warm serverless instance
+// Module-level cache — avoids repeated env lookups in warm serverless instances
 const _cache = new Map<string, string>()
 
-export async function getSecret(name: string): Promise<string> {
+export function getSecret(name: string): string {
   if (_cache.has(name)) return _cache.get(name)!
 
-  const admin = createAdminClient()
-  const { data, error } = await admin.rpc("get_admin_secret", { name })
+  const envKey = name.toUpperCase()
+  const value = process.env[envKey]
 
-  if (error) {
-    throw new Error(`Vault error fetching '${name}': ${error.message}`)
-  }
-  if (!data) {
+  if (!value) {
     throw new Error(
-      `Secret '${name}' not found in Vault. Add it with: SELECT vault.create_secret('value', '${name}', 'description');`
+      `Secret '${name}' not found. Add '${envKey}' to Vercel Environment Variables ` +
+      `(Settings → Environment Variables) or apps/web/.env.local for local dev.`
     )
   }
 
-  const value = data as string
   _cache.set(name, value)
   return value
 }

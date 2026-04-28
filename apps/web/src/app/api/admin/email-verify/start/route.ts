@@ -16,9 +16,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   let apiKey: string
   try {
-    apiKey = await getSecret("reoon_api_key")
+    apiKey = getSecret("reoon_api_key")
   } catch {
-    return NextResponse.json({ error: "Reoon API key not configured in Vault. Run: SELECT vault.create_secret('YOUR_KEY', 'reoon_api_key', 'Reoon email verification API key');" }, { status: 503 })
+    return NextResponse.json({ error: "REOON_API_KEY environment variable is not set. Add it to Vercel Environment Variables." }, { status: 503 })
   }
 
   const { scope = "unverified", limit = 50000 } = (await req.json()) as {
