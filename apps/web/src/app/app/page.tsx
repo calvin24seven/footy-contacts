@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import SearchFilters from "./SearchFilters"
 import SearchBar from "./SearchBar"
-import ContactRow, { type ContactListRow } from "./ContactRow"
+import ContactsList from "./ContactsList"
+import { type ContactListRow } from "./ContactRow"
 
 const PAGE_SIZE = 25
 
@@ -147,8 +148,9 @@ export default async function SearchPage({
         {count !== null && count !== undefined && hasResults && (
           <div className="flex items-center justify-between mb-3 text-xs text-gray-500">
             <span>
-              {count.toLocaleString()} contact{count !== 1 ? "s" : ""}
-              {totalPages > 1 && ` · page ${page} of ${totalPages}`}
+              {count.toLocaleString()} contact{count !== 1 ? "s" : ""} found
+              {" · "}
+              Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, count)}
             </span>
             <span>Sorted by {sortLabel[sort] ?? sort}</span>
           </div>
@@ -156,10 +158,8 @@ export default async function SearchPage({
 
         {hasResults ? (
           <>
-            <div className="flex flex-col gap-1 mb-6">
-              {(contacts ?? []).map((contact) => (
-                <ContactRow key={contact.id} contact={contact as ContactListRow} />
-              ))}
+            <div className="mb-5">
+              <ContactsList contacts={(contacts ?? []) as ContactListRow[]} />
             </div>
 
             {totalPages > 1 && (

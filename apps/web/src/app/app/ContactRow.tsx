@@ -80,8 +80,8 @@ function SignalPill({ type }: { type: "email" | "phone" | "linkedin" }) {
 // ── Verified badge ────────────────────────────────────────────────────────────
 function VerifiedBadge() {
   return (
-    <span title="Email verified" className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded leading-none">
-      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <span title="Email verified" className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-emerald-400/70 bg-emerald-900/20 border border-emerald-900/40 px-1.5 py-0.5 rounded-full leading-none">
+      <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
       </svg>
       Verified
@@ -132,7 +132,7 @@ function TermsModal({ onAccept, onClose }: { onAccept: () => void; onClose: () =
 }
 
 // ── CTA (unlock / view / upgrade) ────────────────────────────────────────────
-function ContactCTA({
+export function ContactCTA({
   contactId, verifiedStatus, hasEmail, hasPhone,
 }: {
   contactId: string; verifiedStatus: string | null; hasEmail: boolean; hasPhone: boolean
@@ -220,45 +220,74 @@ function ContactCTA({
 }
 
 // ── Main contact row ───────────────────────────────────────────────────────────
-export default function ContactRow({ contact }: { contact: ContactListRow }) {
+export default function ContactRow({
+  contact,
+  onPreview,
+  isSelected,
+}: {
+  contact: ContactListRow
+  onPreview?: (contact: ContactListRow) => void
+  isSelected?: boolean
+}) {
   const location = [contact.city, contact.country].filter(Boolean).join(", ")
 
+  const identityContent = (
+    <>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-white font-semibold text-sm leading-tight">{contact.name}</span>
+        {contact.verified_status === "verified" && <VerifiedBadge />}
+      </div>
+
+      <div className="flex items-center gap-1 mt-0.5 text-xs flex-wrap leading-snug">
+        {contact.organisation && (
+          <span className="text-gray-200 font-medium truncate max-w-[140px] sm:max-w-[220px]">{contact.organisation}</span>
+        )}
+        {contact.organisation && contact.role && <span className="text-gray-600">·</span>}
+        {contact.role && (
+          <span className="text-gray-400 truncate max-w-[140px] sm:max-w-[220px]">{contact.role}</span>
+        )}
+        {(contact.organisation || contact.role) && location && <span className="text-gray-600">·</span>}
+        {location && <span className="text-gray-500">{location}</span>}
+      </div>
+
+      {/* Signal pills + category */}
+      <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+        {contact.has_email && <SignalPill type="email" />}
+        {contact.has_phone && <SignalPill type="phone" />}
+        {contact.has_linkedin && <SignalPill type="linkedin" />}
+        {(contact.role_category ?? contact.category) && (
+          <span className="text-[10px] text-gray-500 bg-gray-700/50 px-1.5 py-0.5 rounded leading-none hidden sm:inline">
+            {contact.role_category ?? contact.category}
+          </span>
+        )}
+      </div>
+    </>
+  )
+
   return (
-    <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 bg-navy-light rounded-xl hover:bg-[#354460] active:bg-[#354460] transition-colors group">
+    <div
+      className={`flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl transition-colors group ${
+        isSelected
+          ? "bg-[#2d3c58] ring-1 ring-gold/25"
+          : "bg-navy-light hover:bg-[#354460]"
+      }`}
+    >
       {/* Org / category avatar */}
       <OrgAvatar name={contact.organisation} category={contact.category} />
 
       {/* Identity block */}
-      <Link href={`/app/contacts/${contact.id}`} className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-white font-semibold text-sm leading-tight">{contact.name}</span>
-          {contact.verified_status === "verified" && <VerifiedBadge />}
-        </div>
-
-        <div className="flex items-center gap-1 mt-0.5 text-xs flex-wrap leading-snug">
-          {contact.role && (
-            <span className="text-gold/80 truncate max-w-[160px] sm:max-w-[260px]">{contact.role}</span>
-          )}
-          {contact.role && (contact.organisation || location) && <span className="text-gray-600">·</span>}
-          {contact.organisation && (
-            <span className="text-gray-400 truncate max-w-[120px] sm:max-w-[200px]">{contact.organisation}</span>
-          )}
-          {contact.organisation && location && <span className="text-gray-600">·</span>}
-          {location && <span className="text-gray-500">{location}</span>}
-        </div>
-
-        {/* Signal pills + category */}
-        <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-          {contact.has_email && <SignalPill type="email" />}
-          {contact.has_phone && <SignalPill type="phone" />}
-          {contact.has_linkedin && <SignalPill type="linkedin" />}
-          {(contact.role_category ?? contact.category) && (
-            <span className="text-[10px] text-gray-500 bg-gray-700/50 px-1.5 py-0.5 rounded leading-none hidden sm:inline">
-              {contact.role_category ?? contact.category}
-            </span>
-          )}
-        </div>
-      </Link>
+      {onPreview ? (
+        <button
+          className="flex-1 min-w-0 text-left"
+          onClick={() => onPreview(contact)}
+        >
+          {identityContent}
+        </button>
+      ) : (
+        <Link href={`/app/contacts/${contact.id}`} className="flex-1 min-w-0">
+          {identityContent}
+        </Link>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
