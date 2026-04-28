@@ -27,7 +27,7 @@ export default async function AdminUsersPage({
   let query = supabase
     .from("profiles")
     .select(
-      "id, full_name, first_name, last_name, email, role, user_type, is_suspended, suspended_reason, created_at",
+      "id, full_name, first_name, last_name, email, role, user_type, is_suspended, suspended_reason, bonus_unlock_credits, created_at",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
@@ -108,6 +108,7 @@ export default async function AdminUsersPage({
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">User</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Type</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Plan</th>
+                <th className="text-left px-4 py-3 text-gray-400 font-medium">Credits</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Status</th>
                 <th className="text-left px-4 py-3 text-gray-400 font-medium">Joined</th>
                 <th className="text-right px-4 py-3 text-gray-400 font-medium">Actions</th>
@@ -145,6 +146,15 @@ export default async function AdminUsersPage({
                           </span>
                         ) : (
                           <span className="text-xs text-gray-500">free</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-300 text-xs">
+                        {(u.bonus_unlock_credits ?? 0) > 0 ? (
+                          <span className="text-xs bg-gold/20 text-gold px-2 py-1 rounded">
+                            +{u.bonus_unlock_credits}
+                          </span>
+                        ) : (
+                          <span className="text-gray-600">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">

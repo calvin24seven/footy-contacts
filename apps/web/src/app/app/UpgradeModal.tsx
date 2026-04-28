@@ -192,8 +192,8 @@ export default function UpgradeModal({ context = "upgrade", onClose }: UpgradeMo
                       </span>
                       <span className="text-gray-500 text-xs">{pricing.sub}</span>
                     </div>
-                    {"saving" in pricing && interval === "yearly" && (
-                      <p className="text-emerald-400 text-xs mt-0.5 font-medium">{pricing.saving}</p>
+                    {interval === "yearly" && (
+                      <p className="text-emerald-400 text-xs mt-0.5 font-medium">{plan.yearly.saving}</p>
                     )}
                   </div>
 

@@ -20,7 +20,7 @@ export async function PATCH(
   }
 
   const body = await req.json()
-  const { action, role } = body as { action: string; role?: string }
+  const { action, role, amount } = body as { action: string; role?: string; amount?: number }
 
   if (action === "suspend") {
     const { error } = await supabase
@@ -44,6 +44,17 @@ export async function PATCH(
       .from("profiles")
       .update({ role })
       .eq("id", userId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  } else if (action === "add_credits") {
+    const credits = Math.floor(Number(amount ?? 0))
+    if (!Number.isFinite(credits) || credits === 0 || Math.abs(credits) > 10000) {
+      return NextResponse.json({ error: "Invalid amount (1–10000)" }, { status: 400 })
+    }
+    const { error } = await supabase.rpc("increment_bonus_credits", {
+      p_user_id: userId,
+      p_amount: credits,
+    })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   } else {
