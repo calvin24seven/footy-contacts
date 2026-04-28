@@ -74,7 +74,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     subscription_data: {
       metadata: {
         supabase_user_id: user.id,
-        plan_id: planId,
+        plan_id: plan.id,
       },
     },
     allow_promotion_codes: true,
