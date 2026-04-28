@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import UpgradeModal from "./UpgradeModal"
 
 const STORAGE_KEY = "fc_welcome_v1_dismissed"
 
 export default function WelcomeBanner() {
   const [visible, setVisible] = useState(false)
   const [usedFreeUnlock, setUsedFreeUnlock] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) return
@@ -33,7 +34,9 @@ export default function WelcomeBanner() {
 
   if (usedFreeUnlock) {
     return (
-      <div className="mx-4 mt-3 mb-0 flex items-center justify-between gap-3 px-4 py-3 bg-[#111827] border border-white/[0.08] rounded-xl">
+      <>
+        {showUpgrade && <UpgradeModal context="upgrade" onClose={() => setShowUpgrade(false)} />}
+        <div className="mx-4 mt-3 mb-0 flex items-center justify-between gap-3 px-4 py-3 bg-[#111827] border border-white/[0.08] rounded-xl">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
             <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,15 +49,15 @@ export default function WelcomeBanner() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Link
-            href="/app/billing"
-            className="px-3 py-1.5 bg-gold text-[#080c17] rounded-lg font-bold text-xs hover:bg-yellow-400 transition-colors"
+          <button
+            onClick={() => setShowUpgrade(true)}
+            className="px-3 py-1.5 bg-gold text-[#080c17] rounded-lg font-bold text-xs hover:bg-yellow-400 transition-colors cursor-pointer"
           >
             Upgrade
-          </Link>
+          </button>
           <button
             onClick={dismiss}
-            className="p-1 rounded text-gray-600 hover:text-gray-400 transition-colors"
+            className="p-1 rounded text-gray-600 hover:text-gray-400 transition-colors cursor-pointer"
             aria-label="Dismiss"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +65,8 @@ export default function WelcomeBanner() {
             </svg>
           </button>
         </div>
-      </div>
+        </div>
+      </>
     )
   }
 
@@ -76,12 +80,12 @@ export default function WelcomeBanner() {
         </div>
         <p className="text-sm text-gray-300 truncate">
           <span className="font-semibold text-gold">Welcome!</span>{" "}
-          You have 1 free unlock — search and reveal any contact&apos;s details.
+          You have 3 free unlocks — search and reveal any contact&apos;s details.
         </p>
       </div>
       <button
         onClick={dismiss}
-        className="p-1 rounded text-gold/50 hover:text-gold transition-colors shrink-0"
+        className="p-1 rounded text-gold/50 hover:text-gold transition-colors shrink-0 cursor-pointer"
         aria-label="Dismiss"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

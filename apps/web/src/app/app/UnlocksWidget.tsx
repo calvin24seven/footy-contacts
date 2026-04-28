@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import Link from "next/link"
+import UpgradeModal from "./UpgradeModal"
 
 interface UnlocksData {
   used: number
@@ -22,6 +22,7 @@ const NEXT_PLAN_LIMIT: Record<string, number> = {
 export default function UnlocksWidget() {
   const [data, setData] = useState<UnlocksData | null>(null)
   const [open, setOpen] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -61,10 +62,11 @@ export default function UnlocksWidget() {
 
   return (
     <div className="relative shrink-0" ref={ref}>
+      {showUpgrade && <UpgradeModal context="upgrade" onClose={() => setShowUpgrade(false)} />}
       {/* Badge button */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-navy-light hover:bg-[#354460] transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-navy-light hover:bg-[#354460] transition-colors cursor-pointer"
         aria-label="View unlock usage"
       >
         {/* Key icon */}
@@ -109,16 +111,15 @@ export default function UnlocksWidget() {
 
           {/* Upgrade CTA */}
           {upgradeMultiplier > 1 && (
-            <Link
-              href="/app/billing"
-              onClick={() => setOpen(false)}
-              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark transition-colors"
+            <button
+              onClick={() => { setOpen(false); setShowUpgrade(true) }}
+              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-yellow-400 transition-colors cursor-pointer"
             >
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
               Reach {upgradeMultiplier}x more contacts
-            </Link>
+            </button>
           )}
 
           {upgradeMultiplier === 0 && (

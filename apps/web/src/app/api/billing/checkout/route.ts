@@ -8,15 +8,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
 
-  const body = await req.json() as { planId: string; billingPeriod?: "monthly" | "yearly" }
-  const { planId, billingPeriod = "monthly" } = body
+  const body = await req.json() as { planId?: string; planCode?: string; billingPeriod?: "monthly" | "yearly" }
+  const { planId, planCode, billingPeriod = "monthly" } = body
 
-  // Fetch plan
-  const { data: plan } = await supabase
-    .from("plans")
-    .select("*")
-    .eq("id", planId)
-    .single()
+  if (!planId && !planCode) {
+    return NextResponse.json({ error: "plan_id or plan_code required" }, { status: 400 })
+  }
+
+  // Fetch plan by id or code
+  const planQuery = supabase.from("plans").select("*")
+  const { data: plan } = await (
+    planId
+      ? planQuery.eq("id", planId).single()
+      : planQuery.eq("code", planCode!).eq("is_active", true).single()
+  )
 
   if (!plan) return NextResponse.json({ error: "plan_not_found" }, { status: 404 })
 

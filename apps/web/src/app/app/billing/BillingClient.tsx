@@ -48,7 +48,7 @@ export function UpgradeButton({ plan, hasActiveSubscription, isCurrentPlan }: Pr
       <button
         onClick={handleClick}
         disabled={loading}
-        className="w-full py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark transition-colors disabled:opacity-50"
+        className="w-full py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
       >
         {loading
           ? "Redirecting…"
@@ -87,7 +87,7 @@ export function ManageSubscriptionButton() {
       <button
         onClick={handleClick}
         disabled={loading}
-        className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg text-sm hover:border-gray-400 hover:text-white transition-colors disabled:opacity-50"
+        className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg text-sm hover:border-gray-400 hover:text-white transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
       >
         {loading ? "Loading…" : "Manage subscription"}
       </button>

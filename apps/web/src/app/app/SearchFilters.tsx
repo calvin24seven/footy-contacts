@@ -116,7 +116,7 @@ export default function SearchFilters({ countries, currentSort = "name_asc" }: P
         {/* Filter drawer trigger */}
         <button
           onClick={open ? () => setOpen(false) : handleOpen}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors shrink-0 cursor-pointer ${
             open || activeCount > 0
               ? "border-gold bg-gold/10 text-gold"
               : "border-gray-600 text-gray-400 hover:border-gray-400"
@@ -173,7 +173,7 @@ export default function SearchFilters({ countries, currentSort = "name_asc" }: P
         {activeCategory && <Chip label={activeCategory} onRemove={() => removeFilter("category")} />}
 
         {activeCount > 0 && (
-          <button onClick={clearAll} className="text-xs text-gray-500 hover:text-white transition-colors shrink-0 ml-1">
+          <button onClick={clearAll} className="text-xs text-gray-500 hover:text-white transition-colors shrink-0 ml-1 cursor-pointer">
             Clear all
           </button>
         )}
@@ -263,14 +263,14 @@ export default function SearchFilters({ countries, currentSort = "name_asc" }: P
             <button
               onClick={applyFilters}
               disabled={isPending}
-              className="flex-1 sm:flex-none px-6 py-2.5 sm:py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition-colors"
+              className="flex-1 sm:flex-none px-6 py-2.5 sm:py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               {isPending ? "Applying…" : "Apply filters"}
             </button>
-            <button onClick={clearAll} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
+            <button onClick={clearAll} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors cursor-pointer">
               Clear all
             </button>
-            <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-white transition-colors sm:ml-auto">
+            <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-white transition-colors sm:ml-auto cursor-pointer">
               Cancel
             </button>
           </div>
@@ -284,7 +284,7 @@ function QuickChip({ label, active, onClick }: { label: string; active: boolean;
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors shrink-0 ${
+      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors shrink-0 cursor-pointer ${
         active
           ? "border-gold bg-gold/10 text-gold"
           : "border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-300"
@@ -306,7 +306,7 @@ function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
       {label}
       <button
         onClick={onRemove}
-        className="w-3.5 h-3.5 rounded-full hover:bg-gold/20 flex items-center justify-center transition-colors"
+        className="w-3.5 h-3.5 rounded-full hover:bg-gold/20 flex items-center justify-center transition-colors cursor-pointer"
         aria-label={`Remove ${label} filter`}
       >
         <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
