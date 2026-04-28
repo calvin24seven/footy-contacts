@@ -61,7 +61,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const reoonData = (await reoonRes.json()) as {
     task_id: number | string
     status: string
-    count_emails: number
+    count_submitted: number
+    count_processing: number
+    count_duplicates_removed: number
+    count_rejected_emails: number
   }
 
   // Store task in DB
@@ -70,8 +73,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     .insert({
       reoon_task_id: String(reoonData.task_id),
       task_name: taskName,
-      status: reoonData.status ?? "waiting",
-      count_submitted: reoonData.count_emails ?? emails.length,
+      status: "waiting",
+      count_submitted: reoonData.count_submitted ?? emails.length,
       created_by: user.id,
     })
     .select("id")
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   return NextResponse.json({
     taskId: task.id,
     reoonTaskId: reoonData.task_id,
-    countSubmitted: reoonData.count_emails ?? emails.length,
-    status: reoonData.status ?? "waiting",
+    countSubmitted: reoonData.count_submitted ?? emails.length,
+    status: "waiting",
   })
 }

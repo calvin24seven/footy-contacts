@@ -51,9 +51,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const reoonData = (await reoonRes.json()) as {
     task_id: number | string
     status: string
-    count_emails_submitted?: number
-    count_emails_processing?: number
-    count_emails_done?: number
+    count_total?: number
+    count_checked?: number
+    count_processing?: number
     progress_percentage?: number
     count_duplicates_removed?: number
   }
@@ -65,8 +65,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   else if (reoonData.status === "waiting") newStatus = "waiting"
   else if (reoonData.status === "failed") newStatus = "failed"
 
-  const countDone = reoonData.count_emails_done ?? 0
-  const countSubmitted = reoonData.count_emails_submitted ?? task.count_submitted ?? 1
+  const countDone = reoonData.count_checked ?? 0
+  const countSubmitted = reoonData.count_total ?? task.count_submitted ?? 1
   const progress = reoonData.progress_percentage ?? Math.round((countDone / countSubmitted) * 100)
 
   // Update DB record
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     .from("email_verification_tasks")
     .update({
       status: newStatus,
-      count_processing: reoonData.count_emails_processing ?? 0,
+      count_processing: reoonData.count_processing ?? 0,
       count_duplicates_removed: reoonData.count_duplicates_removed ?? 0,
       progress_percentage: progress,
       completed_at: newStatus === "completed" ? new Date().toISOString() : null,
