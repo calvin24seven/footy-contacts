@@ -89,7 +89,24 @@ export default function EmailVerifyClient({
         setError(data.error ?? "Failed to start verification")
         return
       }
-      // Refresh page to show new task
+      // Immediately show the new task — don't wait on router.refresh() which can abort
+      setTasks((prev) => [
+        {
+          id: data.taskId,
+          reoon_task_id: String(data.reoonTaskId),
+          task_name: null,
+          status: data.status ?? "waiting",
+          count_submitted: data.countSubmitted,
+          count_processing: null,
+          progress_percentage: null,
+          results_applied: false,
+          created_at: new Date().toISOString(),
+          completed_at: null,
+          error_message: null,
+        },
+        ...prev,
+      ])
+      // Best-effort background refresh for eventual consistency
       router.refresh()
     } catch {
       setError("Network error starting verification")
