@@ -68,10 +68,15 @@ export default async function SearchPage({
   }
 
   // Filter: email status
-  if (params.email_status === "verified") {
-    query = query.eq("verified_status", "verified")
-  } else if (params.email_status === "unverified") {
-    query = query.neq("verified_status", "verified")
+  if (params.email_status) {
+    if (params.email_status === "has_email") {
+      query = query.not("email", "is", null)
+    } else if (params.email_status === "no_email") {
+      query = query.is("email", null)
+    } else {
+      // verified | catch_all | unknown | risky | unverified
+      query = query.eq("verified_status", params.email_status)
+    }
   }
 
   // Filter: category
@@ -219,6 +224,21 @@ function ContactCard({ contact }: { contact: Tables<"contacts"> }) {
             {contact.verified_status === "verified" && (
               <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded shrink-0">
                 ✓ Verified
+              </span>
+            )}
+            {contact.verified_status === "catch_all" && (
+              <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded shrink-0">
+                ~ Catch-all
+              </span>
+            )}
+            {contact.verified_status === "unknown" && (
+              <span className="text-xs bg-gray-500/20 text-gray-400 px-1.5 py-0.5 rounded shrink-0">
+                ? Unknown
+              </span>
+            )}
+            {contact.verified_status === "risky" && (
+              <span className="text-xs bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded shrink-0">
+                ⚠ Risky
               </span>
             )}
           </div>

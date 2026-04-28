@@ -124,7 +124,16 @@ export default function SearchFilters({ countries }: Props) {
         )}
         {activeEmailStatus && (
           <Chip
-            label={activeEmailStatus === "verified" ? "Verified email" : "Unverified"}
+            label={
+              activeEmailStatus === "has_email" ? "Has email" :
+              activeEmailStatus === "no_email" ? "No email" :
+              activeEmailStatus === "verified" ? "✓ Verified" :
+              activeEmailStatus === "catch_all" ? "~ Catch-all" :
+              activeEmailStatus === "unknown" ? "? Unknown" :
+              activeEmailStatus === "risky" ? "⚠ Risky" :
+              activeEmailStatus === "unverified" ? "Unverified" :
+              activeEmailStatus
+            }
             onRemove={() => removeFilter("email_status")}
           />
         )}
@@ -188,24 +197,23 @@ export default function SearchFilters({ countries }: Props) {
             </div>
           </div>
 
-          {/* Email status toggle */}
+          {/* Email status */}
           <div className="mb-5">
             <label className="text-xs text-gray-400 mb-1.5 block">Email status</label>
-            <div className="flex gap-2">
-              {(["", "verified", "unverified"] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setEmailStatus(s)}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                    emailStatus === s
-                      ? "border-gold bg-gold/10 text-gold"
-                      : "border-gray-600 text-gray-400 hover:border-gray-400"
-                  }`}
-                >
-                  {s === "" ? "Any" : s === "verified" ? "✓ Verified" : "Unverified"}
-                </button>
-              ))}
-            </div>
+            <select
+              value={emailStatus}
+              onChange={(e) => setEmailStatus(e.target.value)}
+              className="w-full px-3 py-2 bg-navy text-white text-sm rounded-lg border border-gray-600 focus:outline-none focus:border-gold"
+            >
+              <option value="">Any status</option>
+              <option value="has_email">Has email</option>
+              <option value="verified">✓ Verified</option>
+              <option value="catch_all">~ Catch-all (usable)</option>
+              <option value="unknown">? Unknown</option>
+              <option value="risky">⚠ Risky</option>
+              <option value="unverified">Unverified</option>
+              <option value="no_email">No email</option>
+            </select>
           </div>
 
           <div className="flex gap-3">
