@@ -1,22 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import SearchFilters from "./SearchFilters"
+import ContactRow, { type ContactListRow } from "./ContactRow"
 
 const PAGE_SIZE = 25
 
-// Only the columns ContactCard needs — avoids fetching 870-byte rows
+// Only the columns ContactRow needs — avoids fetching 870-byte full rows
 const CONTACT_COLUMNS = "id, name, role, organisation, category, country, city, verified_status" as const
-
-type ContactListRow = {
-  id: string
-  name: string
-  role: string | null
-  organisation: string | null
-  category: string | null
-  country: string | null
-  city: string | null
-  verified_status: string | null
-}
 
 // Escape ILIKE special characters to prevent SQL injection via pattern matching
 function escapeLike(s: string) {
@@ -152,9 +142,17 @@ export default async function SearchPage({
       {/* Results */}
       {hasResults ? (
         <>
-          <div className="grid gap-3 mb-6">
+          {/* Column headers */}
+          <div className="grid grid-cols-[2fr_2fr_2fr_auto] gap-4 px-4 mb-1">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Job title</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Email</span>
+          </div>
+
+          <div className="flex flex-col gap-1 mb-6">
             {(contacts ?? []).map((contact) => (
-              <ContactCard key={contact.id} contact={contact} />
+              <ContactRow key={contact.id} contact={contact as ContactListRow} />
             ))}
           </div>
 
@@ -190,76 +188,6 @@ export default async function SearchPage({
         </div>
       )}
     </div>
-  )
-}
-
-function ContactCard({ contact }: { contact: ContactListRow }) {
-  const location = [contact.city, contact.country].filter(Boolean).join(", ")
-
-  return (
-    <Link
-      href={`/app/contacts/${contact.id}`}
-      className="flex items-center justify-between bg-navy-light rounded-xl px-5 py-4 hover:bg-[#354460] transition-colors group"
-    >
-      <div className="flex items-center gap-4 min-w-0">
-        {/* Avatar */}
-        <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-sm shrink-0">
-          {contact.name[0]?.toUpperCase()}
-        </div>
-
-        <div className="min-w-0">
-          {/* Name + verified */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-white font-medium">{contact.name}</span>
-            {contact.verified_status === "verified" && (
-              <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded shrink-0">
-                ✓ Verified
-              </span>
-            )}
-            {contact.verified_status === "catch_all" && (
-              <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded shrink-0">
-                ~ Catch-all
-              </span>
-            )}
-            {contact.verified_status === "unknown" && (
-              <span className="text-xs bg-gray-500/20 text-gray-400 px-1.5 py-0.5 rounded shrink-0">
-                ? Unknown
-              </span>
-            )}
-            {contact.verified_status === "risky" && (
-              <span className="text-xs bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded shrink-0">
-                ⚠ Risky
-              </span>
-            )}
-          </div>
-          {/* Role · Organisation */}
-          <p className="text-sm text-gray-400 truncate">
-            {[contact.role, contact.organisation].filter(Boolean).join(" · ")}
-          </p>
-          {/* Location */}
-          {location && (
-            <p className="text-xs text-gray-500 mt-0.5">{location}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Right side: category + arrow */}
-      <div className="flex items-center gap-3 shrink-0 ml-4">
-        {contact.category && (
-          <span className="hidden sm:block text-xs bg-navy text-gray-400 px-2 py-1 rounded-full border border-gray-600">
-            {contact.category}
-          </span>
-        )}
-        <svg
-          className="w-4 h-4 text-gray-600 group-hover:text-gold transition-colors"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </div>
-    </Link>
   )
 }
 

@@ -50,13 +50,13 @@ export default function UnlockButton({ contactId }: { contactId: string }) {
     return (
       <div className="bg-navy-dark border border-yellow-800/40 rounded-xl p-6 text-center max-w-sm mx-auto">
         <div className="text-3xl mb-3">📊</div>
-        <h3 className="text-white font-bold text-lg mb-2">Monthly limit reached</h3>
+        <h3 className="text-white font-bold text-lg mb-2">Unlock limit reached</h3>
         <p className="text-gray-400 text-sm mb-2">
-          You&apos;ve used all {limitInfo.limit} unlocks on your{" "}
-          <span className="text-gold">{limitInfo.plan}</span> plan this month.
+          You&apos;ve used all {limitInfo.limit} lifetime unlocks on your{" "}
+          <span className="text-gold">{limitInfo.plan}</span> plan.
         </p>
         <p className="text-gray-500 text-xs mb-4">
-          Limits reset at the start of your next billing period, or upgrade for more.
+          Upgrade your plan to unlock more contacts.
         </p>
         <div className="space-y-2">
           <Link
@@ -116,7 +116,7 @@ export default function UnlockButton({ contactId }: { contactId: string }) {
         {loading ? "Unlocking…" : "🔓 Unlock contact"}
       </button>
       <p className="text-gray-500 text-xs mt-2">
-        Uses 1 unlock from your monthly allowance
+        Uses 1 unlock from your plan allowance
       </p>
     </div>
   )
