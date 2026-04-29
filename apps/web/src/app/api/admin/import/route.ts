@@ -197,6 +197,163 @@ function normalisePhone(text: string): string {
   return text.replace(/\s*(ext\.?|x)\s*\d+$/i, "").trim()
 }
 
+// ── Role-based automatic suppression ──────────────────────────────────────
+
+/**
+ * Roles that indicate a player/athlete, not an industry professional.
+ * Contacts with these roles are suppressed at import time (before any DB touch)
+ * and recorded with status="suppressed" + match_reason="Role suppressed: <role>".
+ *
+ * Rules:
+ *  - Exact full-role matches (lowercased, trimmed) → SUPPRESSED_ROLES_EXACT
+ *  - Substring/prefix matches → SUPPRESSED_ROLE_PATTERNS (regex, applied to full lowercased role)
+ *
+ * What is NOT suppressed:
+ *  - Coaches, managers, scouts, analysts, physios, doctors, kit staff
+ *  - Referees (may be industry contacts)
+ *  - Anyone with a compound title where the player term is incidental
+ *    e.g. "Head of Player Development" contains "player" but is a staff role
+ *    → patterns are anchored or use word boundaries to avoid false positives
+ */
+const SUPPRESSED_ROLES_EXACT = new Set([
+  // English — generic player terms
+  "footballer",
+  "professional footballer",
+  "semi-professional footballer",
+  "semi professional footballer",
+  "football player",
+  "soccer player",
+  "player",
+  "pro footballer",
+  "elite footballer",
+  "academy player",
+  "youth player",
+  "trialist",
+  "loan player",
+  "free agent",          // player-context free agent
+  // English — positional
+  "goalkeeper",
+  "defender",
+  "centre-back",
+  "center-back",
+  "centreback",
+  "full-back",
+  "fullback",
+  "left back",
+  "right back",
+  "midfielder",
+  "central midfielder",
+  "defensive midfielder",
+  "attacking midfielder",
+  "box-to-box midfielder",
+  "winger",
+  "left winger",
+  "right winger",
+  "forward",
+  "striker",
+  "centre-forward",
+  "center-forward",
+  "number 9",
+  "number 10",
+  // Italian — players
+  "calciatore",
+  "calciatore professionista",
+  "calciatore semiprofessionista",
+  "portiere",
+  "difensore",
+  "terzino",
+  "centrocampista",
+  "trequartista",
+  "attaccante",
+  "ala",
+  // Spanish / Portuguese — players
+  "futbolista",
+  "jugador de fútbol",
+  "jugador de futbol",
+  "jugador profesional de fútbol",
+  "jogador de futebol",
+  "jogador profissional de futebol",
+  "goleiro",
+  "guarda-redes",
+  "defensa",
+  "defensor",
+  "centrocampista",
+  "mediocampista",
+  "atacante",
+  "delantero",
+  "extremo",
+  "avançado",
+  // French — players
+  "joueur de football",
+  "joueur de foot",
+  "footballeur",
+  "footballeur professionnel",
+  "gardien",
+  "gardien de but",
+  "défenseur",
+  "milieu",
+  "milieu de terrain",
+  "attaquant",
+  "ailier",
+  // German — players
+  "fußballer",
+  "fussballer",
+  "profifußballer",
+  "profifussballler",
+  "fußballspieler",
+  "fussballspieler",
+  "torwart",
+  "torhüter",
+  "verteidiger",
+  "mittelfeldspieler",
+  "stürmer",
+  "linksaußen",
+  "rechtsaußen",
+  // Dutch — players
+  "voetballer",
+  "profvoetballer",
+  "professioneel voetballer",
+  "doelman",
+  "verdediger",
+  "middenvelder",
+  "aanvaller",
+  "spits",
+  // Other languages
+  "futbolcu",                   // Turkish
+  "piłkarz",                    // Polish
+  "calciatrice",                // Italian (female)
+  "joueuse de football",        // French (female)
+  "futbolista femenina",        // Spanish (female)
+])
+
+/**
+ * Pattern-based suppression for compound titles, positional variants, and
+ * terms that may appear with qualifiers ("professional", "retired", etc.).
+ * Each regex is tested against the lowercased, trimmed role string.
+ * Use word boundaries (\b) to avoid "player development manager" false-positives.
+ */
+const SUPPRESSED_ROLE_PATTERNS: RegExp[] = [
+  // "professional/semi-pro/retired footballer/player" with any qualifier prefix
+  /\b(professional|semi.?pro(fessional)?|retired|ex-?|former)\s+(footballer|football player|soccer player|player)\b/,
+  // Youth/academy with player suffix
+  /\b(youth|academy|reserve|u\d{1,2}|under.?\d{1,2})\s+player\b/,
+  // Pure positional roles (without any staff/coaching suffix)
+  // "goalkeeper" alone already in exact list; this catches "gk", "cb", "lb", "rb", "st", "cf" standalone
+  /^(gk|cb|lb|rb|cm|dm|am|cam|cdm|lw|rw|lm|rm|st|cf|ss|fw)$/,
+]
+
+/**
+ * Returns true if the role indicates a player who should be suppressed.
+ * Called AFTER cleanRole() so foreign-language titles have already been
+ * translated to English equivalents where possible.
+ */
+function isRoleSuppressed(role: string | undefined): boolean {
+  if (!role?.trim()) return false
+  const lower = role.toLowerCase().trim()
+  if (SUPPRESSED_ROLES_EXACT.has(lower)) return true
+  return SUPPRESSED_ROLE_PATTERNS.some((re) => re.test(lower))
+}
+
 // ── Role translation ────────────────────────────────────────────────────────
 
 /** Non-English job title translations (common in European football data). */
@@ -628,6 +785,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         rowInserts.push({
           csv_import_id: importId, row_number: rowNumber, raw_data: raw,
           status: "error", error_message: "Missing required field: name",
+        })
+        continue
+      }
+
+      // ── Step 1b: Role-based suppression (players / athletes) ─────────────
+      // Applied after cleanRole() translation so foreign titles match correctly.
+      // Suppressed here = never touches email suppression list or dedup logic.
+      const role = contact.role as string | undefined
+      if (isRoleSuppressed(role)) {
+        suppressedRows++
+        rowInserts.push({
+          csv_import_id: importId, row_number: rowNumber, raw_data: raw,
+          status: "suppressed", error_message: `Role suppressed: ${role}`,
         })
         continue
       }
