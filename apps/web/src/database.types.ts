@@ -330,7 +330,15 @@ export type Database = {
           role_category?: string | null
           organisation_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       organisations: {
         Row: {
