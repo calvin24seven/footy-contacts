@@ -66,38 +66,208 @@ const COLUMN_MAP: Record<string, string> = {
   // (always duplicated), company_* address/revenue/funding fields, seniority
 }
 
-// Basic non-English job title translations (common in European football data)
+// ── Formatting helpers ─────────────────────────────────────────────────────
+
+/**
+ * Known football/sports acronyms that should stay uppercase.
+ * Maps ALL-CAPS source → canonical display form (handles VFL→VfL etc).
+ */
+const ORG_ACRONYM_CANONICAL: Record<string, string> = {
+  FC: "FC", SC: "SC", BC: "BC", AC: "AC", AFC: "AFC", CF: "CF", IF: "IF",
+  BV: "BV", RB: "RB", PEC: "PEC", DC: "DC", QPR: "QPR", FK: "FK", SK: "SK",
+  BK: "BK", IK: "IK", GK: "GK", NK: "NK", HK: "HK", AS: "AS", SS: "SS",
+  US: "US", UD: "UD", SD: "SD", CD: "CD", AD: "AD", RCD: "RCD", CE: "CE",
+  SV: "SV", VFL: "VfL", VFB: "VfB", TSG: "TSG", FSV: "FSV", BSC: "BSC",
+  HSV: "HSV", MSV: "MSV", PSV: "PSV", LOSC: "LOSC", OGC: "OGC", RC: "RC",
+  GD: "GD", GFC: "GFC", MFC: "MFC", WFC: "WFC", SAF: "SAF", KAA: "KAA",
+  KRC: "KRC", KV: "KV", RSC: "RSC", RSCA: "RSCA",
+}
+
+/** Prepositions/articles that belong lowercase when they appear mid-name. */
+const ORG_SMALL_WORDS = new Set([
+  "de", "da", "di", "do", "del", "della", "delle", "degli",
+  "van", "von", "und", "le", "la", "les", "et", "du", "y", "e",
+  "of", "the", "and",
+])
+
+/**
+ * Normalise organisation/club name capitalisation.
+ * - ALL-CAPS words of 3+ chars → title-case unless a known acronym
+ * - 2-char ALL-CAPS words → kept as-is (AC, SC, FC etc. handled via acronym map)
+ * - Mixed-case words are left untouched (intentional formatting respected)
+ * - Prepositions/articles mid-name → forced lowercase
+ * - Collapses multiple spaces
+ */
+function normaliseOrganisation(text: string): string {
+  const words = text.replace(/\s+/g, " ").trim().split(" ")
+  return words
+    .map((word, i) => {
+      if (!word) return word
+      const upper = word.toUpperCase()
+      const lower = word.toLowerCase()
+
+      // All-caps word
+      if (word === upper && /[A-Z]/.test(word)) {
+        // Known acronym → use canonical form
+        if (ORG_ACRONYM_CANONICAL[upper]) return ORG_ACRONYM_CANONICAL[upper]
+        // Short (≤2 chars) unknown acronym → leave as-is
+        if (word.length <= 2) return word
+        // Mid-name small word → lowercase
+        if (i > 0 && ORG_SMALL_WORDS.has(lower)) return lower
+        // Regular word in all-caps → title-case
+        return word[0] + word.slice(1).toLowerCase()
+      }
+
+      // Mixed-case word: only fix prepositions/articles that were capitalised mid-name
+      if (i > 0 && ORG_SMALL_WORDS.has(lower) && word[0] === word[0].toUpperCase()) {
+        return lower
+      }
+
+      return word
+    })
+    .join(" ")
+}
+
+/**
+ * Normalise a person's full name.
+ * - ALL-CAPS → title-case with Mc/Mac/O' prefix awareness
+ * - all-lowercase → title-case
+ * - Already mixed-case → left untouched
+ * - Collapses extra whitespace
+ */
+function normaliseName(text: string): string {
+  const trimmed = text.replace(/\s+/g, " ").trim()
+  const upper = trimmed.toUpperCase()
+  const lower = trimmed.toLowerCase()
+  // If already mixed-case, don't touch it
+  if (trimmed !== upper && trimmed !== lower) return trimmed
+
+  // Apply title case with prefix handling
+  return trimmed
+    .split(" ")
+    .map((word) => {
+      if (!word) return word
+      // Handle Mc/Mac prefixes: "mcdonald" → "McDonald"
+      const mcMatch = word.toLowerCase().match(/^(mc|mac)(.+)/)
+      if (mcMatch) {
+        return mcMatch[1][0].toUpperCase() + mcMatch[1].slice(1).toLowerCase() +
+          mcMatch[2][0].toUpperCase() + mcMatch[2].slice(1).toLowerCase()
+      }
+      // Handle O' prefix: "o'brien" → "O'Brien"
+      const oMatch = word.toLowerCase().match(/^(o')(.+)/)
+      if (oMatch) {
+        return "O'" + oMatch[2][0].toUpperCase() + oMatch[2].slice(1).toLowerCase()
+      }
+      return word[0].toUpperCase() + word.slice(1).toLowerCase()
+    })
+    .join(" ")
+}
+
+/**
+ * Known country name aliases → canonical English name.
+ * Handles variant spellings produced by different data sources.
+ */
+const COUNTRY_ALIASES: Record<string, string> = {
+  "tuerkiye": "Turkey",
+  "türkiye": "Turkey",
+  "uk": "United Kingdom",
+  "great britain": "United Kingdom",
+  "england": "United Kingdom",
+  "usa": "United States",
+  "united states of america": "United States",
+  "u.s.a.": "United States",
+  "u.s.": "United States",
+  "korea, republic of": "South Korea",
+  "republic of ireland": "Ireland",
+  "côte d'ivoire": "Cote d'Ivoire",
+  "ivory coast": "Cote d'Ivoire",
+}
+
+function normaliseCountry(text: string): string {
+  const canonical = COUNTRY_ALIASES[text.toLowerCase().trim()]
+  return canonical ?? text.trim()
+}
+
+/**
+ * Strip telephone extension suffixes — these indicate a company switchboard,
+ * not a direct line, and the extension is useless without an internal directory.
+ * "+44 800 169 1863 ext 6300" → "+44 800 169 1863"
+ */
+function normalisePhone(text: string): string {
+  return text.replace(/\s*(ext\.?|x)\s*\d+$/i, "").trim()
+}
+
+// ── Role translation ────────────────────────────────────────────────────────
+
+/** Non-English job title translations (common in European football data). */
 const ROLE_TRANSLATIONS: Record<string, string> = {
+  // Italian
   "operaio": "Operational Staff",
   "impiegato": "Administrative Staff",
-  "responsable": "Manager",
   "responsabile": "Manager",
-  "directeur": "Director",
-  "directeur général": "General Director",
-  "directeur sportif": "Sporting Director",
-  "entraîneur": "Coach",
-  "entrenador": "Coach",
-  "preparador físico": "Fitness Coach",
-  "director deportivo": "Sporting Director",
-  "director general": "General Director",
-  "secretario": "Secretary",
-  "presidente": "President",
-  "vicepresidente": "Vice President",
-  "geschäftsführer": "Managing Director",
-  "trainer": "Coach",
-  "cheftrainer": "Head Coach",
-  "sportdirektor": "Sporting Director",
   "direttore sportivo": "Sporting Director",
   "allenatore": "Coach",
   "preparatore atletico": "Fitness Coach",
   "addetto stampa": "Press Officer",
+  "fisioterapista": "Physiotherapist",
+  "medico sportivo": "Sports Doctor",
+  "osservatore": "Scout",
+  "calciatore": "Footballer",
+  "calciatore professionista": "Professional Footballer",
+  "portiere": "Goalkeeper",
+  "difensore": "Defender",
+  "centrocampista": "Midfielder",
+  "attaccante": "Forward",
+  // Spanish
+  "responsable": "Manager",
+  "directeur": "Director",
+  "entrenador": "Coach",
+  "preparador físico": "Fitness Coach",
+  "director deportivo": "Sporting Director",
+  "director general": "General Director",
+  "director técnico": "Technical Director",
+  "secretario": "Secretary",
+  "presidente": "President",
+  "vicepresidente": "Vice President",
+  "fisioterapeuta": "Physiotherapist",
+  "jugador de fútbol": "Footballer",
+  "nutricionista": "Nutritionist",
+  "preparador fisico": "Fitness Coach",
+  "coach de fútbol": "Football Coach",
+  // French
+  "directeur général": "General Director",
+  "directeur sportif": "Sporting Director",
+  "entraîneur": "Coach",
+  "préparateur physique": "Fitness Coach",
+  "joueur de football": "Footballer",
+  "coach de football": "Football Coach",
+  // German
+  "geschäftsführer": "Managing Director",
+  "trainer": "Coach",
+  "cheftrainer": "Head Coach",
+  "sportdirektor": "Sporting Director",
+  "physiotherapeut": "Physiotherapist",
+  // Dutch
+  "voetballer": "Footballer",
+  "professioneel voetballer": "Professional Footballer",
 }
 
 function cleanRole(role: string): string {
   const lower = role.toLowerCase().trim()
+  // Exact match
   if (ROLE_TRANSLATIONS[lower]) return ROLE_TRANSLATIONS[lower]
+  // Prefix match (e.g. "directeur sportif adjoint")
   for (const [key, val] of Object.entries(ROLE_TRANSLATIONS)) {
     if (lower.startsWith(key + " ")) return val + role.slice(key.length)
+  }
+  // Apply title-case if the role is all-caps or all-lowercase after translation
+  const upper = role.toUpperCase()
+  const lowerRole = role.toLowerCase()
+  if (role === upper || role === lowerRole) {
+    return role
+      .split(" ")
+      .map((w) => w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w)
+      .join(" ")
   }
   return role
 }
@@ -157,7 +327,8 @@ function buildContact(
   values: string[]
 ): Record<string, unknown> {
   const contact: Record<string, unknown> = {
-    visibility_status: "published",
+    visibility_status: "hidden",
+    import_status: "draft",
     suppression_status: "active",
     source: "csv_import",
     verified_status: "unverified",
@@ -211,7 +382,10 @@ function buildContact(
         // Skip placeholder values from Apollo
         const lower = val.toLowerCase()
         if (lower !== "unavailable" && lower !== "n/a" && lower !== "none") {
-          contact.email = val.toLowerCase()
+          // Basic syntax guard — reject malformed addresses before Reoon submission
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(lower)) {
+            contact.email = lower
+          }
         }
         break
       }
@@ -241,9 +415,54 @@ function buildContact(
     contact.linkedin_url = cleaned || null
   }
 
-  // Translate non-English job titles
+  // ── Field normalisation ────────────────────────────────────────────────
+
+  // Person name: normalise casing (ALL-CAPS / all-lower → title case)
+  if (typeof contact.name === "string") {
+    contact.name = normaliseName(contact.name)
+  }
+
+  // Organisation: fix errant all-caps words, lowercase prepositions mid-name
+  if (typeof contact.organisation === "string") {
+    contact.organisation = normaliseOrganisation(contact.organisation)
+  }
+
+  // Country: resolve known aliases ("Tuerkiye" → "Turkey" etc.)
+  if (typeof contact.country === "string") {
+    contact.country = normaliseCountry(contact.country)
+  }
+
+  // Phone: strip "ext XXXX" company switchboard suffixes
+  if (typeof contact.phone === "string") {
+    contact.phone = normalisePhone(contact.phone)
+  }
+
+  // Translate non-English job titles, then normalise casing
   if (typeof contact.role === "string") {
     contact.role = cleanRole(contact.role)
+  }
+
+  // ── Data confidence ────────────────────────────────────────────────────
+
+  // LinkedIn-obfuscated names ("Dominic M.", "Lea F.") — last name is a single
+  // initial with a dot, meaning the profile was privacy-protected at scrape time.
+  // Flag with a reduced confidence score so these can be filtered/reviewed.
+  if (
+    typeof contact.name === "string" &&
+    /\b[A-Z]\.$/.test(contact.name.trim())
+  ) {
+    contact.data_confidence_score = 30
+  }
+
+  // ── Compute has_* contact-method flags ────────────────────────────────
+  contact.has_email = typeof contact.email === "string"
+  contact.has_phone = typeof contact.phone === "string"
+  contact.has_linkedin = typeof contact.linkedin_url === "string"
+
+  // Contacts without an email have nothing to verify — publish immediately
+  if (!contact.email) {
+    contact.import_status = "imported"
+    contact.visibility_status = "published"
   }
 
   return contact

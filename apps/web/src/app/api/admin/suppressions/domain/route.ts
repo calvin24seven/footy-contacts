@@ -52,10 +52,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       batch.map((email) => ({ email, reason, added_by: user.id })),
       { onConflict: "email", ignoreDuplicates: true }
     )
-    // Clear the email from contacts
+    // Mark contacts as rejected — keep email for audit trail + suppression reference
     await supabase
       .from("contacts")
-      .update({ email: null, verified_status: "unverified" })
+      .update({
+        verified_status: "invalid",
+        import_status: "rejected",
+        visibility_status: "hidden",
+        suppression_status: "suppressed",
+      })
       .in("email", batch)
   }
 

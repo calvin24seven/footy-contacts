@@ -258,6 +258,7 @@ export type Database = {
           has_email: boolean
           has_phone: boolean
           has_linkedin: boolean
+          import_status: string
           role_category: string | null
           organisation_id: string | null
         }
@@ -270,6 +271,7 @@ export type Database = {
           data_confidence_score?: number | null
           email?: string | null
           id?: string
+          import_status?: string
           instagram_url?: string | null
           last_verified_at?: string | null
           level?: string | null
@@ -303,6 +305,7 @@ export type Database = {
           data_confidence_score?: number | null
           email?: string | null
           id?: string
+          import_status?: string
           instagram_url?: string | null
           last_verified_at?: string | null
           level?: string | null

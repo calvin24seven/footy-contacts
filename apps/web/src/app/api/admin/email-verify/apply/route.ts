@@ -69,19 +69,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "No results returned from Reoon" }, { status: 400 })
   }
 
-  // Map Reoon status → our DB verified_status value.
-  // 'safe'      → 'verified'   (confirmed deliverable)
-  // 'catch_all' → 'catch_all'  (domain accepts all, can't confirm mailbox)
-  // 'unknown'   → 'unknown'    (server timeout / greylisted)
-  // 'risky'     → 'risky'      (role address, spam-trap risk, etc.)
-  // 'invalid'   → clear email, add to suppressions
-  type VerifiedStatus = "verified" | "catch_all" | "unknown" | "risky" | "unverified"
+  // Map Reoon result status → 3-axis contact state.
+  // safe      → verified  + imported + published   (confirmed deliverable)
+  // catch_all → catch_all + imported + published   (domain accepts all; still sendable)
+  // risky     → risky     + imported + hidden      (role address / spam-trap risk)
+  // unknown   → unknown   + draft    + hidden      (server timeout / greylisted — stay in draft)
+  // invalid   → invalid   + rejected + hidden      (keep email for audit, suppress, never publish)
+  const STATUS_UPDATES: Record<string, { verified_status: string; import_status: string; visibility_status: string }> = {
+    verified:  { verified_status: "verified",  import_status: "imported", visibility_status: "published" },
+    catch_all: { verified_status: "catch_all", import_status: "imported", visibility_status: "published" },
+    risky:     { verified_status: "risky",     import_status: "imported", visibility_status: "hidden"    },
+    unknown:   { verified_status: "unknown",   import_status: "draft",    visibility_status: "hidden"    },
+  }
 
-  const statusBuckets = new Map<VerifiedStatus, string[]>([
-    ["verified", []],
+  const statusBuckets = new Map<string, string[]>([
+    ["verified",  []],
     ["catch_all", []],
-    ["unknown", []],
-    ["risky", []],
+    ["risky",     []],
+    ["unknown",   []],
   ])
   const invalidEmails: string[] = []
 
@@ -97,7 +102,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     } else if (r.status === "risky") {
       statusBuckets.get("risky")!.push(email)
     } else {
-      // 'invalid' or anything else with bad syntax/deliverability → clear the email
+      // 'invalid' or anything else → reject
       invalidEmails.push(email)
     }
   }
@@ -107,17 +112,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let unverifiedCount = 0
   let clearedCount = 0
 
-  // Update each status bucket in batches
+  // Update each status bucket — full 3-axis state transition per Reoon result
   const BATCH = 500
-  for (const [dbStatus, emails] of statusBuckets.entries()) {
+  for (const [bucketKey, emails] of statusBuckets.entries()) {
+    const update = STATUS_UPDATES[bucketKey]
     for (let i = 0; i < emails.length; i += BATCH) {
       const batch = emails.slice(i, i + BATCH)
       const { data } = await supabase
         .from("contacts")
-        .update({ verified_status: dbStatus, last_verified_at: now, cron_queued_at: null })
+        .update({ ...update, last_verified_at: now, cron_queued_at: null })
         .in("email", batch)
         .select("id")
-      if (dbStatus === "verified") {
+      if (bucketKey === "verified") {
         verifiedCount += (data?.length ?? 0)
       } else {
         unverifiedCount += (data?.length ?? 0)
@@ -125,12 +131,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // Clear truly invalid emails and add them to the suppression blacklist
+  // Invalid emails — rejected state, keep email for audit trail, add to suppression list
   for (let i = 0; i < invalidEmails.length; i += BATCH) {
     const batch = invalidEmails.slice(i, i + BATCH)
     const { data } = await supabase
       .from("contacts")
-      .update({ email: null, verified_status: "unverified", suppression_status: "suppressed", last_verified_at: now, cron_queued_at: null })
+      .update({
+        verified_status: "invalid",
+        import_status: "rejected",
+        visibility_status: "hidden",
+        suppression_status: "suppressed",
+        last_verified_at: now,
+        cron_queued_at: null,
+      })
       .in("email", batch)
       .select("id")
     clearedCount += (data?.length ?? 0)

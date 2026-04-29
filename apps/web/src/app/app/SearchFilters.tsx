@@ -78,10 +78,10 @@ export default function SearchFilters({ countries, currentSort = "name_asc" }: P
   // Items shown in the active-filter summary at top of drawer (staged, not applied yet)
   type StagedItem = { key: string; value: string; display: string; variant: "include" | "exclude" }
   const stagedItems: StagedItem[] = [
-    ...roleValues.map(v   => ({ key: "role",         value: v, display: v,                          variant: "include" as const })),
-    ...roleExcludes.map(v => ({ key: "role_exclude", value: v, display: `≠ ${v}`,                   variant: "exclude" as const })),
-    ...orgValues.map(v    => ({ key: "org",          value: v, display: v,                          variant: "include" as const })),
-    ...orgExcludes.map(v  => ({ key: "org_exclude",  value: v, display: `≠ ${v}`,                   variant: "exclude" as const })),
+    ...roleValues.map(v   => ({ key: "role",         value: v, display: v, variant: "include" as const })),
+    ...roleExcludes.map(v => ({ key: "role_exclude", value: v, display: v, variant: "exclude" as const })),
+    ...orgValues.map(v    => ({ key: "org",          value: v, display: v, variant: "include" as const })),
+    ...orgExcludes.map(v  => ({ key: "org_exclude",  value: v, display: v, variant: "exclude" as const })),
     ...(city        ? [{ key: "city",         value: city,        display: `City: ${city}`,         variant: "include" as const }] : []),
     ...(country     ? [{ key: "country",      value: country,     display: country,                 variant: "include" as const }] : []),
     ...(emailStatus ? [{ key: "email_status", value: emailStatus, display: emailStatusLabel(emailStatus), variant: "include" as const }] : []),
@@ -228,11 +228,11 @@ export default function SearchFilters({ countries, currentSort = "name_asc" }: P
 
         {/* Active multi-value role chips */}
         {activeRole.map(v => <Chip key={`r-${v}`} label={v} onRemove={() => removeFilterValue("role", v)} />)}
-        {activeRoleExclude.map(v => <Chip key={`re-${v}`} label={`≠ ${v}`} variant="exclude" onRemove={() => removeFilterValue("role_exclude", v)} />)}
+        {activeRoleExclude.map(v => <Chip key={`re-${v}`} label={v} variant="exclude" onRemove={() => removeFilterValue("role_exclude", v)} />)}
 
         {/* Active multi-value org chips */}
         {activeOrg.map(v => <Chip key={`o-${v}`} label={v} onRemove={() => removeFilterValue("org", v)} />)}
-        {activeOrgExclude.map(v => <Chip key={`oe-${v}`} label={`≠ ${v}`} variant="exclude" onRemove={() => removeFilterValue("org_exclude", v)} />)}
+        {activeOrgExclude.map(v => <Chip key={`oe-${v}`} label={v} variant="exclude" onRemove={() => removeFilterValue("org_exclude", v)} />)}
 
         {/* Single-value chips */}
         {activeCity    && <Chip label={`City: ${activeCity}`} onRemove={() => removeSimpleFilter("city")} />}
@@ -265,166 +265,215 @@ export default function SearchFilters({ countries, currentSort = "name_asc" }: P
 
       {/* ── Advanced filter drawer ─────────────────────────────────────────── */}
       {open && (
-        <div className="mt-3 p-5 bg-navy-light rounded-xl border border-gray-600/50">
+        <>
+          {/* Mobile backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/60 md:hidden"
+            onClick={() => setOpen(false)}
+            aria-hidden
+          />
 
-          {/* Active filter summary at top of drawer */}
-          {stagedItems.length > 0 && (
-            <div className="mb-5 pb-4 border-b border-gray-700/50">
-              <p className="text-[11px] text-gray-500 uppercase tracking-wide mb-2">Active filters</p>
-              <div className="flex flex-wrap gap-1.5">
-                {stagedItems.map(item => (
-                  <Chip
-                    key={`${item.key}-${item.value}`}
-                    label={item.display}
-                    variant={item.variant}
-                    onRemove={() => removeStagedItem(item.key, item.value)}
-                  />
-                ))}
-              </div>
+          {/* Drawer
+              Mobile  : fixed full-screen overlay, own scroll, sticky Apply bar
+              Desktop : inline card below the filter row */}
+          <div className="
+            fixed inset-0 z-50 flex flex-col bg-navy overflow-hidden
+            md:relative md:inset-auto md:z-auto md:flex-none md:overflow-visible
+            md:mt-3 md:rounded-xl md:border md:border-gray-600/50 md:bg-navy-light
+          ">
+            {/* Mobile-only header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 shrink-0 md:hidden">
+              <span className="text-sm font-semibold text-white">Filters</span>
+              <button
+                onClick={() => setOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-navy-light transition-colors text-gray-400 hover:text-white cursor-pointer"
+                aria-label="Close filters"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-          )}
 
-          <div className="space-y-5">
-            {/* Role includes + excludes */}
-            <div>
-              <ChipInput
-                label="Role includes"
-                values={roleValues}
-                onAdd={v => setRoleValues(p => [...p, v])}
-                onRemove={v => setRoleValues(p => p.filter(x => x !== v))}
-                placeholder="e.g. Head Coach, Scout… press Enter or Add"
-              />
-              {!showRoleExclude ? (
-                <button
-                  type="button"
-                  onClick={() => setShowRoleExclude(true)}
-                  className="mt-2 text-xs text-gray-600 hover:text-gray-400 transition-colors cursor-pointer flex items-center gap-1"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Exclude roles
-                </button>
-              ) : (
-                <div className="mt-3">
-                  <ChipInput
-                    label="Exclude roles"
-                    variant="exclude"
-                    values={roleExcludes}
-                    onAdd={v => setRoleExcludes(p => [...p, v])}
-                    onRemove={v => setRoleExcludes(p => p.filter(x => x !== v))}
-                    placeholder="e.g. Intern, Volunteer…"
-                  />
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 pb-6 md:p-5 space-y-5">
+
+              {/* Active filter summary */}
+              {stagedItems.length > 0 && (
+                <div className="pb-4 border-b border-gray-700/50">
+                  <p className="text-[11px] text-gray-500 uppercase tracking-wide mb-2">Active filters</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {stagedItems.map(item => (
+                      <Chip
+                        key={`${item.key}-${item.value}`}
+                        label={item.display}
+                        variant={item.variant}
+                        onRemove={() => removeStagedItem(item.key, item.value)}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Organisation includes + excludes */}
-            <div>
-              <ChipInput
-                label="Organisation includes"
-                values={orgValues}
-                onAdd={v => setOrgValues(p => [...p, v])}
-                onRemove={v => setOrgValues(p => p.filter(x => x !== v))}
-                placeholder="e.g. Arsenal, FIFA… press Enter or Add"
-              />
-              {!showOrgExclude ? (
-                <button
-                  type="button"
-                  onClick={() => setShowOrgExclude(true)}
-                  className="mt-2 text-xs text-gray-600 hover:text-gray-400 transition-colors cursor-pointer flex items-center gap-1"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Exclude organisations
-                </button>
-              ) : (
-                <div className="mt-3">
-                  <ChipInput
-                    label="Exclude organisations"
-                    variant="exclude"
-                    values={orgExcludes}
-                    onAdd={v => setOrgExcludes(p => [...p, v])}
-                    onRemove={v => setOrgExcludes(p => p.filter(x => x !== v))}
-                    placeholder="e.g. Manchester City…"
-                  />
+              {/* Role includes + excludes */}
+              <div>
+                <ChipInput
+                  label="Role includes"
+                  values={roleValues}
+                  onAdd={v => setRoleValues(p => [...p, v])}
+                  onRemove={v => setRoleValues(p => p.filter(x => x !== v))}
+                  placeholder="e.g. Head Coach, Scout… press Enter or Add"
+                />
+                {!showRoleExclude ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowRoleExclude(true)}
+                    className="mt-2 text-xs text-gray-600 hover:text-gray-400 transition-colors cursor-pointer flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Exclude roles
+                  </button>
+                ) : (
+                  <div className="mt-3">
+                    <ChipInput
+                      label="Exclude roles"
+                      variant="exclude"
+                      values={roleExcludes}
+                      onAdd={v => setRoleExcludes(p => [...p, v])}
+                      onRemove={v => setRoleExcludes(p => p.filter(x => x !== v))}
+                      placeholder="e.g. Intern, Volunteer…"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Organisation includes + excludes */}
+              <div>
+                <ChipInput
+                  label="Organisation includes"
+                  values={orgValues}
+                  onAdd={v => setOrgValues(p => [...p, v])}
+                  onRemove={v => setOrgValues(p => p.filter(x => x !== v))}
+                  placeholder="e.g. Arsenal, FIFA… press Enter or Add"
+                />
+                {!showOrgExclude ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowOrgExclude(true)}
+                    className="mt-2 text-xs text-gray-600 hover:text-gray-400 transition-colors cursor-pointer flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Exclude organisations
+                  </button>
+                ) : (
+                  <div className="mt-3">
+                    <ChipInput
+                      label="Exclude organisations"
+                      variant="exclude"
+                      values={orgExcludes}
+                      onAdd={v => setOrgExcludes(p => [...p, v])}
+                      onRemove={v => setOrgExcludes(p => p.filter(x => x !== v))}
+                      placeholder="e.g. Manchester City…"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* City + Country */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FilterInput
+                  label="City"
+                  value={city}
+                  onChange={setCity}
+                  placeholder="e.g. London, Madrid…"
+                  onEnter={applyFilters}
+                />
+                <div>
+                  <label className="text-xs text-gray-400 mb-1.5 block">Country</label>
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="w-full px-3 py-2 bg-navy text-white text-sm rounded-lg border border-gray-600 focus:outline-none focus:border-gold"
+                    size={1}
+                  >
+                    <option value="">Any country</option>
+                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
-              )}
+              </div>
+
+              {/* Category + Email status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs text-gray-400 mb-1.5 block">Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full px-3 py-2 bg-navy text-white text-sm rounded-lg border border-gray-600 focus:outline-none focus:border-gold"
+                  >
+                    <option value="">All categories</option>
+                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1.5 block">Email status</label>
+                  <select
+                    value={emailStatus}
+                    onChange={(e) => setEmailStatus(e.target.value)}
+                    className="w-full px-3 py-2 bg-navy text-white text-sm rounded-lg border border-gray-600 focus:outline-none focus:border-gold"
+                  >
+                    <option value="">Any status</option>
+                    <option value="has_email">Has email</option>
+                    <option value="verified">✓ Verified</option>
+                    <option value="catch_all">~ Catch-all (usable)</option>
+                    <option value="unknown">? Unknown</option>
+                    <option value="risky">⚠ Risky</option>
+                    <option value="unverified">Unverified</option>
+                    <option value="no_email">No email</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Desktop action buttons (inline) */}
+              <div className="hidden md:flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-700/50">
+                <button
+                  onClick={applyFilters}
+                  disabled={isPending}
+                  className="flex-1 sm:flex-none px-6 py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                >
+                  {isPending ? "Applying…" : "Apply filters"}
+                </button>
+                <button onClick={clearAll} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors cursor-pointer">
+                  Clear all
+                </button>
+                <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-white transition-colors sm:ml-auto cursor-pointer">
+                  Cancel
+                </button>
+              </div>
             </div>
 
-            {/* City + Country */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FilterInput
-                label="City"
-                value={city}
-                onChange={setCity}
-                placeholder="e.g. London, Madrid…"
-                onEnter={applyFilters}
-              />
-              <div>
-                <label className="text-xs text-gray-400 mb-1.5 block">Country</label>
-                <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full px-3 py-2 bg-navy text-white text-sm rounded-lg border border-gray-600 focus:outline-none focus:border-gold"
-                >
-                  <option value="">Any country</option>
-                  {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-
-            {/* Category + Email status */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs text-gray-400 mb-1.5 block">Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-navy text-white text-sm rounded-lg border border-gray-600 focus:outline-none focus:border-gold"
-                >
-                  <option value="">All categories</option>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 mb-1.5 block">Email status</label>
-                <select
-                  value={emailStatus}
-                  onChange={(e) => setEmailStatus(e.target.value)}
-                  className="w-full px-3 py-2 bg-navy text-white text-sm rounded-lg border border-gray-600 focus:outline-none focus:border-gold"
-                >
-                  <option value="">Any status</option>
-                  <option value="has_email">Has email</option>
-                  <option value="verified">✓ Verified</option>
-                  <option value="catch_all">~ Catch-all (usable)</option>
-                  <option value="unknown">? Unknown</option>
-                  <option value="risky">⚠ Risky</option>
-                  <option value="unverified">Unverified</option>
-                  <option value="no_email">No email</option>
-                </select>
-              </div>
+            {/* Mobile sticky action bar */}
+            <div className="md:hidden shrink-0 px-4 py-3 border-t border-gray-700 flex gap-2 bg-navy">
+              <button
+                onClick={applyFilters}
+                disabled={isPending}
+                className="flex-1 px-4 py-3 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-not-allowed"
+              >
+                {isPending ? "Applying…" : "Apply filters"}
+              </button>
+              <button
+                onClick={clearAll}
+                className="px-4 py-3 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-colors cursor-pointer"
+              >
+                Clear
+              </button>
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-5 pt-4 border-t border-gray-700/50">
-            <button
-              onClick={applyFilters}
-              disabled={isPending}
-              className="flex-1 sm:flex-none px-6 py-2.5 sm:py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-not-allowed"
-            >
-              {isPending ? "Applying…" : "Apply filters"}
-            </button>
-            <button onClick={clearAll} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors cursor-pointer">
-              Clear all
-            </button>
-            <button onClick={() => setOpen(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-white transition-colors sm:ml-auto cursor-pointer">
-              Cancel
-            </button>
-          </div>
-        </div>
+        </>
       )}
     </div>
   )

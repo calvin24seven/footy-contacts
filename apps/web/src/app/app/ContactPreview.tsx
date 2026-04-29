@@ -61,11 +61,11 @@ export default function ContactPreview({ contact, onClose, desktopMode = false }
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/60 z-30"
+        className="fixed inset-0 bg-black/60 z-40"
         onClick={onClose}
         aria-hidden
       />
-      <div className="fixed right-0 top-0 bottom-0 z-40 w-full max-w-[min(420px,calc(100vw-2rem))] flex flex-col bg-[#0d1a2e] border-l border-navy-light/50 shadow-2xl">
+      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[min(420px,calc(100vw-2rem))] flex flex-col bg-[#0d1a2e] border-l border-navy-light/50 shadow-2xl">
         <PreviewHeader onClose={onClose} />
         <PreviewBody
           contact={contact}

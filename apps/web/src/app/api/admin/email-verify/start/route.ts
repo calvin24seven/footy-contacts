@@ -40,6 +40,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       .from("contacts")
       .select("email")
       .not("email", "is", null)
+      .eq("suppression_status", "active")
+      .neq("verified_status", "invalid")
       .order("id")
       .range(from, to)
 
