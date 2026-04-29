@@ -759,6 +759,7 @@ export type Database = {
           city: string | null
           bonus_unlock_credits: number
           country: string | null
+          lifetime_unlocks_used: number
           created_at: string
           current_club: string | null
           email: string | null
@@ -798,6 +799,7 @@ export type Database = {
           highlight_video_url?: string | null
           id: string
           is_suspended?: boolean
+          lifetime_unlocks_used?: number
           last_name?: string | null
           onboarding_completed?: boolean | null
           onboarding_last_updated?: string | null
@@ -827,6 +829,7 @@ export type Database = {
           highlight_video_url?: string | null
           id?: string
           is_suspended?: boolean
+          lifetime_unlocks_used?: number
           last_name?: string | null
           onboarding_completed?: boolean | null
           onboarding_last_updated?: string | null

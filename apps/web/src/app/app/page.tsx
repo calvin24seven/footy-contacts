@@ -33,7 +33,7 @@ export default async function SearchPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
-  const page = Math.max(1, parseInt(params.page ?? "1", 10))
+  const page = Math.min(500, Math.max(1, parseInt(params.page ?? "1", 10)))
   const offset = (page - 1) * PAGE_SIZE
 
   const supabase = await createClient()

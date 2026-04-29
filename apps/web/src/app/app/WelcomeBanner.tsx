@@ -7,20 +7,22 @@ const STORAGE_KEY = "fc_welcome_v1_dismissed"
 
 export default function WelcomeBanner() {
   const [visible, setVisible] = useState(false)
-  const [usedFreeUnlock, setUsedFreeUnlock] = useState(false)
+  const [unlockStats, setUnlockStats] = useState<{ used: number; limit: number; totalRemaining: number } | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) return
     setVisible(true)
 
-    // Check if free unlock has been used
+    // Load unlock stats (server-authoritative)
     fetch("/api/account/unlocks")
       .then((r) => r.json())
-      .then((d: { used?: number; limit?: number }) => {
-        if (typeof d.used === "number" && d.used > 0) {
-          setUsedFreeUnlock(true)
-        }
+      .then((d: { used?: number; limit?: number; totalRemaining?: number }) => {
+        setUnlockStats({
+          used: d.used ?? 0,
+          limit: d.limit ?? 3,
+          totalRemaining: d.totalRemaining ?? 0,
+        })
       })
       .catch(() => undefined)
   }, [])
@@ -32,7 +34,10 @@ export default function WelcomeBanner() {
 
   if (!visible) return null
 
-  if (usedFreeUnlock) {
+  const allFreeUsed = unlockStats !== null && unlockStats.used >= unlockStats.limit && unlockStats.totalRemaining <= 0
+  const someUsed = unlockStats !== null && unlockStats.used > 0
+
+  if (someUsed) {
     return (
       <>
         {showUpgrade && <UpgradeModal context="upgrade" onClose={() => setShowUpgrade(false)} />}
@@ -44,8 +49,11 @@ export default function WelcomeBanner() {
             </svg>
           </div>
           <p className="text-sm text-gray-300 truncate">
-            <span className="font-semibold text-white">Free unlock used.</span>{" "}
-            Upgrade to Pro for 150 unlocks / month.
+            {allFreeUsed ? (
+              <><span className="font-semibold text-white">3 free unlocks used.</span>{" "}Upgrade to Pro for 150 unlocks / month.</>
+            ) : (
+              <><span className="font-semibold text-white">{unlockStats?.used ?? 0} of 3 free unlocks used.</span>{" "}{unlockStats?.totalRemaining ?? 0} remaining — upgrade to Pro for 150/month.</>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
