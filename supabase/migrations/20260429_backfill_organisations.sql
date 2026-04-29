@@ -9,19 +9,15 @@
 
 -- normalised_name is a generated column: lower(trim(name)) — do NOT insert into it.
 -- Most-frequent (organisation, website) pair per normalised group wins.
-INSERT INTO organisations (name, website, logo_url)
+-- domain is extracted from website; logo_url is NULL (derived at render time via Google favicons).
+INSERT INTO organisations (name, website, domain)
 SELECT DISTINCT ON (norm_name)
   organisation AS name,
   website,
-  CASE
-    WHEN website IS NOT NULL THEN
-      'https://logo.clearbit.com/' ||
-      REGEXP_REPLACE(
-        REGEXP_REPLACE(website, '^https?://(www\.)?', ''),
-        '/.*$', ''
-      )
-    ELSE NULL
-  END AS logo_url
+  REGEXP_REPLACE(
+    REGEXP_REPLACE(website, '^https?://(www\.)?', ''),
+    '/.*$', ''
+  ) AS domain
 FROM (
   SELECT
     organisation,

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import UnlockButton from "./UnlockButton"
 import SaveToListButton from "@/components/SaveToListButton"
+import { getOrgLogoUrl } from "@/lib/orgLogo"
 
 export default async function ContactPage({
   params,
@@ -13,14 +14,14 @@ export default async function ContactPage({
 
   const { data: contact } = await supabase
     .from("contacts")
-    .select("*, organisations(logo_url)")
+    .select("*, organisations(logo_url, domain)")
     .eq("id", id)
     .eq("visibility_status", "published")
     .single()
 
   if (!contact) notFound()
 
-  const orgLogoUrl = (contact.organisations as { logo_url: string | null } | null)?.logo_url ?? null
+  const orgLogoUrl = getOrgLogoUrl(contact.organisations as { logo_url: string | null; domain: string | null } | null)
 
   const { data: { user } } = await supabase.auth.getUser()
 

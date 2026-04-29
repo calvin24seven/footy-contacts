@@ -776,7 +776,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         return {
           name,
           website: website ?? null,
-          logo_url: domain ? `https://logo.clearbit.com/${domain}` : null,
+          domain: domain ?? null,
+          // logo_url is NULL — admin can upload a manual override;
+          // automatic logo is derived from domain at render time
         }
       })
       await supabase.from("organisations").upsert(orgRows, {

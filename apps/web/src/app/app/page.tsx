@@ -5,11 +5,12 @@ import SearchBar from "./SearchBar"
 import ContactsList from "./ContactsList"
 import WelcomeBanner from "./WelcomeBanner"
 import { type ContactListRow } from "./ContactRow"
+import { getOrgLogoUrl } from "@/lib/orgLogo"
 
 const PAGE_SIZE = 25
 
 const CONTACT_COLUMNS =
-  "id, name, role, organisation, category, country, city, verified_status, has_email, has_phone, has_linkedin, role_category, organisations(logo_url)" as const
+  "id, name, role, organisation, category, country, city, verified_status, has_email, has_phone, has_linkedin, role_category, organisations(logo_url, domain)" as const
 
 function escapeLike(s: string) {
   return s.replace(/[%_\\]/g, "\\$&")
@@ -203,7 +204,7 @@ export default async function SearchPage({
             <div className="mb-5">
               <ContactsList contacts={(contacts ?? []).map(c => ({
                 ...c,
-                org_logo_url: (c.organisations as { logo_url: string | null } | null)?.logo_url ?? null,
+                org_logo_url: getOrgLogoUrl(c.organisations as { logo_url: string | null; domain: string | null } | null),
               })) as ContactListRow[]} />
             </div>
 

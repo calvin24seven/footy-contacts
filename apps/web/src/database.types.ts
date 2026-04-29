@@ -347,6 +347,7 @@ export type Database = {
           normalised_name: string
           org_type: string | null
           logo_url: string | null
+          domain: string | null
           website: string | null
           country: string | null
           city: string | null
@@ -361,6 +362,7 @@ export type Database = {
           /** normalised_name is a generated column — omit on insert */
           org_type?: string | null
           logo_url?: string | null
+          domain?: string | null
           website?: string | null
           country?: string | null
           city?: string | null
@@ -375,6 +377,7 @@ export type Database = {
           /** normalised_name is a generated column — omit on update */
           org_type?: string | null
           logo_url?: string | null
+          domain?: string | null
           website?: string | null
           country?: string | null
           city?: string | null
