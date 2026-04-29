@@ -182,8 +182,8 @@ export default function SearchFilters({ countries, currentSort = "name_asc" }: P
           <span className="text-xs text-gray-600 ml-1 shrink-0">Updating…</span>
         )}
 
-        {/* Sort — pushed to right on desktop */}
-        <div className="ml-auto shrink-0 hidden sm:flex items-center gap-1.5">
+        {/* Sort — always visible, pushed to right */}
+        <div className="ml-auto shrink-0 flex items-center gap-1.5">
           <span className="text-xs text-gray-500">Sort:</span>
           <select
             value={activeSort}
@@ -195,20 +195,6 @@ export default function SearchFilters({ countries, currentSort = "name_asc" }: P
             ))}
           </select>
         </div>
-      </div>
-
-      {/* Mobile sort (below chips) */}
-      <div className="flex sm:hidden items-center gap-1.5 mt-2">
-        <span className="text-xs text-gray-500">Sort:</span>
-        <select
-          value={activeSort}
-          onChange={(e) => handleSort(e.target.value)}
-          className="flex-1 bg-navy-light text-gray-300 text-xs border border-gray-700 rounded-lg px-2 py-1.5 focus:outline-none focus:border-gold"
-        >
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
       </div>
 
       {/* ── Advanced filter drawer ─────────────────────────────────────────── */}

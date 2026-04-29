@@ -48,11 +48,11 @@ export default function WelcomeBanner() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <p className="text-sm text-gray-300 truncate">
+          <p className="text-sm text-gray-300">
             {allFreeUsed ? (
-              <><span className="font-semibold text-white">3 free unlocks used.</span>{" "}Upgrade to Pro for 150 unlocks / month.</>
+              <><span className="font-semibold text-white">All 3 free unlocks used.</span>{" "}Upgrade to unlock 150/month.</>
             ) : (
-              <><span className="font-semibold text-white">{unlockStats?.used ?? 0} of 3 free unlocks used.</span>{" "}{unlockStats?.totalRemaining ?? 0} remaining — upgrade to Pro for 150/month.</>
+              <><span className="font-semibold text-white">{unlockStats?.totalRemaining ?? 0} of {unlockStats?.limit ?? 3} unlocks left.</span>{" "}Upgrade for 150/month.</>
             )}
           </p>
         </div>

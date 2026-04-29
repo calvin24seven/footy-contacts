@@ -140,16 +140,6 @@ export default async function SearchPage({
 
       {/* ── Sticky search zone ─────────────────────────────────────────────── */}
       <div className="sticky top-14 z-20 bg-navy-dark/95 backdrop-blur-sm border-b border-navy-light/40 px-4 sm:px-6 pt-4 pb-3">
-        {/* Title row */}
-        <div className="flex items-baseline justify-between mb-3">
-          <h1 className="text-lg font-bold text-white">Find Contacts</h1>
-          {count !== null && count !== undefined && (
-            <p className="text-xs text-gray-500">
-              {count.toLocaleString()} found
-            </p>
-          )}
-        </div>
-
         {/* Live search bar */}
         <SearchBar initialQ={params.q} />
 
@@ -163,11 +153,9 @@ export default async function SearchPage({
         {count !== null && count !== undefined && hasResults && (
           <div className="flex items-center justify-between mb-3 text-xs text-gray-500">
             <span>
-              {count.toLocaleString()} contact{count !== 1 ? "s" : ""} found
-              {" · "}
-              Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, count)}
+              {count.toLocaleString()} found · {offset + 1}–{Math.min(offset + PAGE_SIZE, count)}
             </span>
-            <span>Sorted by {sortLabel[sort] ?? sort}</span>
+            <span className="hidden sm:inline">Sorted by {sortLabel[sort] ?? sort}</span>
           </div>
         )}
 
