@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { unstable_cache } from "next/cache"
 import Link from "next/link"
 import { Suspense } from "react"
@@ -18,7 +19,8 @@ const CONTACT_COLUMNS =
 // This eliminates a 27k-row scan on every page load.
 const getPublishedCountries = unstable_cache(
   async () => {
-    const supabase = await createClient()
+    // Must use cookie-free client — unstable_cache runs outside request context
+    const supabase = createAdminClient()
     const { data } = await supabase
       .from("contacts")
       .select("country")

@@ -132,14 +132,14 @@ export default function UnlocksWidget() {
           {showUpgradeCTA && (
             <button
               onClick={() => { setOpen(false); setShowUpgrade(true) }}
-              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-yellow-400 transition-colors cursor-pointer"
+              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-yellow-400 transition-colors cursor-pointer whitespace-nowrap"
             >
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
               {data.planCode === "free"
-                ? `Upgrade — get ${nextPlanContacts} unlocks/month`
-                : "Upgrade to Agency — unlimited contacts"}
+                ? `Upgrade — get ${nextPlanContacts} unlocks/mo`
+                : "Upgrade to Agency — unlimited"}
             </button>
           )}
 
