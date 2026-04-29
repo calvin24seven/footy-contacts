@@ -33,7 +33,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown error"
-    console.error("Webhook signature verification failed:", message)
+    console.error("Webhook signature verification failed:", message, {
+      signatureHeader: signature?.slice(0, 30) + "…",
+      secretPrefix: webhookSecret?.slice(0, 10) + "…",
+      bodyLength: body.length,
+    })
     return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 })
   }
 
@@ -202,6 +206,14 @@ async function upsertSubscription(
     cancelAtPeriodEnd: boolean
   }
 ) {
+  // Delete any manually-inserted placeholder rows (null stripe_subscription_id) for this user
+  // so we don't end up with two active rows after the webhook starts working.
+  await admin
+    .from("subscriptions")
+    .delete()
+    .eq("user_id", data.userId)
+    .is("stripe_subscription_id", null)
+
   await admin.from("subscriptions").upsert(
     {
       user_id: data.userId,

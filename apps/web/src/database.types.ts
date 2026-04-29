@@ -350,6 +350,7 @@ export type Database = {
         Insert: {
           id?: string
           name: string
+          /** normalised_name is a generated column — omit on insert */
           org_type?: string | null
           logo_url?: string | null
           website?: string | null
@@ -363,6 +364,7 @@ export type Database = {
         Update: {
           id?: string
           name?: string
+          /** normalised_name is a generated column — omit on update */
           org_type?: string | null
           logo_url?: string | null
           website?: string | null

@@ -33,6 +33,11 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // ── API routes — skip middleware auth entirely, each route handles its own auth ──
+  if (pathname.startsWith("/api/")) {
+    return supabaseResponse
+  }
+
   // ── Public paths — always allowed ─────────────────────────────────────────
   const publicPaths = ["/", "/login", "/signup", "/forgot-password", "/terms", "/privacy"]
   const isPublicPath = publicPaths.includes(pathname)

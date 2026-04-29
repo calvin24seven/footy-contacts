@@ -272,6 +272,26 @@ function cleanRole(role: string): string {
   return role
 }
 
+/**
+ * Extract the bare domain from a website URL.
+ * "http://www.acffiorentina.com" → "acffiorentina.com"
+ */
+function extractDomain(website: string): string | null {
+  try {
+    const url = website.startsWith("http") ? website : "https://" + website
+    return new URL(url).hostname.replace(/^www\./, "")
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Dedup key that matches organisations.normalised_name (generated as lower(trim(name))).
+ */
+function normalisedOrgKey(name: string): string {
+  return name.toLowerCase().trim()
+}
+
 // Returns true if the string is mostly ASCII (English-language heuristic)
 function isEnglishLike(text: string): boolean {
   if (!text || text.length === 0) return false
@@ -470,7 +490,7 @@ function buildContact(
 
 // Fields updated on existing contacts when import_mode=update
 const UPDATABLE_FIELDS = [
-  "role", "organisation", "city", "country", "region",
+  "role", "organisation", "organisation_id", "city", "country", "region",
   "phone", "linkedin_url", "x_url", "instagram_url", "website",
   "email", "level", "category",
 ]
@@ -729,6 +749,58 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           entry.matchReason = `Duplicate name+org: ${name} @ ${org}`
           entry.existingContact = match
         }
+      }
+    }
+
+    // ── Organisation resolution ──────────────────────────────────────────────
+    // Upsert organisations from every non-suppressed entry, then link
+    // contact.organisation_id so the FK is always populated on insert/update.
+    const orgCandidates = entries.filter(
+      e => e.matchType !== "suppressed" && e.contact.organisation
+    )
+    if (orgCandidates.length > 0) {
+      // Collect unique org keys — first occurrence wins for website/logo
+      const orgMap = new Map<string, { name: string; website?: string }>()
+      for (const e of orgCandidates) {
+        const name = e.contact.organisation as string
+        const key = normalisedOrgKey(name)
+        if (!orgMap.has(key)) {
+          orgMap.set(key, { name, website: e.contact.website as string | undefined })
+        }
+      }
+
+      // Upsert: insert new orgs; on conflict leave existing data untouched
+      // (admin may have manually curated name/logo — don't overwrite)
+      const orgRows = [...orgMap.values()].map(({ name, website }) => {
+        const domain = website ? extractDomain(website) : null
+        return {
+          name,
+          website: website ?? null,
+          logo_url: domain ? `https://logo.clearbit.com/${domain}` : null,
+        }
+      })
+      await supabase.from("organisations").upsert(orgRows, {
+        onConflict: "normalised_name",
+        ignoreDuplicates: true,
+      })
+
+      // Fetch ids for all relevant orgs (upserted + pre-existing)
+      const allKeys = [...orgMap.keys()]
+      const { data: fetchedOrgs } = await supabase
+        .from("organisations")
+        .select("id, normalised_name")
+        .in("normalised_name", allKeys)
+
+      const keyToOrgId = new Map<string, string>()
+      for (const org of fetchedOrgs ?? []) {
+        keyToOrgId.set(org.normalised_name, org.id)
+      }
+
+      // Apply organisation_id to every candidate entry
+      for (const entry of orgCandidates) {
+        const key = normalisedOrgKey(entry.contact.organisation as string)
+        const orgId = keyToOrgId.get(key)
+        if (orgId) entry.contact.organisation_id = orgId
       }
     }
 
