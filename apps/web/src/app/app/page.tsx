@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
+import { unstable_cache } from "next/cache"
 import Link from "next/link"
+import { Suspense } from "react"
 import SearchFilters from "./SearchFilters"
 import SearchBar from "./SearchBar"
 import ContactsList from "./ContactsList"
@@ -11,6 +13,24 @@ const PAGE_SIZE = 25
 
 const CONTACT_COLUMNS =
   "id, name, role, organisation, category, country, city, verified_status, has_email, has_phone, has_linkedin, role_category, organisations(logo_url, domain)" as const
+
+// Countries list changes rarely — cache for 1 hour across all users.
+// This eliminates a 27k-row scan on every page load.
+const getPublishedCountries = unstable_cache(
+  async () => {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from("contacts")
+      .select("country")
+      .eq("visibility_status", "published")
+      .eq("suppression_status", "active")
+      .not("country", "is", null)
+      .order("country")
+    return [...new Set((data ?? []).map((r) => r.country).filter(Boolean))] as string[]
+  },
+  ["published-countries"],
+  { revalidate: 3600 }
+)
 
 function escapeLike(s: string) {
   return s.replace(/[%_\\]/g, "\\$&")
@@ -54,14 +74,6 @@ export default async function SearchPage({
   // Free users are hard-capped to page 1 on the server
   const page = isFree ? 1 : Math.min(500, Math.max(1, parseInt(params.page ?? "1", 10)))
   const offset = (page - 1) * PAGE_SIZE
-
-  const countriesPromise = supabase
-    .from("contacts")
-    .select("country")
-    .eq("visibility_status", "published")
-    .eq("suppression_status", "active")
-    .not("country", "is", null)
-    .order("country")
 
   let query = supabase
     .from("contacts")
@@ -139,14 +151,10 @@ export default async function SearchPage({
     query = query.order("name")
   }
 
-  const [{ data: contacts, count }, { data: countryRows }] = await Promise.all([
+  const [{ data: contacts, count }, countries] = await Promise.all([
     query.range(offset, offset + PAGE_SIZE - 1),
-    countriesPromise,
+    getPublishedCountries(),
   ])
-
-  const countries = [
-    ...new Set((countryRows ?? []).map((r) => r.country).filter(Boolean)),
-  ] as string[]
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0
   const hasResults = contacts && contacts.length > 0
 
@@ -180,11 +188,23 @@ export default async function SearchPage({
 
       {/* ── Sticky search zone ─────────────────────────────────────────────── */}
       <div className="sticky top-14 z-20 bg-navy-dark/95 backdrop-blur-sm border-b border-navy-light/40 px-4 sm:px-6 pt-4 pb-3">
-        {/* Live search bar */}
-        <SearchBar initialQ={params.q} />
+        {/* SearchBar uses useSearchParams — needs Suspense for streaming */}
+        <Suspense fallback={
+          <div className="h-10 bg-navy-light rounded-xl animate-pulse mb-3" />
+        }>
+          <SearchBar initialQ={params.q} />
+        </Suspense>
 
-        {/* Filters + sort */}
-        <SearchFilters countries={countries} currentSort={sort} />
+        {/* SearchFilters uses useSearchParams — needs Suspense for streaming */}
+        <Suspense fallback={
+          <div className="flex gap-2">
+            {[20, 24, 20, 24].map((w, i) => (
+              <div key={i} className={`h-7 w-${w} bg-navy-light rounded-lg animate-pulse`} />
+            ))}
+          </div>
+        }>
+          <SearchFilters countries={countries} currentSort={sort} />
+        </Suspense>
       </div>
 
       {/* ── Results area ───────────────────────────────────────────────────── */}

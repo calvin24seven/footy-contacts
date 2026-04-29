@@ -2,36 +2,23 @@
 
 import { useEffect, useState } from "react"
 import UpgradeModal from "./UpgradeModal"
+import { useUnlocks } from "./UnlocksProvider"
 
 const STORAGE_KEY = "fc_welcome_v1_dismissed"
 
 export default function WelcomeBanner() {
+  const { data: unlockData } = useUnlocks()
   const [visible, setVisible] = useState(false)
-  const [unlockStats, setUnlockStats] = useState<{
-    used: number
-    limit: number
-    totalRemaining: number
-    planCode: string
-  } | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) return
     setVisible(true)
-
-    // Load unlock stats (server-authoritative)
-    fetch("/api/account/unlocks")
-      .then((r) => r.json())
-      .then((d: { used?: number; limit?: number; totalRemaining?: number; planCode?: string }) => {
-        setUnlockStats({
-          used: d.used ?? 0,
-          limit: d.limit ?? 3,
-          totalRemaining: d.totalRemaining ?? 0,
-          planCode: d.planCode ?? "free",
-        })
-      })
-      .catch(() => undefined)
   }, [])
+
+  const unlockStats = unlockData
+    ? { used: unlockData.used, limit: unlockData.limit, totalRemaining: unlockData.totalRemaining, planCode: unlockData.planCode }
+    : null
 
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, "1")

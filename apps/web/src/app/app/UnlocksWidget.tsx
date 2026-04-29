@@ -2,16 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import UpgradeModal from "./UpgradeModal"
-
-interface UnlocksData {
-  used: number
-  limit: number
-  bonus: number          // admin-gifted bonus credits (not part of base plan)
-  totalRemaining: number // authoritative server total: (limit - used) + bonus, or -1 for unlimited
-  periodEnd: string | null
-  planName: string
-  planCode: string
-}
+import { useUnlocks } from "./UnlocksProvider"
 
 // Contacts available on the next plan tier (for upgrade CTA)
 const NEXT_PLAN_CONTACTS: Record<string, number> = {
@@ -21,35 +12,10 @@ const NEXT_PLAN_CONTACTS: Record<string, number> = {
 }
 
 export default function UnlocksWidget() {
-  const [data, setData] = useState<UnlocksData | null>(null)
+  const { data } = useUnlocks()
   const [open, setOpen] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-
-  function fetchData() {
-    fetch("/api/account/unlocks")
-      .then((r) => r.json())
-      .then((d) => setData(d as UnlocksData))
-      .catch(() => {})
-  }
-
-  useEffect(() => {
-    fetchData()
-
-    // Refresh when a contact is unlocked anywhere in the app
-    window.addEventListener("unlocks-updated", fetchData)
-
-    // Refresh when the user returns to this tab
-    function onVisibility() {
-      if (document.visibilityState === "visible") fetchData()
-    }
-    document.addEventListener("visibilitychange", onVisibility)
-
-    return () => {
-      window.removeEventListener("unlocks-updated", fetchData)
-      document.removeEventListener("visibilitychange", onVisibility)
-    }
-  }, [])
 
   useEffect(() => {
     function handle(e: MouseEvent) {
