@@ -170,7 +170,11 @@ export function ContactCTA({
     }
     if (res.status === 402 || data.requires_subscription) { setState("paywall"); return }
     if (res.status === 429) { setState("limit"); return }
-    if (data.success || data.already_unlocked) { router.push(`/app/contacts/${contactId}`); return }
+    if (data.success || data.already_unlocked) {
+      window.dispatchEvent(new Event("unlocks-updated"))
+      router.push(`/app/contacts/${contactId}`)
+      return
+    }
     setState("error")
   }
 

@@ -7,7 +7,12 @@ const STORAGE_KEY = "fc_welcome_v1_dismissed"
 
 export default function WelcomeBanner() {
   const [visible, setVisible] = useState(false)
-  const [unlockStats, setUnlockStats] = useState<{ used: number; limit: number; totalRemaining: number } | null>(null)
+  const [unlockStats, setUnlockStats] = useState<{
+    used: number
+    limit: number
+    totalRemaining: number
+    planCode: string
+  } | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
@@ -17,11 +22,12 @@ export default function WelcomeBanner() {
     // Load unlock stats (server-authoritative)
     fetch("/api/account/unlocks")
       .then((r) => r.json())
-      .then((d: { used?: number; limit?: number; totalRemaining?: number }) => {
+      .then((d: { used?: number; limit?: number; totalRemaining?: number; planCode?: string }) => {
         setUnlockStats({
           used: d.used ?? 0,
           limit: d.limit ?? 3,
           totalRemaining: d.totalRemaining ?? 0,
+          planCode: d.planCode ?? "free",
         })
       })
       .catch(() => undefined)
@@ -34,8 +40,22 @@ export default function WelcomeBanner() {
 
   if (!visible) return null
 
-  const allFreeUsed = unlockStats !== null && unlockStats.used >= unlockStats.limit && unlockStats.totalRemaining <= 0
+  const planCode = unlockStats?.planCode ?? "free"
+  const allUsed = unlockStats !== null && unlockStats.totalRemaining <= 0
   const someUsed = unlockStats !== null && unlockStats.used > 0
+
+  // Context-aware upgrade copy
+  const upgradeLine = planCode === "pro"
+    ? "Upgrade to Agency for unlimited unlocks."
+    : "Upgrade to Pro — 50× more contacts/month."
+
+  const allUsedLine = planCode === "pro"
+    ? <><span className="font-semibold text-white">All unlocks used.</span>{" "}{upgradeLine}</>
+    : <><span className="font-semibold text-white">All {unlockStats?.limit ?? 3} free unlocks used.</span>{" "}{upgradeLine}</>
+
+  const someUsedLine = (
+    <><span className="font-semibold text-white">{unlockStats?.totalRemaining ?? 0} unlocks left.</span>{" "}{upgradeLine}</>
+  )
 
   if (someUsed) {
     return (
@@ -49,11 +69,7 @@ export default function WelcomeBanner() {
             </svg>
           </div>
           <p className="text-sm text-gray-300">
-            {allFreeUsed ? (
-              <><span className="font-semibold text-white">All 3 free unlocks used.</span>{" "}Upgrade to unlock 150/month.</>
-            ) : (
-              <><span className="font-semibold text-white">{unlockStats?.totalRemaining ?? 0} of {unlockStats?.limit ?? 3} unlocks left.</span>{" "}Upgrade for 150/month.</>
-            )}
+            {allUsed ? allUsedLine : someUsedLine}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -86,7 +102,7 @@ export default function WelcomeBanner() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
           </svg>
         </div>
-        <p className="text-sm text-gray-300 truncate">
+        <p className="text-sm text-gray-300">
           <span className="font-semibold text-gold">Welcome!</span>{" "}
           You have 3 free unlocks — search and reveal any contact&apos;s details.
         </p>

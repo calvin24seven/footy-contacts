@@ -107,6 +107,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // ── Security headers for authenticated app routes ──────────────────────────
+  const isAppPath = pathname.startsWith("/app")
+  if (isAppPath) {
+    // Prevent search engines from indexing authenticated contact pages
+    supabaseResponse.headers.set("X-Robots-Tag", "noindex, nofollow")
+    // Prevent clickjacking
+    supabaseResponse.headers.set("X-Frame-Options", "DENY")
+    // Prevent MIME sniffing
+    supabaseResponse.headers.set("X-Content-Type-Options", "nosniff")
+  }
+
   return supabaseResponse
 }
 

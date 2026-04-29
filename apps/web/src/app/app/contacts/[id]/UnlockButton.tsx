@@ -39,6 +39,7 @@ export default function UnlockButton({ contactId }: { contactId: string }) {
     }
 
     if (data.success) {
+      window.dispatchEvent(new Event("unlocks-updated"))
       router.refresh()
       return
     }

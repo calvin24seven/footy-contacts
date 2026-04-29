@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { rateLimit } from "@/lib/rate-limit"
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   const { id } = await params
@@ -10,6 +11,11 @@ export async function POST(
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
+
+  // 30 unlock attempts per user per minute
+  if (!rateLimit(`unlock:${user.id}`, { limit: 30, windowMs: 60_000 })) {
+    return NextResponse.json({ error: "too_many_requests" }, { status: 429 })
+  }
 
   const { data, error } = await supabase.rpc("unlock_contact", {
     p_contact_id: id,

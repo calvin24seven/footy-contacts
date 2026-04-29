@@ -26,11 +26,29 @@ export default function UnlocksWidget() {
   const [showUpgrade, setShowUpgrade] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  function fetchData() {
     fetch("/api/account/unlocks")
       .then((r) => r.json())
       .then((d) => setData(d as UnlocksData))
       .catch(() => {})
+  }
+
+  useEffect(() => {
+    fetchData()
+
+    // Refresh when a contact is unlocked anywhere in the app
+    window.addEventListener("unlocks-updated", fetchData)
+
+    // Refresh when the user returns to this tab
+    function onVisibility() {
+      if (document.visibilityState === "visible") fetchData()
+    }
+    document.addEventListener("visibilitychange", onVisibility)
+
+    return () => {
+      window.removeEventListener("unlocks-updated", fetchData)
+      document.removeEventListener("visibilitychange", onVisibility)
+    }
   }, [])
 
   useEffect(() => {

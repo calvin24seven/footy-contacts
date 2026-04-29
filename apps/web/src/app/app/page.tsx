@@ -17,8 +17,11 @@ function escapeLike(s: string) {
 
 interface SearchParams {
   q?: string
-  role?: string
-  org?: string
+  role?: string         // comma-separated OR values
+  role_exclude?: string // comma-separated NOT values
+  org?: string          // comma-separated OR values
+  org_exclude?: string  // comma-separated NOT values
+  city?: string
   country?: string
   email_status?: string
   category?: string
@@ -33,8 +36,6 @@ export default async function SearchPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
-  const page = Math.min(500, Math.max(1, parseInt(params.page ?? "1", 10)))
-  const offset = (page - 1) * PAGE_SIZE
 
   const supabase = await createClient()
 
@@ -48,6 +49,10 @@ export default async function SearchPage({
         .maybeSingle()
     : { data: null }
   const isFree = !activeSub
+
+  // Free users are hard-capped to page 1 on the server
+  const page = isFree ? 1 : Math.min(500, Math.max(1, parseInt(params.page ?? "1", 10)))
+  const offset = (page - 1) * PAGE_SIZE
 
   const countriesPromise = supabase
     .from("contacts")
@@ -67,12 +72,43 @@ export default async function SearchPage({
     const q = escapeLike(params.q.trim())
     query = query.or(`name.ilike.%${q}%,role.ilike.%${q}%,organisation.ilike.%${q}%`)
   }
+
+  // Multi-value role (OR between values)
   if (params.role?.trim()) {
-    query = query.ilike("role", `%${escapeLike(params.role.trim())}%`)
+    const roles = params.role.split(",").map((s) => s.trim()).filter(Boolean)
+    if (roles.length === 1) {
+      query = query.ilike("role", `%${escapeLike(roles[0])}%`)
+    } else if (roles.length > 1) {
+      query = query.or(roles.map((r) => `role.ilike.%${escapeLike(r)}%`).join(","))
+    }
   }
+  // Role excludes (AND NOT per value)
+  if (params.role_exclude?.trim()) {
+    for (const r of params.role_exclude.split(",").map((s) => s.trim()).filter(Boolean)) {
+      query = query.not("role", "ilike", `%${escapeLike(r)}%`)
+    }
+  }
+
+  // Multi-value org (OR between values)
   if (params.org?.trim()) {
-    query = query.ilike("organisation", `%${escapeLike(params.org.trim())}%`)
+    const orgs = params.org.split(",").map((s) => s.trim()).filter(Boolean)
+    if (orgs.length === 1) {
+      query = query.ilike("organisation", `%${escapeLike(orgs[0])}%`)
+    } else if (orgs.length > 1) {
+      query = query.or(orgs.map((o) => `organisation.ilike.%${escapeLike(o)}%`).join(","))
+    }
   }
+  // Org excludes (AND NOT per value)
+  if (params.org_exclude?.trim()) {
+    for (const o of params.org_exclude.split(",").map((s) => s.trim()).filter(Boolean)) {
+      query = query.not("organisation", "ilike", `%${escapeLike(o)}%`)
+    }
+  }
+
+  if (params.city?.trim()) {
+    query = query.ilike("city", `%${escapeLike(params.city.trim())}%`)
+  }
+
   if (params.country?.trim()) {
     query = query.eq("country", params.country.trim())
   }
@@ -115,14 +151,17 @@ export default async function SearchPage({
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
-    if (params.q) qs.set("q", params.q)
-    if (params.role) qs.set("role", params.role)
-    if (params.org) qs.set("org", params.org)
-    if (params.country) qs.set("country", params.country)
+    if (params.q)            qs.set("q",            params.q)
+    if (params.role)         qs.set("role",         params.role)
+    if (params.role_exclude) qs.set("role_exclude", params.role_exclude)
+    if (params.org)          qs.set("org",          params.org)
+    if (params.org_exclude)  qs.set("org_exclude",  params.org_exclude)
+    if (params.city)         qs.set("city",         params.city)
+    if (params.country)      qs.set("country",      params.country)
     if (params.email_status) qs.set("email_status", params.email_status)
-    if (params.category) qs.set("category", params.category)
-    if (params.has_phone) qs.set("has_phone", params.has_phone)
-    if (params.sort) qs.set("sort", params.sort)
+    if (params.category)     qs.set("category",     params.category)
+    if (params.has_phone)    qs.set("has_phone",    params.has_phone)
+    if (params.sort)         qs.set("sort",         params.sort)
     qs.set("page", String(p))
     return `/app?${qs.toString()}`
   }
@@ -183,7 +222,7 @@ export default async function SearchPage({
               </div>
             )}
 
-            {totalPages > 1 && (
+            {totalPages > 1 && !isFree && (
               <div className="flex items-center justify-center gap-3 pb-4">
                 {page > 1 && (
                   <Link
