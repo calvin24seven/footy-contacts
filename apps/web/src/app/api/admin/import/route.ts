@@ -631,10 +631,8 @@ function buildContact(
     contact.data_confidence_score = 30
   }
 
-  // ── Compute has_* contact-method flags ────────────────────────────────
-  contact.has_email = typeof contact.email === "string"
-  contact.has_phone = typeof contact.phone === "string"
-  contact.has_linkedin = typeof contact.linkedin_url === "string"
+  // has_email / has_phone / has_linkedin are Postgres GENERATED columns
+  // (computed as `email IS NOT NULL` etc.) — never set them on insert.
 
   // Contacts without an email have nothing to verify — publish immediately
   if (!contact.email) {
@@ -760,8 +758,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let suppressedRows = 0
   const errors: Array<{ row: number; message: string }> = []
 
+  // Pre-check: if contacts table is empty we can skip all name+org dedup queries
+  // (saves ~200-300 round-trips for a fresh 27k import)
+  const { count: existingContactCount } = await supabase
+    .from("contacts")
+    .select("id", { count: "exact", head: true })
+  const skipNameOrgDedup = (existingContactCount ?? 0) === 0
+
+  // Fail-fast flag: if a batch insert fails with a schema error (e.g. inserting into
+  // a generated column) every subsequent batch will fail identically — abort immediately.
+  let fatalError: string | null = null
+
   const BATCH_SIZE = 2000
   for (let batchStart = 0; batchStart < dataLines.length; batchStart += BATCH_SIZE) {
+    if (fatalError) break
     const batch = dataLines.slice(batchStart, batchStart + BATCH_SIZE)
     const entries: ContactEntry[] = []
     const rowInserts: Array<{
@@ -887,14 +897,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       const o = (e.contact.organisation as string | undefined)?.trim()
       return !!(n && o)
     })
-    if (nameOrgEntries.length > 0) {
+    if (nameOrgEntries.length > 0 && !skipNameOrgDedup) {
       // Names containing PostgREST OR-filter breaking chars are skipped (very rare in contact data)
       const safeForFilter = (s: string) => !/[(),]/.test(s)
       const uniqueNames = [
         ...new Set(nameOrgEntries.map(e => (e.contact.name as string).trim()).filter(safeForFilter))
       ]
       const nameToContacts = new Map<string, ExistingContact[]>()
-      const NAME_OR_BATCH = 100
+      const NAME_OR_BATCH = 500
       for (let ni = 0; ni < uniqueNames.length; ni += NAME_OR_BATCH) {
         const nameBatch = uniqueNames.slice(ni, ni + NAME_OR_BATCH)
         const orFilter = nameBatch.map(n => `name.ilike.${n}`).join(",")
@@ -1021,6 +1031,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           if (rowInsert) { rowInsert.status = "error"; rowInsert.error_message = bulkErr.message }
           errors.push({ row: entry.rowNumber, message: bulkErr.message })
         }
+        // Schema-level errors (e.g. generated column, missing NOT NULL) will repeat on every
+        // batch — abort immediately rather than burning through all remaining chunks.
+        if (bulkErr.code === "42601" || bulkErr.code === "42703" || bulkErr.message.includes("non-DEFAULT") || bulkErr.message.includes("generated")) {
+          fatalError = bulkErr.message
+        }
       } else {
         successfulRows += toInsert.length
         const ids: Array<{ id: string }> = inserted ?? []
@@ -1087,6 +1102,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     await supabase.from("csv_import_rows").insert(rowInserts)
+  }
+
+  // If a fatal schema error was detected, return 422 immediately so the client
+  // doesn't send remaining chunks (which would all fail identically).
+  if (fatalError) {
+    return NextResponse.json(
+      { error: `Import aborted — schema error: ${fatalError}` },
+      { status: 422 }
+    )
   }
 
   if (isLastChunk) {
