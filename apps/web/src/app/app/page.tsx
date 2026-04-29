@@ -9,7 +9,7 @@ import { type ContactListRow } from "./ContactRow"
 const PAGE_SIZE = 25
 
 const CONTACT_COLUMNS =
-  "id, name, role, organisation, category, country, city, verified_status, has_email, has_phone, has_linkedin, role_category" as const
+  "id, name, role, organisation, category, country, city, verified_status, has_email, has_phone, has_linkedin, role_category, organisations(logo_url)" as const
 
 function escapeLike(s: string) {
   return s.replace(/[%_\\]/g, "\\$&")
@@ -201,7 +201,10 @@ export default async function SearchPage({
         {hasResults ? (
           <>
             <div className="mb-5">
-              <ContactsList contacts={(contacts ?? []) as ContactListRow[]} />
+              <ContactsList contacts={(contacts ?? []).map(c => ({
+                ...c,
+                org_logo_url: (c.organisations as { logo_url: string | null } | null)?.logo_url ?? null,
+              })) as ContactListRow[]} />
             </div>
 
             {/* Free upgrade prompt — shown when results are capped */}

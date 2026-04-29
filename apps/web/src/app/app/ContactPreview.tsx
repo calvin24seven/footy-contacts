@@ -118,11 +118,28 @@ function PreviewBody({
     <div className="flex-1 overflow-y-auto p-5 space-y-5">
       {/* Identity */}
       <div className="flex items-start gap-4">
-        <div
-          className={`w-14 h-14 rounded-xl flex items-center justify-center text-base font-bold shrink-0 select-none ${colorClass}`}
-        >
-          {initials.slice(0, 2)}
-        </div>
+        {contact.org_logo_url ? (
+          <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 bg-white/5 border border-gray-700/50 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={contact.org_logo_url}
+              alt={contact.organisation ?? ""}
+              className="w-full h-full object-contain p-1.5"
+              onError={(e) => {
+                const el = e.currentTarget
+                el.style.display = "none"
+                el.parentElement!.className = `w-14 h-14 rounded-xl flex items-center justify-center text-base font-bold shrink-0 select-none ${colorClass}`
+                el.parentElement!.textContent = initials.slice(0, 2)
+              }}
+            />
+          </div>
+        ) : (
+          <div
+            className={`w-14 h-14 rounded-xl flex items-center justify-center text-base font-bold shrink-0 select-none ${colorClass}`}
+          >
+            {initials.slice(0, 2)}
+          </div>
+        )}
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-white font-bold text-base leading-snug">{contact.name}</h2>

@@ -11,6 +11,7 @@ export type ContactListRow = {
   name: string
   role: string | null
   organisation: string | null
+  org_logo_url?: string | null
   category: string | null
   country: string | null
   city: string | null
@@ -52,7 +53,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Other":        "bg-gray-700 text-gray-300",
 }
 
-function OrgAvatar({ name, category }: { name: string | null; category: string | null }) {
+function OrgAvatar({ name, category, logoUrl }: { name: string | null; category: string | null; logoUrl?: string | null }) {
   const initials = name
     ? name
         .split(/[\s\-&]+/)
@@ -63,6 +64,27 @@ function OrgAvatar({ name, category }: { name: string | null; category: string |
     : "?"
 
   const colorClass = CATEGORY_COLORS[category ?? ""] ?? "bg-navy text-gray-400 border border-gray-700"
+
+  if (logoUrl) {
+    return (
+      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 bg-white/5 overflow-hidden border border-gray-700/50">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logoUrl}
+          alt={name ?? ""}
+          className="w-full h-full object-contain p-1"
+          onError={(e) => {
+            // Fall back to initials on broken image
+            const el = e.currentTarget
+            el.style.display = "none"
+            el.parentElement!.setAttribute("data-fallback", "1")
+            el.parentElement!.className = `w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 select-none ${colorClass}`
+            el.parentElement!.textContent = initials.slice(0, 2)
+          }}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 select-none ${colorClass}`}>
@@ -287,7 +309,7 @@ export default function ContactRow({
       }`}
     >
       {/* Org / category avatar */}
-      <OrgAvatar name={contact.organisation} category={contact.category} />
+      <OrgAvatar name={contact.organisation} category={contact.category} logoUrl={contact.org_logo_url} />
 
       {/* Identity block */}
       {onPreview ? (

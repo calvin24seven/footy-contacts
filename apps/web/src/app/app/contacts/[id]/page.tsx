@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import UnlockButton from "./UnlockButton"
 import SaveToListButton from "@/components/SaveToListButton"
-import type { Tables } from "@/database.types"
 
 export default async function ContactPage({
   params,
@@ -14,12 +13,14 @@ export default async function ContactPage({
 
   const { data: contact } = await supabase
     .from("contacts")
-    .select("*")
+    .select("*, organisations(logo_url)")
     .eq("id", id)
     .eq("visibility_status", "published")
     .single()
 
   if (!contact) notFound()
+
+  const orgLogoUrl = (contact.organisations as { logo_url: string | null } | null)?.logo_url ?? null
 
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -48,8 +49,19 @@ export default async function ContactPage({
       <div className="bg-navy-light rounded-xl p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-start gap-4 mb-6">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gold/20 flex items-center justify-center text-gold text-xl sm:text-2xl font-bold shrink-0">
-            {contact.name[0]?.toUpperCase()}
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center shrink-0 overflow-hidden
+            bg-gold/20 text-gold text-xl sm:text-2xl font-bold">
+            {orgLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={orgLogoUrl}
+                alt={contact.organisation ?? ""}
+                className="w-full h-full object-contain p-1.5 bg-white/5"
+                onError={(e) => { e.currentTarget.style.display = "none" }}
+              />
+            ) : (
+              contact.name[0]?.toUpperCase()
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
