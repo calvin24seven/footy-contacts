@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createAdminClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 // Apollo/LinkedIn CSV column aliases → canonical contact field names.
 // Special keys prefixed with _ are handled in buildContact().
@@ -671,16 +672,21 @@ interface ContactEntry {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const supabase = await createAdminClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
+  // Auth check: use cookie-based client so getUser() reads the session JWT from cookies.
+  // All DB operations use the raw admin client (service role, bypasses RLS) so that
+  // tables with RLS enabled but no user-facing policies (e.g. organisations) are accessible.
+  const authClient = await createClient()
+  const { data: { user } } = await authClient.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { data: profile } = await supabase
+  const { data: profile } = await authClient
     .from("profiles").select("role").eq("id", user.id).single()
   if (profile?.role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
+
+  // Service-role client for all import DB operations — never uses user JWT.
+  const supabase = createAdminClient()
 
   const formData = await req.formData()
   const file = formData.get("file")
@@ -897,7 +903,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       const o = (e.contact.organisation as string | undefined)?.trim()
       return !!(n && o)
     })
-    if (nameOrgEntries.length > 0 && !skipNameOrgDedup) {
+    // Name+org dedup: only meaningful in update mode (to find which existing contact to update).
+    // In skip mode, email + linkedin matching is sufficient and avoids expensive ilike OR queries
+    // that hit PostgREST's statement timeout once the contacts table grows past ~10k rows.
+    if (nameOrgEntries.length > 0 && !skipNameOrgDedup && importMode === "update") {
       // Names containing PostgREST OR-filter breaking chars are skipped (very rare in contact data)
       const safeForFilter = (s: string) => !/[(),]/.test(s)
       const uniqueNames = [
