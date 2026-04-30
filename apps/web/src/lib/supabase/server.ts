@@ -30,10 +30,19 @@ export async function createClient() {
 export async function createAdminClient() {
   const cookieStore = await cookies()
 
+  // Force the service-role key as the Authorization header for all PostgREST queries.
+  // @supabase/ssr otherwise uses the session JWT from cookies, which means RLS policies
+  // run as the logged-in user — not as service role. auth.getUser() still reads from
+  // cookies correctly because it bypasses the global header.
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
+      global: {
+        headers: {
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll()
