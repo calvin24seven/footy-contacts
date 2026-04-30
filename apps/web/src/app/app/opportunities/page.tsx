@@ -7,7 +7,7 @@ export default async function OpportunitiesPage() {
   const { data: opportunities } = await supabase
     .from("opportunities")
     .select("*")
-    .eq("status", "active")
+    .eq("status", "live")
     .order("created_at", { ascending: false })
     .limit(50)
 

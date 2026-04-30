@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
   const publicPaths = ["/", "/login", "/signup", "/forgot-password", "/terms", "/privacy"]
   const isPublicPath = publicPaths.includes(pathname)
   const isAdminPath = pathname.startsWith("/admin")
-  const isAuthCallbackPath = pathname.startsWith("/auth/callback")
+  const isAuthCallbackPath = pathname.startsWith("/auth/callback") || pathname.startsWith("/auth/update-password")
   const isOnboardingPath = pathname.startsWith("/onboarding")
   const isSuspendedPath = pathname.startsWith("/suspended")
 

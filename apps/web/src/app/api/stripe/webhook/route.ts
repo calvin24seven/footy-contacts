@@ -33,14 +33,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown error"
-    const debug = {
-      error: `Webhook Error: ${message}`,
-      secretPrefix: webhookSecret?.slice(0, 10) + "…",
-      signatureHeader: signature?.slice(0, 40) + "…",
+    console.error("Webhook signature verification failed:", {
+      error: message,
       bodyLength: body.length,
-    }
-    console.error("Webhook signature verification failed:", debug)
-    return NextResponse.json(debug, { status: 400 })
+    })
+    return NextResponse.json({ error: "invalid_signature" }, { status: 400 })
   }
 
   const admin = createAdminClient()
