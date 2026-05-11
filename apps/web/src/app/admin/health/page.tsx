@@ -53,7 +53,7 @@ export default async function ContactHealthPage(): Promise<JSX.Element> {
       .from("csv_imports")
       .select("id, filename, status, total_rows, successful_rows, updated_rows, failed_rows, suppressed_rows, skipped_rows, created_at")
       .order("created_at", { ascending: false })
-      .limit(20) as Promise<{ data: Array<{
+      .limit(20) as unknown as Promise<{ data: Array<{
         id: string; filename: string; status: string;
         total_rows: number | null; successful_rows: number | null; updated_rows: number | null;
         failed_rows: number | null; suppressed_rows: number | null; skipped_rows: number | null;
