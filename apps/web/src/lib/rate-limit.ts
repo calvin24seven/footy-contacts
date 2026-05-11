@@ -31,21 +31,19 @@ interface RateLimitResult {
 /**
  * Sliding-window rate limiter using Redis INCR + EXPIRE.
  *
- * @param key        Unique key, e.g. `unlock:${userId}`
- * @param limit      Max requests allowed in the window
- * @param windowSecs Window duration in seconds
- * @param failOpen   If true (default), allow requests when Redis is unavailable.
- *                   Set to false for sensitive operations like exports.
+ * @param key     Unique key, e.g. `unlock:${userId}`
+ * @param limit   Max requests allowed in the window
+ * @param windowSecs  Window duration in seconds
  */
 export async function rateLimit(
   key: string,
   limit: number,
-  windowSecs: number,
-  failOpen = true
+  windowSecs: number
 ): Promise<RateLimitResult> {
   const r = getRedis()
   if (!r) {
-    return { allowed: failOpen, remaining: failOpen ? limit : 0, resetAt: Date.now() + windowSecs * 1000 }
+    // Redis not configured — fail open (don't break the app)
+    return { allowed: true, remaining: limit, resetAt: Date.now() + windowSecs * 1000 }
   }
 
   try {
@@ -62,22 +60,20 @@ export async function rateLimit(
       resetAt,
     }
   } catch {
-    return { allowed: failOpen, remaining: failOpen ? limit : 0, resetAt: Date.now() + windowSecs * 1000 }
+    // Redis error — fail open
+    return { allowed: true, remaining: limit, resetAt: Date.now() + windowSecs * 1000 }
   }
 }
 
 /**
  * Daily rate limiter — resets at midnight UTC.
  * Key is automatically scoped to the current UTC day.
- *
- * @param failOpen  If true (default), allow requests when Redis is unavailable.
  */
 export async function rateLimitDaily(
   key: string,
-  limit: number,
-  failOpen = true
+  limit: number
 ): Promise<RateLimitResult> {
   const today = new Date().toISOString().slice(0, 10) // "2026-05-01"
   const secondsUntilMidnight = 86400 - (Math.floor(Date.now() / 1000) % 86400)
-  return rateLimit(`${key}:${today}`, limit, secondsUntilMidnight, failOpen)
+  return rateLimit(`${key}:${today}`, limit, secondsUntilMidnight)
 }

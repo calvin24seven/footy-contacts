@@ -73,7 +73,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
 
   // 1 export per user per hour
-  const perHour = await rateLimit(`export:${user.id}`, 1, 3600, false)
+  const perHour = await rateLimit(`export:${user.id}`, 1, 3600)
   if (!perHour.allowed) {
     return NextResponse.json({ error: "export_limit_reached", message: "You can export once per hour." }, { status: 429 })
   }

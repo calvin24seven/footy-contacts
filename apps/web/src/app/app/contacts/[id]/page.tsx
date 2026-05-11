@@ -14,12 +14,9 @@ export default async function ContactPage({
   const { id } = await params
   const supabase = await createClient()
 
-  // Fetch only safe (non-premium) columns via the user-scoped client.
-  // Premium fields (email, phone, social URLs) are excluded here because
-  // column-level grants prevent the authenticated role from selecting them.
   const { data: contact } = await supabase
     .from("contacts")
-    .select("id, name, organisation, role, category, country, city, region, level, verified_status, has_email, has_phone, has_linkedin, tags, organisation_id, organisations(logo_url, domain)")
+    .select("*, organisations(logo_url, domain)")
     .eq("id", id)
     .eq("visibility_status", "published")
     .single()
@@ -55,26 +52,6 @@ export default async function ContactPage({
       ip,
       user_agent: ua,
     }).then() // intentionally not awaited
-  }
-
-  // Fetch premium fields only if the user has unlocked this contact.
-  // Using the admin client bypasses column-level RLS restrictions.
-  let premiumFields: {
-    email: string | null
-    phone: string | null
-    linkedin_url: string | null
-    instagram_url: string | null
-    x_url: string | null
-    website: string | null
-  } | null = null
-  if (isUnlocked) {
-    const admin = createAdminClient()
-    const { data } = await admin
-      .from("contacts")
-      .select("email, phone, linkedin_url, instagram_url, x_url, website")
-      .eq("id", id)
-      .single()
-    premiumFields = data
   }
 
   return (
@@ -144,37 +121,37 @@ export default async function ContactPage({
           <h2 className="text-white font-semibold mb-4">Contact Details</h2>
           {isUnlocked ? (
             <div className="space-y-3">
-              {premiumFields?.email && (
+              {contact.email && (
                 <ContactDetail
                   label="Email"
                   icon="email"
-                  value={premiumFields.email}
-                  href={`mailto:${premiumFields.email}`}
+                  value={contact.email}
+                  href={`mailto:${contact.email}`}
                 />
               )}
-              {premiumFields?.phone && (
+              {contact.phone && (
                 <ContactDetail
                   label="Phone"
                   icon="phone"
-                  value={premiumFields.phone}
-                  href={`tel:${premiumFields.phone}`}
+                  value={contact.phone}
+                  href={`tel:${contact.phone}`}
                 />
               )}
-              {premiumFields?.linkedin_url && (
+              {contact.linkedin_url && (
                 <ContactDetail
                   label="LinkedIn"
                   icon="linkedin"
                   value="View profile"
-                  href={premiumFields.linkedin_url}
+                  href={contact.linkedin_url}
                   external
                 />
               )}
-              {premiumFields?.website && (
+              {contact.website && (
                 <ContactDetail
                   label="Website"
                   icon="globe"
                   value="Visit website"
-                  href={premiumFields.website}
+                  href={contact.website}
                   external
                 />
               )}

@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import UserActionsMenu from "./UserActionsMenu"
 
@@ -10,6 +11,8 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ page?: string; q?: string; filter?: string }>
 }) {
   const supabase = createAdminClient()
+  const userClient = await createClient()
+  const { data: { user } } = await userClient.auth.getUser()
 
   const params = await searchParams
   const page = Math.max(1, parseInt(params.page ?? "1", 10))
