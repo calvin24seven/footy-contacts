@@ -182,7 +182,7 @@ export default async function AdminUsersPage({
                           userId={u.id}
                           currentRole={u.role ?? "user"}
                           isSuspended={u.is_suspended}
-                          isSelf={u.id === user.id}
+                          isSelf={u.id === user?.id}
                         />
                       </td>
                     </tr>
