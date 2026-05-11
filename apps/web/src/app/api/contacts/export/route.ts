@@ -129,7 +129,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // Atomically check limit + log export
   const { data: logResult, error: logError } = await supabase.rpc("log_export", {
     p_contact_count: unlockedIds.length,
-    p_list_id: list_id ?? null,
+    p_list_id: list_id ?? undefined,
     p_export_type: "csv",
   })
 
