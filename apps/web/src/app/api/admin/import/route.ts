@@ -984,7 +984,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       const keyToOrgId = new Map<string, string>()
       for (const org of fetchedOrgs ?? []) {
-        keyToOrgId.set(org.normalised_name, org.id)
+        if (org.normalised_name) keyToOrgId.set(org.normalised_name, org.id)
       }
 
       // Apply organisation_id to every candidate entry

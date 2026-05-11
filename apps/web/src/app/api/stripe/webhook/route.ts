@@ -142,20 +142,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         const now = new Date().toISOString()
         // Only set past_due_since if not already set (preserves original failure date)
-        // Cast needed: `past_due_since` column was added after types were last generated
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const adminAny = admin as any
-        const { data: existing } = await adminAny
+        const { data: existing } = await admin
           .from("subscriptions")
           .select("past_due_since")
           .eq("stripe_subscription_id", subscriptionId)
           .maybeSingle()
 
-        await adminAny
+        await admin
           .from("subscriptions")
           .update({
             status: "past_due",
-            past_due_since: (existing as { past_due_since?: string | null } | null)?.past_due_since ?? now,
+            past_due_since: existing?.past_due_since ?? now,
             updated_at: now,
           })
           .eq("stripe_subscription_id", subscriptionId)
