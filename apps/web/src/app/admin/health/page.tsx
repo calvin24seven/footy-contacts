@@ -1,11 +1,10 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { JSX } from "react"
 
-export const revalidate = 300 // cache for 5 minutes
+export const dynamic = "force-dynamic"
 
 export default async function ContactHealthPage(): Promise<JSX.Element> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = (await createAdminClient()) as any
+  const supabase = createAdminClient()
 
   const [
     emailStatusBreakdown,

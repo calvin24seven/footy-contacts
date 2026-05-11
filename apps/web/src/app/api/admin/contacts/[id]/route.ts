@@ -21,14 +21,26 @@ export async function PATCH(
 
   const body = await req.json() as Record<string, unknown>
 
+  // Allowlist of fields that can be updated via this endpoint.
+  // Prevents mass-assignment of internal/system fields.
+  const ALLOWED_FIELDS = new Set([
+    "name", "role", "organisation", "category", "country", "city", "region", "level",
+    "email", "phone", "website", "linkedin_url", "instagram_url", "x_url", "other_social_url",
+    "verified_status", "visibility_status", "suppression_status", "tags", "notes",
+    "role_category", "organisation_id", "data_confidence_score", "source", "source_notes",
+  ])
+  const filtered = Object.fromEntries(
+    Object.entries(body).filter(([k]) => ALLOWED_FIELDS.has(k))
+  )
+
   // Normalise tags: accept comma-string or array
-  if (typeof body.tags === "string") {
-    body.tags = (body.tags as string).split(",").map((t) => t.trim()).filter(Boolean)
+  if (typeof filtered.tags === "string") {
+    filtered.tags = (filtered.tags as string).split(",").map((t) => t.trim()).filter(Boolean)
   }
 
   const { data, error } = await supabase
     .from("contacts")
-    .update({ ...body, updated_at: new Date().toISOString() })
+    .update({ ...filtered, updated_at: new Date().toISOString() })
     .eq("id", id)
     .select()
     .single()

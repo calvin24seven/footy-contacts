@@ -140,9 +140,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const subscriptionId = getInvoiceSubscriptionId(invoice as any)
         if (!subscriptionId) break
 
+        const now = new Date().toISOString()
+        // Only set past_due_since if not already set (preserves original failure date)
+        const { data: existing } = await admin
+          .from("subscriptions")
+          .select("past_due_since")
+          .eq("stripe_subscription_id", subscriptionId)
+          .maybeSingle()
+
         await admin
           .from("subscriptions")
-          .update({ status: "past_due", updated_at: new Date().toISOString() })
+          .update({
+            status: "past_due",
+            past_due_since: existing?.past_due_since ?? now,
+            updated_at: now,
+          })
           .eq("stripe_subscription_id", subscriptionId)
         break
       }

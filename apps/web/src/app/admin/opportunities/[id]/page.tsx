@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import OpportunityForm from "../OpportunityForm"
@@ -9,7 +9,7 @@ export default async function EditOpportunityPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
 
   const [oppResult, responsesResult] = await Promise.all([
     supabase.from("opportunities").select("*").eq("id", id).single(),

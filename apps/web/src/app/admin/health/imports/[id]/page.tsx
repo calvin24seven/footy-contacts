@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import ImportDetailClient from "./ImportDetailClient"
 import { notFound } from "next/navigation"
 import type { JSX } from "react"
@@ -9,7 +9,7 @@ export default async function ImportDetailPage({
   params: Promise<{ id: string }>
 }): Promise<JSX.Element> {
   const { id } = await params
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
 
   const [importRecord, rowStats] = await Promise.all([
     supabase

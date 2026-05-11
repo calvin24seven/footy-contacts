@@ -1,37 +1,83 @@
 /**
- * Lightweight in-memory rate limiter.
- * Works per-serverless-instance; good enough to deter casual scrapers.
- * For production at scale, replace with Upstash Redis.
+ * Distributed rate limiter backed by Upstash Redis.
+ * Works correctly across all Vercel serverless instances.
+ *
+ * Requires env vars: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+ * (set in Vercel dashboard → Settings → Environment Variables)
+ *
+ * Falls back to allowing the request if Redis is unavailable, so the
+ * app stays online if Redis has an outage.
  */
 
-interface Window {
-  count: number
-  resetAt: number
+import { Redis } from "@upstash/redis"
+
+let redis: Redis | null = null
+
+function getRedis(): Redis | null {
+  if (redis) return redis
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) return null
+  redis = new Redis({ url, token })
+  return redis
 }
 
-const store = new Map<string, Window>()
-
-interface RateLimitOptions {
-  /** Max requests allowed in the window */
-  limit: number
-  /** Window size in milliseconds */
-  windowMs: number
+interface RateLimitResult {
+  allowed: boolean
+  remaining: number
+  resetAt: number // unix ms
 }
 
 /**
- * Returns true if the key is within limits, false if rate-limited.
+ * Sliding-window rate limiter using Redis INCR + EXPIRE.
+ *
+ * @param key        Unique key, e.g. `unlock:${userId}`
+ * @param limit      Max requests allowed in the window
+ * @param windowSecs Window duration in seconds
+ * @param failOpen   If true (default), allow requests when Redis is unavailable.
+ *                   Set to false for sensitive operations like exports.
  */
-export function rateLimit(key: string, opts: RateLimitOptions): boolean {
-  const now = Date.now()
-  const win = store.get(key)
-
-  if (!win || now >= win.resetAt) {
-    store.set(key, { count: 1, resetAt: now + opts.windowMs })
-    return true
+export async function rateLimit(
+  key: string,
+  limit: number,
+  windowSecs: number,
+  failOpen = true
+): Promise<RateLimitResult> {
+  const r = getRedis()
+  if (!r) {
+    return { allowed: failOpen, remaining: failOpen ? limit : 0, resetAt: Date.now() + windowSecs * 1000 }
   }
 
-  if (win.count >= opts.limit) return false
+  try {
+    const redisKey = `rl:${key}`
+    const count = await r.incr(redisKey)
+    if (count === 1) {
+      await r.expire(redisKey, windowSecs)
+    }
+    const ttl = await r.ttl(redisKey)
+    const resetAt = Date.now() + ttl * 1000
+    return {
+      allowed: count <= limit,
+      remaining: Math.max(0, limit - count),
+      resetAt,
+    }
+  } catch {
+    return { allowed: failOpen, remaining: failOpen ? limit : 0, resetAt: Date.now() + windowSecs * 1000 }
+  }
+}
 
-  win.count++
-  return true
+/**
+ * Daily rate limiter — resets at midnight UTC.
+ * Key is automatically scoped to the current UTC day.
+ *
+ * @param failOpen  If true (default), allow requests when Redis is unavailable.
+ */
+export async function rateLimitDaily(
+  key: string,
+  limit: number,
+  failOpen = true
+): Promise<RateLimitResult> {
+  const today = new Date().toISOString().slice(0, 10) // "2026-05-01"
+  const secondsUntilMidnight = 86400 - (Math.floor(Date.now() / 1000) % 86400)
+  return rateLimit(`${key}:${today}`, limit, secondsUntilMidnight, failOpen)
 }

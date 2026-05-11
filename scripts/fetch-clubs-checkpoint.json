@@ -1,0 +1,783 @@
+{
+  "8": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "9": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "12": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "14": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "17": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "20": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "42": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "44": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "45": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "48": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "51": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "53": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "54": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "68": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "69": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "72": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "74": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "77": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "80": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "82": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "85": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "88": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "91": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "103": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "106": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "208": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "211": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "301": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "304": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "313": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "360": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "363": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "438": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "441": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "462": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "465": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "501": {
+    "done": true,
+    "seasonId": 25598,
+    "seasonName": "2025/2026",
+    "teams": [
+      {
+        "id": 309,
+        "name": "Motherwell",
+        "short_code": "MOT"
+      },
+      {
+        "id": 180,
+        "name": "Kilmarnock",
+        "short_code": "KIL"
+      },
+      {
+        "id": 273,
+        "name": "Aberdeen",
+        "short_code": "ABE"
+      },
+      {
+        "id": 770,
+        "name": "Falkirk",
+        "short_code": ""
+      },
+      {
+        "id": 66,
+        "name": "Hibernian",
+        "short_code": "HIB"
+      },
+      {
+        "id": 53,
+        "name": "Celtic",
+        "short_code": "CEL"
+      },
+      {
+        "id": 258,
+        "name": "Livingston",
+        "short_code": "LIV"
+      },
+      {
+        "id": 314,
+        "name": "Hearts",
+        "short_code": ""
+      },
+      {
+        "id": 284,
+        "name": "Dundee",
+        "short_code": "DUD"
+      },
+      {
+        "id": 62,
+        "name": "Rangers",
+        "short_code": "RAN"
+      },
+      {
+        "id": 282,
+        "name": "Dundee United",
+        "short_code": "DUD"
+      },
+      {
+        "id": 496,
+        "name": "St. Mirren",
+        "short_code": "STM"
+      }
+    ]
+  },
+  "504": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "516": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "519": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "564": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "567": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "624": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "779": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "791": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "794": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1092": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1177": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1178": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1228": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1229": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1351": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1418": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1422": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1547": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1560": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1568": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1571": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1572": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1575": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1599": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1607": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1608": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1609": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1643": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1689": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1738": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1803": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1804": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1805": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1900": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1945": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1949": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1950": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1967": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1968": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1969": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1970": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1971": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "1972": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2312": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2328": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2329": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2330": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2331": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2332": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2333": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2334": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2336": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2337": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2338": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2339": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2340": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2344": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2348": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2394": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2398": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2399": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2400": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2415": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2463": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2495": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2496": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2606": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2608": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2669": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2670": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2726": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2768": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2771": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2787": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2831": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2850": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2859": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2866": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "2868": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "3335": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "3385": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "3464": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  },
+  "3499": {
+    "done": true,
+    "seasonId": null,
+    "seasonName": null,
+    "teams": []
+  }
+}

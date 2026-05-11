@@ -1,8 +1,8 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 
 export default async function AdminDashboard() {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 

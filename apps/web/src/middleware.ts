@@ -123,6 +123,31 @@ export async function middleware(request: NextRequest) {
     supabaseResponse.headers.set("X-Content-Type-Options", "nosniff")
   }
 
+  // ── Security headers applied to ALL routes ─────────────────────────────────
+  // HSTS: tell browsers to always use HTTPS for the next year
+  supabaseResponse.headers.set(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains"
+  )
+  // CSP: restrict which resources the browser can load
+  supabaseResponse.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+      "style-src 'self' 'unsafe-inline'",
+      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://js.stripe.com",
+      "frame-src https://js.stripe.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
+      "font-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; ")
+  )
+  // Prevent referrer leaking on cross-origin navigation
+  supabaseResponse.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+
   return supabaseResponse
 }
 

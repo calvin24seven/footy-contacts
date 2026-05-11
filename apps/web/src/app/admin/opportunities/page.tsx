@@ -1,8 +1,8 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 
 export default async function AdminOpportunitiesPage() {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
 
   const { data: opportunities } = await supabase
     .from("opportunities")

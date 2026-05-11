@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { Tables } from "@/database.types"
+import { rateLimit } from "@/lib/rate-limit"
 
 // ---------------------------------------------------------------------------
 // CSV helpers
@@ -71,6 +72,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
 
+  // 1 export per user per hour
+  const perHour = await rateLimit(`export:${user.id}`, 1, 3600, false)
+  if (!perHour.allowed) {
+    return NextResponse.json({ error: "export_limit_reached", message: "You can export once per hour." }, { status: 429 })
+  }
+
   const body = (await req.json()) as {
     list_id?: string
     contact_ids?: string[]
@@ -110,7 +117,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     .eq("user_id", user.id)
     .in("contact_id", requestedIds)
 
-  const unlockedIds = unlocks?.map((u) => u.contact_id) ?? []
+  const unlockedIds = (unlocks?.map((u) => u.contact_id) ?? []).slice(0, 500)
 
   if (unlockedIds.length === 0) {
     return NextResponse.json(
@@ -155,6 +162,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     .from("contacts")
     .select("*")
     .in("id", unlockedIds)
+    .eq("is_honeypot", false) // never export honeypot contacts
 
   if (!contacts?.length) {
     return NextResponse.json({ error: "contacts not found" }, { status: 404 })

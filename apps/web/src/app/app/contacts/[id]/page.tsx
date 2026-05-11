@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound } from "next/navigation"
 import UnlockButton from "./UnlockButton"
 import SaveToListButton from "@/components/SaveToListButton"
 import { getOrgLogoUrl } from "@/lib/orgLogo"
+import { headers as nextHeaders } from "next/headers"
 
 export default async function ContactPage({
   params,
@@ -12,9 +14,12 @@ export default async function ContactPage({
   const { id } = await params
   const supabase = await createClient()
 
+  // Fetch only safe (non-premium) columns via the user-scoped client.
+  // Premium fields (email, phone, social URLs) are excluded here because
+  // column-level grants prevent the authenticated role from selecting them.
   const { data: contact } = await supabase
     .from("contacts")
-    .select("*, organisations(logo_url, domain)")
+    .select("id, name, organisation, role, category, country, city, region, level, verified_status, has_email, has_phone, has_linkedin, tags, organisation_id, organisations(logo_url, domain)")
     .eq("id", id)
     .eq("visibility_status", "published")
     .single()
@@ -35,6 +40,41 @@ export default async function ContactPage({
       .eq("contact_id", id)
       .maybeSingle()
     isUnlocked = !!unlock
+
+    // Record view for scraper detection (fire-and-forget, do not block render)
+    const reqHeaders = await nextHeaders()
+    const ip =
+      reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      reqHeaders.get("x-real-ip") ??
+      null
+    const ua = reqHeaders.get("user-agent") ?? null
+    const admin = createAdminClient()
+    admin.from("contact_views").insert({
+      user_id: user.id,
+      contact_id: id,
+      ip,
+      user_agent: ua,
+    }).then() // intentionally not awaited
+  }
+
+  // Fetch premium fields only if the user has unlocked this contact.
+  // Using the admin client bypasses column-level RLS restrictions.
+  let premiumFields: {
+    email: string | null
+    phone: string | null
+    linkedin_url: string | null
+    instagram_url: string | null
+    x_url: string | null
+    website: string | null
+  } | null = null
+  if (isUnlocked) {
+    const admin = createAdminClient()
+    const { data } = await admin
+      .from("contacts")
+      .select("email, phone, linkedin_url, instagram_url, x_url, website")
+      .eq("id", id)
+      .single()
+    premiumFields = data
   }
 
   return (
@@ -104,37 +144,37 @@ export default async function ContactPage({
           <h2 className="text-white font-semibold mb-4">Contact Details</h2>
           {isUnlocked ? (
             <div className="space-y-3">
-              {contact.email && (
+              {premiumFields?.email && (
                 <ContactDetail
                   label="Email"
                   icon="email"
-                  value={contact.email}
-                  href={`mailto:${contact.email}`}
+                  value={premiumFields.email}
+                  href={`mailto:${premiumFields.email}`}
                 />
               )}
-              {contact.phone && (
+              {premiumFields?.phone && (
                 <ContactDetail
                   label="Phone"
                   icon="phone"
-                  value={contact.phone}
-                  href={`tel:${contact.phone}`}
+                  value={premiumFields.phone}
+                  href={`tel:${premiumFields.phone}`}
                 />
               )}
-              {contact.linkedin_url && (
+              {premiumFields?.linkedin_url && (
                 <ContactDetail
                   label="LinkedIn"
                   icon="linkedin"
                   value="View profile"
-                  href={contact.linkedin_url}
+                  href={premiumFields.linkedin_url}
                   external
                 />
               )}
-              {contact.website && (
+              {premiumFields?.website && (
                 <ContactDetail
                   label="Website"
                   icon="globe"
                   value="Visit website"
-                  href={contact.website}
+                  href={premiumFields.website}
                   external
                 />
               )}

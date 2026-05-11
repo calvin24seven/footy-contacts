@@ -13,6 +13,8 @@
  *   REOON_API_KEY
  *   STRIPE_SECRET_KEY
  *   STRIPE_WEBHOOK_SECRET
+ *   UPSTASH_REDIS_REST_URL   (for distributed rate limiting)
+ *   UPSTASH_REDIS_REST_TOKEN (for distributed rate limiting)
  */
 
 // Module-level cache — avoids repeated env lookups in warm serverless instances

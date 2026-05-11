@@ -1,9 +1,9 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import SuppressionClient from "./SuppressionClient"
 import type { JSX } from "react"
 
 export default async function SuppressionsPage(): Promise<JSX.Element> {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
 
   const [suppressions, count] = await Promise.all([
     supabase

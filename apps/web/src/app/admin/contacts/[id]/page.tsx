@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import ContactEditForm from "./ContactEditForm"
@@ -10,7 +10,7 @@ export default async function AdminContactEditPage({
   params: Promise<{ id: string }>
 }): Promise<JSX.Element> {
   const { id } = await params
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
 
   const { data: contact } = await supabase
     .from("contacts")

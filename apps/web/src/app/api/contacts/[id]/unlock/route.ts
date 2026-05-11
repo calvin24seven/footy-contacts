@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { rateLimit } from "@/lib/rate-limit"
+import { rateLimit, rateLimitDaily } from "@/lib/rate-limit"
 
 export async function POST(
   req: NextRequest,
@@ -12,9 +12,16 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
 
-  // 30 unlock attempts per user per minute
-  if (!rateLimit(`unlock:${user.id}`, { limit: 30, windowMs: 60_000 })) {
+  // 20 unlocks per user per minute
+  const perMin = await rateLimit(`unlock:${user.id}:min`, 20, 60)
+  if (!perMin.allowed) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 })
+  }
+
+  // 200 unlocks per user per day
+  const perDay = await rateLimitDaily(`unlock:${user.id}`, 200)
+  if (!perDay.allowed) {
+    return NextResponse.json({ error: "daily_limit_reached" }, { status: 429 })
   }
 
   const { data, error } = await supabase.rpc("unlock_contact", {

@@ -1,0 +1,333 @@
+This website uses cookies
+We use cookies to personalise content and ads, to provide social media features and to analyse our traffic. We also share information about your use of our site with our social media, advertising and analytics partners who may combine it with other information that you’ve provided to them or that they’ve collected from your use of their services.
+Show details
+Allow all
+Customize
+Deny
+Live now!
+• Accurate & reliable sports data
+• Trusted by 20,000+ developers
+• Easy API integration
+EN
+World Cup 2026
+Login
+Try for free
+Home Football API Football League Coverage and Data Features
+FOOTBALL LEAGUE COVERAGE AND DATA FEATURES
+
+We cover over 2200+ leagues and offer various data points to help you make the most of our Football API.
+
+Have a look for yourself!
+
+Data features
+COVERAGE FOOTBALL API
+
+Here, you can find a document in which all leagues are included. As our coverage is always growing, we are constantly updating this document. We are currently over 2200 leagues.
+
+We have leagues like the World Cup, Premier League, Champions League, and so on.
+
+Download Coverage
+
+FOOTBALL API DOCUMENTATION
+
+Interested in how our APIs work? Check out our comprehensive and in-depth docs!
+
+AVAILABLE LEAGUES & COVERAGE
+All
+Europe
+International
+South America
+North America
+Asia
+Africa
+Oceania
+Last-update 2026-04-2
+ALL
+Standings
+Odds
+Fixtures and Season Schedules
+Advanced Player Stats
+Standard Player Stats and Lineups
+Livescores and Events
+Match Statistics
+Standings Live
+Topscorers
+Historical data
+TOP LEAGUES
+World Cup #732
+European Championship #1326
+Copa America #1114
+Africa Cup of Nations #1117
+Asian Cup #1105
+Champions League #2
+Europa League #5
+Conference League #2286
+Premier League #8
+La Liga #564
+Bundesliga #82
+Serie A #384
+Eredivisie #72
+Liga Portugal #462
+Pro League #208
+Serie A #648
+MLS #779
+Superliga #636
+Pro League #944
+Super League #989
+AFRICA
+Africa Cup Of Nations U20 #1515
+-
+-
+-
+African Championship Women #1570
+-
+-
+-
+-
+-
+COSAFA U20 Championship #1591
+-
+-
+Africa U23 Cup of Nations #1756
+-
+CECAFA U20 Championship #1999
+-
+-
+Africa U20 Cup of Nations Qualification #2004
+-
+-
+-
+-
+-
+CAF Women's Champions League #2431
+-
+-
+-
+-
+-
+Africa U23 Cup of Nations Qualification #2879
+-
+-
+-
+-
+-
+CAF U17 Cup of Nations #3114
+-
+-
+-
+-
+-
+Women's Olympic Qualifying CAF #3197
+-
+-
+-
+-
+-
+U20 Women's World Cup Qualification Africa #3236
+-
+-
+-
+-
+-
+Africa Women Cup of Nations Qualification #3254
+-
+-
+-
+-
+-
+African Football League #3270
+-
+-
+-
+-
+-
+U17 Women's World Cup Qualification Africa #3295
+-
+-
+-
+-
+-
+All Africa Games #3320
+-
+-
+-
+-
+-
+African Games Women #3321
+-
+-
+-
+-
+-
+Africa U20 Cup of Nations Qualification #3398
+-
+-
+-
+-
+-
+COSAFA Women's U20 Cup #3415
+-
+-
+-
+-
+-
+ALBANIA
+Superliga #172
+-
+1st Division #1358
+-
+2nd Division #1359
+-
+-
+-
+-
+-
+-
+Albanian Cup #1361
+-
+-
+-
+-
+-
+1st Division Play-offs #1675
+-
+-
+-
+-
+-
+-
+Super Cup #1676
+-
+-
+-
+-
+-
+Kampionati i Femrave #2027
+-
+-
+-
+-
+-
+Play-offs 1/2 #3157
+-
+-
+-
+-
+-
+ALGERIA
+Ligue 1 #809
+-
+-
+Ligue 2 #812
+-
+-
+-
+-
+Algeria Cup #1373
+-
+-
+-
+-
+-
+Super Cup #1567
+-
+-
+-
+-
+-
+Algeria Youth League #1597
+-
+-
+Reserve League #3408
+-
+-
+ANDORRA
+Primera División #893
+-
+-
+2. Division #896
+-
+-
+Player-offs 1/2 #1902
+-
+-
+-
+-
+-
+-
+-
+Super Cup #2307
+-
+-
+-
+-
+-
+-
+Copa Constitució #2308
+-
+-
+-
+-
+-
+-
+ANGOLA
+Girabola #815
+-
+-
+Super Cup #2543
+-
+-
+-
+-
+-
+-
+Show all
+
+CREATE THE FUTURE OF SPORTS!
+
+Try for free
+Papenstraat 26
+7411 ND Deventer
+support@sportmonks.com
+KvK (Chamber of Commerce) 74390856
+API
+Football API
+Football Coverage
+Plans & pricing
+Cricket
+Cricket Coverage
+Formula 1 API
+FOOTBALL
+Widgets
+Predictions
+xG Data
+Expected Lineups API
+Premium Odds Feed
+Pressure Index
+News API
+Transfer Rumours
+RESOURCES
+Plans & pricing
+Docs
+FAQ
+Blogs
+Glossary
+SPORTMONKS
+Why clients use Sportmonks?
+Contact & Support
+Sportmonks Careers
+Privacy Policy
+Terms of Service
+Server status
+EN
+Terms and Conditions
+Sitemap
+©2026 Sportmonks B.V. All rights reserved.
+World Cup 2026 Kick-off
+41D
+:
+21H
+:
+36M
+:
+19S

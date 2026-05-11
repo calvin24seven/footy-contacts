@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { JSX } from "react"
 
 const PER_PAGE = 50
@@ -8,7 +8,7 @@ export default async function AdminAuditLogsPage({
 }: {
   searchParams: Promise<{ page?: string; action?: string; entity?: string }>
 }): Promise<JSX.Element> {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
   const params = await searchParams
   const page = Math.max(1, parseInt(params.page ?? "1", 10))
   const actionFilter = params.action ?? ""

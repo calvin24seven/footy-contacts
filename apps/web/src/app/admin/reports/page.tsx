@@ -1,8 +1,8 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { JSX } from "react"
 
 export default async function AdminReportsPage(): Promise<JSX.Element> {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
 
   const now = new Date()
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()

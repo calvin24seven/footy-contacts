@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 import type { JSX } from "react"
 
@@ -9,7 +9,7 @@ export default async function AdminContactsPage({
 }: {
   searchParams: Promise<{ page?: string; q?: string; category?: string; status?: string; verified?: string }>
 }): Promise<JSX.Element> {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
   const params = await searchParams
 
   const page = Math.max(1, parseInt(params.page ?? "1", 10))

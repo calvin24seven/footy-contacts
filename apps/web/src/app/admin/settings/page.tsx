@@ -1,9 +1,9 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import SettingsEditor from "./SettingsEditor"
 import type { JSX } from "react"
 
 export default async function AdminSettingsPage(): Promise<JSX.Element> {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClient()
 
   const { data: settings } = await supabase
     .from("app_settings")

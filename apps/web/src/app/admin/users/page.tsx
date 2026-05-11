@@ -1,5 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 import UserActionsMenu from "./UserActionsMenu"
 
@@ -10,13 +9,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ page?: string; q?: string; filter?: string }>
 }) {
-  const supabase = await createAdminClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect("/login")
-
-  const { data: selfProfile } = await supabase
-    .from("profiles").select("role").eq("id", user.id).single()
-  if (selfProfile?.role !== "admin") redirect("/app")
+  const supabase = createAdminClient()
 
   const params = await searchParams
   const page = Math.max(1, parseInt(params.page ?? "1", 10))
