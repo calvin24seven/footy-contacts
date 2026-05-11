@@ -158,11 +158,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // Fetch full contact rows via admin client (bypass RLS for confirmed unlocks)
   const admin = createAdminClient()
-  const { data: contacts } = await admin
+  const { data: contactsRaw } = await admin
     .from("contacts")
     .select("*")
     .in("id", unlockedIds)
-    .eq("is_honeypot", false) // never export honeypot contacts
+
+  // Never export honeypot contacts — filter in JS because generated types may lag the DB schema
+  const contacts = (contactsRaw ?? []).filter(
+    (c) => !(c as Record<string, unknown>)["is_honeypot"]
+  )
 
   if (!contacts?.length) {
     return NextResponse.json({ error: "contacts not found" }, { status: 404 })
