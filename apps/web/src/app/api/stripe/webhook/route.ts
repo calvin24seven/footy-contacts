@@ -154,7 +154,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             status: "past_due",
             past_due_since: existing?.past_due_since ?? now,
             updated_at: now,
-          })
+          } as unknown as Parameters<ReturnType<typeof admin.from<"subscriptions">>["update"]>[0])
           .eq("stripe_subscription_id", subscriptionId)
         break
       }
