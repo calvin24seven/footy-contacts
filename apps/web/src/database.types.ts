@@ -154,29 +154,47 @@ export type Database = {
       }
       contact_role_history: {
         Row: {
+          change_type: string | null
           contact_id: string
           id: string
           import_id: string | null
+          new_email: string | null
+          new_phone: string | null
           organisation: string | null
           recorded_at: string
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           role: string | null
           source: string
         }
         Insert: {
+          change_type?: string | null
           contact_id: string
           id?: string
           import_id?: string | null
+          new_email?: string | null
+          new_phone?: string | null
           organisation?: string | null
           recorded_at?: string
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           role?: string | null
           source?: string
         }
         Update: {
+          change_type?: string | null
           contact_id?: string
           id?: string
           import_id?: string | null
+          new_email?: string | null
+          new_phone?: string | null
           organisation?: string | null
           recorded_at?: string
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           role?: string | null
           source?: string
         }

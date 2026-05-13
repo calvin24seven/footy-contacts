@@ -1083,16 +1083,40 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const existing = entry.existingContact
         if (existing) {
           const incomingRole = entry.contact.role as string | undefined
-          const incomingOrg = entry.contact.organisation as string | undefined
-          const roleChanged = incomingRole && incomingRole !== existing.role
-          const orgChanged = incomingOrg && incomingOrg !== existing.organisation
+          const incomingOrg  = entry.contact.organisation as string | undefined
+          const incomingEmail = entry.contact.email as string | undefined
+          const incomingPhone = entry.contact.phone as string | undefined
+
+          const roleLower    = incomingRole?.toLowerCase()
+          const existRole    = existing.role?.toLowerCase()
+          const orgLower     = incomingOrg?.toLowerCase()
+          const existOrg     = existing.organisation?.toLowerCase()
+
+          const roleChanged  = !!(incomingRole && roleLower !== existRole)
+          const orgChanged   = !!(incomingOrg  && orgLower  !== existOrg)
+
           if (roleChanged || orgChanged) {
+            const changeType =
+              roleChanged && orgChanged ? "both_changed" :
+              roleChanged               ? "role_changed" :
+                                          "org_changed"
+            // Casing-only: same content, different capitalisation
+            const isCasingOnly =
+              changeType === "role_changed" && incomingRole?.toLowerCase() === existRole ||
+              changeType === "org_changed"  && incomingOrg?.toLowerCase()  === existOrg
+
+            const resolvedChangeType = isCasingOnly ? "casing_only" : changeType
+
             skipModeHistoryInserts.push({
-              contact_id: existing.id,
-              role: incomingRole ?? existing.role,
-              organisation: incomingOrg ?? existing.organisation,
-              source: "csv_import_signal",
-              import_id: importId,
+              contact_id:    existing.id,
+              role:          incomingRole ?? existing.role,
+              organisation:  incomingOrg  ?? existing.organisation,
+              new_email:     incomingEmail ?? null,
+              new_phone:     incomingPhone ?? null,
+              change_type:   resolvedChangeType,
+              review_status: resolvedChangeType === "casing_only" ? "auto_approved" : "pending",
+              source:        "csv_import_signal",
+              import_id:     importId,
             })
           }
         }
@@ -1108,6 +1132,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (skipModeHistoryInserts.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from("contact_role_history") as any).insert(skipModeHistoryInserts)
+
+      // Apply casing-only fixes immediately — no admin approval needed
+      const casingFixes = skipModeHistoryInserts.filter(h => h.change_type === "casing_only")
+      for (const fix of casingFixes) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase.from("contacts") as any)
+          .update({ role: fix.role, organisation: fix.organisation, updated_at: new Date().toISOString() })
+          .eq("id", fix.contact_id)
+      }
     }
 
     // ── Bulk insert new contacts ──────────────────────────────────────────────
