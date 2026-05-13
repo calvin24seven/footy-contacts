@@ -1086,10 +1086,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     // ── Bulk insert new contacts ──────────────────────────────────────────────
+    // Strip internal _-prefixed fields (e.g. _company_linkedin) that are used
+    // during processing but have no corresponding column in the contacts table.
+    const stripInternal = (c: Record<string, unknown>) =>
+      Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith("_")))
+
     if (toInsert.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: inserted, error: bulkErr } = await (supabase.from("contacts") as any)
-        .insert(toInsert.map(e => e.contact))
+        .insert(toInsert.map(e => stripInternal(e.contact)))
         .select("id")
       if (bulkErr) {
         failedRows += toInsert.length
