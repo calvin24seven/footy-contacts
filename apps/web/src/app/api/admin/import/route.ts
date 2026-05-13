@@ -42,6 +42,7 @@ const COLUMN_MAP: Record<string, string> = {
   phone_number: "phone",
   mobile: "phone",
   company_phone_number: "_phone_fallback",
+  company_phone: "_phone_fallback",            // Apollo "Company Phone" header variant
 
   // Web / social
   website: "website",
@@ -50,21 +51,30 @@ const COLUMN_MAP: Record<string, string> = {
   linkedin_url: "linkedin_url",
   linkedin_link: "linkedin_url",
   linkedin: "linkedin_url",
+  person_linkedin_url: "linkedin_url",         // Apollo "Person Linkedin Url" header variant
   x_url: "x_url",
   twitter: "x_url",
+  twitter_url: "x_url",                        // Apollo "Twitter Url" header variant
   company_twitter_link: "_x_fallback",
   instagram_url: "instagram_url",
   instagram: "instagram_url",
+  facebook_url: "other_social_url",            // No dedicated FB field — store as other social
+
+  // Location extras
+  state: "region",                             // Apollo "State" header (person's state)
 
   // Content
   source: "source",
   notes: "notes",
   company_short_description: "_description",   // → notes (cleaned, truncated)
   company_keywords: "_keywords",               // → tags (JSON array, deduped)
+  keywords: "_keywords",                       // → tags (plain comma-separated variant)
   tags: "tags",
 
   // Ignored: company_seo_description (spam/foreign), company_technologies
-  // (always duplicated), company_* address/revenue/funding fields, seniority
+  // (always duplicated), company_* address/revenue/funding/founding fields,
+  // seniority (Apollo Director/Entry/VP ≠ DB level which is football career level),
+  // languages, industry, company_linkedin_url, company_city/state/country
 }
 
 // ── Formatting helpers ─────────────────────────────────────────────────────
@@ -196,6 +206,34 @@ function normaliseCountry(text: string): string {
  */
 function normalisePhone(text: string): string {
   return text.replace(/\s*(ext\.?|x)\s*\d+$/i, "").trim()
+}
+
+/**
+ * Attempt to fix mojibake (UTF-8 bytes misread as Latin-1/CP-1252).
+ * This happens when a CSV file saved as UTF-8 is parsed without specifying
+ * the encoding, causing multi-byte sequences to be split into individual Latin-1
+ * characters (e.g. "ç" → "Ã§", "ã" → "Ã£").
+ * Strategy: treat each character's codepoint as a raw byte and re-decode as UTF-8.
+ * If decoding succeeds AND produces fewer non-ASCII characters, the fix is accepted.
+ */
+function fixMojibake(text: string): string {
+  // Fast path: pure ASCII is never mojibake
+  if (!/[^\x00-\x7F]/.test(text)) return text
+  try {
+    const bytes = new Uint8Array(text.length)
+    for (let i = 0; i < text.length; i++) {
+      const code = text.charCodeAt(i)
+      // If any codepoint exceeds 0xFF the string is already proper Unicode — skip
+      if (code > 0xFF) return text
+      bytes[i] = code
+    }
+    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes)
+    // Accept only if the decoded string has fewer non-ASCII chars (i.e. is cleaner)
+    const highCount = (s: string) => [...s].filter((c) => c.charCodeAt(0) > 127).length
+    return highCount(decoded) < highCount(text) ? decoded : text
+  } catch {
+    return text
+  }
 }
 
 // ── Role-based automatic suppression ──────────────────────────────────────
@@ -542,14 +580,20 @@ function buildContact(
         break
       }
       case "_keywords": {
-        try {
-          const parsed = JSON.parse(val)
-          if (Array.isArray(parsed)) {
-            // Deduplicate (Apollo sometimes triplicates entries)
-            const deduped = [...new Set((parsed as string[]).map((k) => k.toLowerCase().trim()))]
-            if (!contact.tags) contact.tags = deduped
+        if (!contact.tags) {
+          try {
+            const parsed = JSON.parse(val)
+            if (Array.isArray(parsed)) {
+              // Deduplicate (Apollo sometimes triplicates entries)
+              const deduped = [...new Set((parsed as string[]).map((k) => k.toLowerCase().trim()))]
+              contact.tags = deduped
+            }
+          } catch {
+            // Not JSON — treat as plain comma-separated string (e.g. Apollo "Keywords" column)
+            const parts = val.split(",").map((k) => k.toLowerCase().trim()).filter(Boolean)
+            if (parts.length) contact.tags = [...new Set(parts)]
           }
-        } catch { /* malformed JSON — skip */ }
+        }
         break
       }
       case "tags": {
@@ -594,6 +638,11 @@ function buildContact(
   }
 
   // ── Field normalisation ────────────────────────────────────────────────
+
+  // Fix mojibake before any other normalisation (UTF-8 bytes misread as Latin-1)
+  if (typeof contact.name === "string") contact.name = fixMojibake(contact.name)
+  if (typeof contact.role === "string") contact.role = fixMojibake(contact.role)
+  if (typeof contact.organisation === "string") contact.organisation = fixMojibake(contact.organisation)
 
   // Person name: normalise casing (ALL-CAPS / all-lower → title case)
   if (typeof contact.name === "string") {
