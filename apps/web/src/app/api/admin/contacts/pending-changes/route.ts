@@ -13,6 +13,46 @@ async function requireAdmin() {
 }
 
 /**
+ * GET /api/admin/contacts/pending-changes
+ * Query params: page (1-based), limit (default 50), change_type (optional filter)
+ */
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  const { supabase, forbidden } = await requireAdmin()
+  if (forbidden || !supabase) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  const { searchParams } = new URL(req.url)
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10))
+  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit") ?? "50", 10)))
+  const changeType = searchParams.get("change_type")
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase.from("contact_role_history") as any)
+    .select(
+      `id, contact_id, role, organisation, new_email, new_phone,
+       change_type, recorded_at, import_id,
+       contacts!contact_role_history_contact_id_fkey (
+         name, role, organisation, email
+       )`,
+      { count: "exact" }
+    )
+    .eq("source", "csv_import_signal")
+    .eq("review_status", "pending")
+    .order("recorded_at", { ascending: false })
+    .range((page - 1) * limit, page * limit - 1)
+
+  if (changeType && changeType !== "all") {
+    query = query.eq("change_type", changeType)
+  }
+
+  const { data, count, error } = await query
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ data: data ?? [], count: count ?? 0 })
+}
+
+/**
  * POST /api/admin/contacts/pending-changes
  * Body: { action: "approve" | "reject", ids: string[] }
  *

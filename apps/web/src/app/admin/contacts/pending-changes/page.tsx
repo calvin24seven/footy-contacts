@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { createClient } from "@/lib/supabase/client"
 
 type ChangeType = "role_changed" | "org_changed" | "both_changed" | "casing_only"
 
@@ -32,8 +31,6 @@ const CHANGE_TYPE_LABELS: Record<string, { label: string; colour: string }> = {
 const PAGE_SIZE = 50
 
 export default function PendingChangesPage() {
-  const supabase = createClient()
-
   const [signals, setSignals]         = useState<PendingSignal[]>([])
   const [total, setTotal]             = useState(0)
   const [page, setPage]               = useState(1)
@@ -52,46 +49,36 @@ export default function PendingChangesPage() {
     setLoading(true)
     setSelected(new Set())
 
-    let query = supabase
-      .from("contact_role_history")
-      .select(`
-        id, contact_id, role, organisation, new_email, new_phone,
-        change_type, recorded_at, import_id,
-        contacts!contact_role_history_contact_id_fkey (
-          name, role, organisation, email
-        )
-      `, { count: "exact" })
-      .eq("source", "csv_import_signal")
-      .eq("review_status", "pending")
-      .order("recorded_at", { ascending: false })
-      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(PAGE_SIZE),
+      ...(filterType !== "all" ? { change_type: filterType } : {}),
+    })
+    const res = await fetch(`/api/admin/contacts/pending-changes?${params}`)
+    if (!res.ok) { setLoading(false); return }
 
-    if (filterType !== "all") {
-      query = query.eq("change_type", filterType)
-    }
-
-    const { data, count, error } = await query
-    if (error) { setLoading(false); return }
-
-    setTotal(count ?? 0)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setSignals((data ?? []).map((row: any) => ({
-      id:                   row.id,
-      contact_id:           row.contact_id,
-      role:                 row.role,
-      organisation:         row.organisation,
-      new_email:            row.new_email,
-      new_phone:            row.new_phone,
-      change_type:          row.change_type,
-      recorded_at:          row.recorded_at,
-      import_id:            row.import_id,
-      contact_name:         row.contacts?.name ?? "—",
-      current_role:         row.contacts?.role ?? null,
-      current_organisation: row.contacts?.organisation ?? null,
-      current_email:        row.contacts?.email ?? null,
-    })))
+    const body = await res.json() as { data: Array<Record<string, unknown>>; count: number }
+    setTotal(body.count)
+    setSignals(body.data.map((row) => {
+      const contact = row.contacts as Record<string, unknown> | null
+      return {
+        id:                   row.id as string,
+        contact_id:           row.contact_id as string,
+        role:                 row.role as string | null,
+        organisation:         row.organisation as string | null,
+        new_email:            row.new_email as string | null,
+        new_phone:            row.new_phone as string | null,
+        change_type:          row.change_type as ChangeType | null,
+        recorded_at:          row.recorded_at as string,
+        import_id:            row.import_id as string | null,
+        contact_name:         contact?.name as string ?? "—",
+        current_role:         contact?.role as string | null ?? null,
+        current_organisation: contact?.organisation as string | null ?? null,
+        current_email:        contact?.email as string | null ?? null,
+      }
+    }))
     setLoading(false)
-  }, [page, filterType, supabase])
+  }, [page, filterType])
 
   useEffect(() => { load() }, [load])
 
