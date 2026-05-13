@@ -1016,6 +1016,7 @@ export type Database = {
           id: string
           league: string | null
           level: string | null
+          linkedin_url: string | null
           logo_url: string | null
           name: string
           normalised_name: string | null
@@ -1031,6 +1032,7 @@ export type Database = {
           id?: string
           league?: string | null
           level?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           name: string
           normalised_name?: string | null
@@ -1046,6 +1048,7 @@ export type Database = {
           id?: string
           league?: string | null
           level?: string | null
+          linkedin_url?: string | null
           logo_url?: string | null
           name?: string
           normalised_name?: string | null
