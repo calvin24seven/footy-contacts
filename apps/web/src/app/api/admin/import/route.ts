@@ -217,6 +217,21 @@ function normalisePhone(text: string): string {
  * Strategy: treat each character's codepoint as a raw byte and re-decode as UTF-8.
  * If decoding succeeds AND produces fewer non-ASCII characters, the fix is accepted.
  */
+/**
+ * Normalise an organisation name for change-detection comparison only.
+ * Strips punctuation, collapses whitespace, and removes trailing football
+ * entity-type tokens (FC, AFC, SC, FK, CF, BV, SV, AC, AS) so that
+ * "Newport County AFC" ≡ "Newport County" and "U.c. Sampdoria" ≡ "UC Sampdoria".
+ */
+function normaliseOrgForComparison(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[.\-']/g, "")                                    // strip punctuation
+    .replace(/\s+/g, " ")                                      // collapse spaces
+    .replace(/\s+(afc|fc|sc|fk|cf|bv|sv|ac|as|rfk|hfc)\s*$/, "") // strip trailing entity type
+    .trim()
+}
+
 function fixMojibake(text: string): string {
   // Fast path: pure ASCII is never mojibake
   if (!/[^\x00-\x7F]/.test(text)) return text
@@ -1089,8 +1104,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
           const roleLower    = incomingRole?.toLowerCase()
           const existRole    = existing.role?.toLowerCase()
-          const orgLower     = incomingOrg?.toLowerCase()
-          const existOrg     = existing.organisation?.toLowerCase()
+          const orgLower     = incomingOrg ? normaliseOrgForComparison(incomingOrg) : undefined
+          const existOrg     = existing.organisation ? normaliseOrgForComparison(existing.organisation) : undefined
 
           const roleChanged  = !!(incomingRole && roleLower !== existRole)
           const orgChanged   = !!(incomingOrg  && orgLower  !== existOrg)
@@ -1100,10 +1115,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
               roleChanged && orgChanged ? "both_changed" :
               roleChanged               ? "role_changed" :
                                           "org_changed"
-            // Casing-only: same content, different capitalisation
+            // casing_only: content is the same after normalisation, only capitalisation differs
             const isCasingOnly =
-              changeType === "role_changed" && incomingRole?.toLowerCase() === existRole ||
-              changeType === "org_changed"  && incomingOrg?.toLowerCase()  === existOrg
+              (changeType !== "both_changed") &&
+              (changeType !== "role_changed" || incomingRole?.toLowerCase() === existing.role?.toLowerCase()) &&
+              (changeType !== "org_changed"  || (incomingOrg ? normaliseOrgForComparison(incomingOrg) : "") === (existing.organisation ? normaliseOrgForComparison(existing.organisation) : ""))
 
             const resolvedChangeType = isCasingOnly ? "casing_only" : changeType
 
