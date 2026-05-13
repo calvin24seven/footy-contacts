@@ -59,6 +59,7 @@ const COLUMN_MAP: Record<string, string> = {
   instagram_url: "instagram_url",
   instagram: "instagram_url",
   facebook_url: "other_social_url",            // No dedicated FB field — store as other social
+  company_linkedin_url: "_company_linkedin",   // Org's LinkedIn — stored on organisations row
 
   // Location extras
   state: "region",                             // Apollo "State" header (person's state)
@@ -569,6 +570,7 @@ function buildContact(
       case "_website_fallback": if (!websiteFallback) websiteFallback = val; break
       case "_x_fallback": if (!xFallback) xFallback = val; break
       case "_phone_fallback": if (!phoneFallback) phoneFallback = val; break
+      case "_company_linkedin": contact._company_linkedin = val; break
       case "_description": {
         if (!contact.notes && isEnglishLike(val)) {
           // Take first 500 chars; stop at a sentence boundary if possible
@@ -824,7 +826,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // a generated column) every subsequent batch will fail identically — abort immediately.
   let fatalError: string | null = null
 
-  const BATCH_SIZE = 2000
+  // 500 rows per batch keeps each bulk INSERT statement well under Supabase's 8s
+  // statement timeout even with the per-row search_vector trigger firing.
+  const BATCH_SIZE = 500
   for (let batchStart = 0; batchStart < dataLines.length; batchStart += BATCH_SIZE) {
     if (fatalError) break
     const batch = dataLines.slice(batchStart, batchStart + BATCH_SIZE)
@@ -997,24 +1001,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       e => e.matchType !== "suppressed" && e.contact.organisation
     )
     if (orgCandidates.length > 0) {
-      // Collect unique org keys — first occurrence wins for website/logo
-      const orgMap = new Map<string, { name: string; website?: string }>()
+      // Collect unique org keys — first occurrence wins for website/logo/linkedin
+      const orgMap = new Map<string, { name: string; website?: string; linkedin_url?: string }>()
       for (const e of orgCandidates) {
         const name = e.contact.organisation as string
         const key = normalisedOrgKey(name)
         if (!orgMap.has(key)) {
-          orgMap.set(key, { name, website: e.contact.website as string | undefined })
+          orgMap.set(key, {
+            name,
+            website: e.contact.website as string | undefined,
+            linkedin_url: e.contact._company_linkedin as string | undefined,
+          })
         }
       }
 
       // Upsert: insert new orgs; on conflict leave existing data untouched
       // (admin may have manually curated name/logo — don't overwrite)
-      const orgRows = [...orgMap.values()].map(({ name, website }) => {
+      const orgRows = [...orgMap.values()].map(({ name, website, linkedin_url }) => {
         const domain = website ? extractDomain(website) : null
         return {
           name,
           website: website ?? null,
           domain: domain ?? null,
+          linkedin_url: linkedin_url ?? null,
           // logo_url is NULL — admin can upload a manual override;
           // automatic logo is derived from domain at render time
         }
