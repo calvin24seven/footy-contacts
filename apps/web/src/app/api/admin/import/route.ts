@@ -1056,6 +1056,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ── Separate: new inserts vs duplicates/suppressions ─────────────────────
     const toInsert: ContactEntry[] = []
     const toUpdate: ContactEntry[] = []
+    // Role/org changes observed on skip-mode duplicates (recorded but not applied)
+    const skipModeHistoryInserts: Array<Record<string, unknown>> = []
 
     for (const entry of entries) {
       if (entry.matchType === "suppressed") {
@@ -1077,12 +1079,35 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           status: "pending", contact_id: entry.existingContact.id,
         })
       } else {
+        // skip mode duplicate — record role/org change as an observation if values differ
+        const existing = entry.existingContact
+        if (existing) {
+          const incomingRole = entry.contact.role as string | undefined
+          const incomingOrg = entry.contact.organisation as string | undefined
+          const roleChanged = incomingRole && incomingRole !== existing.role
+          const orgChanged = incomingOrg && incomingOrg !== existing.organisation
+          if (roleChanged || orgChanged) {
+            skipModeHistoryInserts.push({
+              contact_id: existing.id,
+              role: incomingRole ?? existing.role,
+              organisation: incomingOrg ?? existing.organisation,
+              source: "csv_import_signal",
+              import_id: importId,
+            })
+          }
+        }
         duplicatesSkipped++
         rowInserts.push({
           csv_import_id: importId, row_number: entry.rowNumber, raw_data: entry.rawData,
           status: "duplicate", error_message: entry.matchReason,
         })
       }
+    }
+
+    // Persist skip-mode role/org change observations in one batch
+    if (skipModeHistoryInserts.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("contact_role_history") as any).insert(skipModeHistoryInserts)
     }
 
     // ── Bulk insert new contacts ──────────────────────────────────────────────
