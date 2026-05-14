@@ -2,8 +2,10 @@
 
 **Status**: Ready to send  
 **Audience**: 743 existing registered users  
-**Goal**: 5–20 paying subscribers from existing base  
-**Stack**: Resend (or any email tool)  
+**Primary goal**: reactivate 75–150 users into product usage.  
+**Revenue goal**: convert 5–20 users into paid subscribers.  
+**Learning goal**: identify which user types and search intents are most commercially valuable.  
+**Stack**: Resend (or any email tool)
 **Written**: May 2026
 
 ---
@@ -157,14 +159,14 @@ If you tried it and the experience felt broken, confusing, or unfinished — you
 
 I built the product, but I didn't give it the attention it needed after launch. Some of the core flows were not good enough, and that is on me.
 
-I've now come back to it properly, fixed the main issues, and reopened the database.
+I've now come back to it properly, fixed the main user flows, and reopened the database.
 
 Here is what is inside Footy Contacts today:
 
-- 55,016 football industry contacts
-- 12,422 published and searchable
-- 42,614 contacts with email data
-- 47,154 contacts with phone data
+- 55,016 football industry contacts in the database
+- 12,422 currently published and searchable
+- 42,614 contacts with email fields
+- 47,154 contacts with phone fields
 - 54,996 LinkedIn profiles
 - 114 countries covered
 
@@ -394,12 +396,12 @@ Pro gives you:
 - 150 contact unlocks per month
 - 75 CSV exports per month
 - email, phone, and LinkedIn access
-- full search across all categories
+- full search across available contact categories
 - cancel anytime
 
 Normal price: £39/month.
 
-Because you signed up before the product was where it needed to be, I've added a comeback offer for existing users:
+Because you signed up before Footy Contacts was where it needed to be, I've added a comeback offer for existing users:
 
 **Your first month of Pro is £19.**
 
@@ -498,6 +500,24 @@ If the database doesn't have what you need, reply and tell me. Feedback from thi
 10. **Account updates after payment**: After a test Stripe payment, does the account reflect Pro status?
 
 If any of these fail, fix it before sending. One broken step in this chain wastes your warmest users and makes the campaign worse than sending nothing.
+
+### Search quality gate
+
+Before sending Email 1, run at least 20 realistic searches manually — including these:
+
+- scout + England
+- chief scout + Championship
+- academy director + League One
+- agent + Spain
+- head of recruitment + Premier League
+- sporting director + Belgium
+- journalist + Nigeria
+- sports science + Germany
+- player representative + France
+
+Do not send the campaign unless at least 70% of these searches return credible, relevant results.
+
+A technically working search that returns weak or irrelevant results is just as damaging as a broken one. The entire promise of the product is "find the right football people." If that promise fails at first use, no email copy will recover it.
 
 ---
 
@@ -685,7 +705,7 @@ They stay on free. The free plan is a permanent conversion surface. Every month 
 
 - Open rate below 15%: deliverability issue. Stop campaign. Check spam score, sender reputation, DNS (SPF, DKIM, DMARC).
 - Zero unlocks after 200 logins: UX is broken. Fix the unlock flow before sending more emails.
-- Zero replies to Email 5: audience is cold or emails are landing in spam.
+- Zero replies to Email 4: audience is cold, the ask is unclear, or emails are landing in spam.
 
 ---
 
@@ -695,7 +715,7 @@ They stay on free. The free plan is a permanent conversion surface. Every month 
 
 These are existing registered users, not a cold list. That gives you a stronger basis than cold outreach — but these emails are partly marketing (especially the discount and Pro push), not purely service communications. Do not treat the whole sequence as transactional.
 
-**The relevant legal frameworks in the UK are GDPR and PECR.** Under PECR, the soft opt-in rule may apply if users gave their contact details in the context of a service like Footy Contacts and were given a clear opportunity to opt out at signup. If that opt-out opportunity was absent at signup, you should rely on consent or legitimate interests — but note that individuals have an absolute right to object to direct marketing under GDPR, which must be honoured immediately.
+**The relevant legal frameworks in the UK are GDPR and PECR.** Under PECR, the soft opt-in rule may apply if users gave their contact details in the context of a service like Footy Contacts and were given a clear opportunity to opt out at signup. If users were not given an opt-out opportunity at signup, be cautious. For individual subscribers, PECR generally requires consent or that all soft opt-in conditions are met. Legitimate interests may still be relevant under UK GDPR for processing personal data, but it does not by itself override PECR's email marketing rules. Individuals also have an absolute right to object to direct marketing, which must be honoured immediately.
 
 **Before sending, confirm:**
 - Users who previously unsubscribed or are on the suppression list are excluded
@@ -756,6 +776,9 @@ Before you send Email 1:
 - [ ] Upgrade checkout works — tested in Stripe test mode then live
 - [ ] Email 1 CTA link goes to `/app` (not homepage)
 - [ ] [REAL DATE] placeholder in Email 5 replaced with an actual calendar date (7 days from send)
+- [ ] Plain-text version created for every email
+- [ ] Email renders correctly without images (main message is text-only anyway)
+- [ ] Main CTA appears as a raw URL in the plain-text version
 - [ ] Tracking pixels or click tracking enabled in Resend
 
 ---
@@ -783,6 +806,34 @@ Replies are your highest-value leads. Treat every reply like a sales call.
 **When someone says they're interested in Agency:**
 
 > Great to hear. Agency gives you unlimited unlocks and 500 exports a month. Most users on that plan are agents managing multiple clients, scouting ops, or agencies doing volume outreach. Happy to walk you through it — or you can go straight to [upgrade link]. Also happy to chat if you want to talk through whether it fits what you're doing.
+
+---
+
+## Part 18 — Dynamic Personalisation
+
+Even one or two personalised variables per email will outperform generic copy significantly. These are achievable without complex tooling — most require only data you already have in Supabase auth or your profile table.
+
+### Highest-impact variables to add
+
+| Variable | Where to use it | What it adds |
+|---|---|---|
+| `You signed up in [Month Year]` | Email 1 | Makes the email feel personal, not broadcast |
+| `You still have 3 free unlocks` | Email 3 | Confirms the state they're actually in |
+| `You searched for [term] but didn't unlock anyone` | Email 3 or behavioural trigger | Direct relevance to their real behaviour |
+| `You viewed [contact name] — that contact is still available` | Behavioural trigger | Highest-intent signal possible |
+| `Your free unlocks reset on [date]` | Monthly re-engagement email | Creates a natural re-entry point |
+| `Your account is on the free plan` | Email 5 | Confirms context before the upgrade ask |
+
+### How to implement without complexity
+
+- Pull signup month from `auth.users.created_at` — include it in your email tool's contact data
+- Pull unlock count from your contacts/usage table — use it to branch email content (0 unlocks vs 1–2 unlocks)
+- Pull last search term if logged in Supabase — use it in behavioural trigger copy
+- For the broadcast sequence, even just signup month is enough to feel human
+
+### If you cannot personalise yet
+
+Send the generic versions. The founder tone and honest subject lines will carry the campaign. Add personalisation on the next campaign once you have the data pipeline in place.
 
 ---
 
