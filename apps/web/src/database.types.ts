@@ -238,6 +238,20 @@ export type Database = {
             referencedRelation: "csv_imports"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contact_role_history_new_organisation_id_fkey"
+            columns: ["new_organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_role_history_prev_organisation_id_fkey"
+            columns: ["prev_organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contact_unlocks: {
@@ -725,27 +739,159 @@ export type Database = {
         }
         Relationships: []
       }
-      email_suppressions: {
+      email_events: {
         Row: {
-          added_at: string
-          added_by: string | null
-          email: string
+          email_job_id: string | null
+          event_type: string
           id: string
-          reason: string
+          payload: Json
+          provider: string
+          provider_event_id: string
+          received_at: string
+          resend_message_id: string | null
         }
         Insert: {
-          added_at?: string
-          added_by?: string | null
-          email: string
+          email_job_id?: string | null
+          event_type: string
           id?: string
-          reason?: string
+          payload: Json
+          provider?: string
+          provider_event_id: string
+          received_at?: string
+          resend_message_id?: string | null
         }
         Update: {
-          added_at?: string
-          added_by?: string | null
+          email_job_id?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          provider?: string
+          provider_event_id?: string
+          received_at?: string
+          resend_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_events_email_job_id_fkey"
+            columns: ["email_job_id"]
+            isOneToOne: false
+            referencedRelation: "email_dlq"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_events_email_job_id_fkey"
+            columns: ["email_job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_jobs: {
+        Row: {
+          attempt_count: number
+          cancelled_at: string | null
+          category: string
+          created_at: string
+          delivered_at: string | null
+          failed_at: string | null
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          locked_at: string | null
+          max_attempts: number
+          next_retry_at: string | null
+          provider: string
+          reply_to: string | null
+          resend_message_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["email_job_status"]
+          template_id: string
+          template_props: Json
+          to_email: string
+          to_name: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attempt_count?: number
+          cancelled_at?: string | null
+          category?: string
+          created_at?: string
+          delivered_at?: string | null
+          failed_at?: string | null
+          id?: string
+          idempotency_key: string
+          last_error?: string | null
+          locked_at?: string | null
+          max_attempts?: number
+          next_retry_at?: string | null
+          provider?: string
+          reply_to?: string | null
+          resend_message_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["email_job_status"]
+          template_id: string
+          template_props?: Json
+          to_email: string
+          to_name?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attempt_count?: number
+          cancelled_at?: string | null
+          category?: string
+          created_at?: string
+          delivered_at?: string | null
+          failed_at?: string | null
+          id?: string
+          idempotency_key?: string
+          last_error?: string | null
+          locked_at?: string | null
+          max_attempts?: number
+          next_retry_at?: string | null
+          provider?: string
+          reply_to?: string | null
+          resend_message_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["email_job_status"]
+          template_id?: string
+          template_props?: Json
+          to_email?: string
+          to_name?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_suppressions: {
+        Row: {
+          category: string
+          created_at: string
+          details: Json
+          email: string
+          id: string
+          reason: Database["public"]["Enums"]["email_suppression_reason"]
+          source: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          details?: Json
+          email: string
+          id?: string
+          reason?: Database["public"]["Enums"]["email_suppression_reason"]
+          source?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          details?: Json
           email?: string
           id?: string
-          reason?: string
+          reason?: Database["public"]["Enums"]["email_suppression_reason"]
+          source?: string | null
         }
         Relationships: []
       }
@@ -1607,6 +1753,45 @@ export type Database = {
           },
         ]
       }
+      email_dlq: {
+        Row: {
+          attempt_count: number | null
+          category: string | null
+          created_at: string | null
+          failed_at: string | null
+          id: string | null
+          idempotency_key: string | null
+          last_error: string | null
+          max_attempts: number | null
+          template_id: string | null
+          to_email: string | null
+        }
+        Insert: {
+          attempt_count?: number | null
+          category?: string | null
+          created_at?: string | null
+          failed_at?: string | null
+          id?: string | null
+          idempotency_key?: string | null
+          last_error?: string | null
+          max_attempts?: number | null
+          template_id?: string | null
+          to_email?: string | null
+        }
+        Update: {
+          attempt_count?: number | null
+          category?: string | null
+          created_at?: string | null
+          failed_at?: string | null
+          id?: string | null
+          idempotency_key?: string | null
+          last_error?: string | null
+          max_attempts?: number | null
+          template_id?: string | null
+          to_email?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_prorated_credits:
@@ -1637,6 +1822,40 @@ export type Database = {
       check_user_limits: {
         Args: { action_type: string; user_id: string }
         Returns: Json
+      }
+      claim_email_jobs: {
+        Args: { batch_size: number }
+        Returns: {
+          attempt_count: number
+          cancelled_at: string | null
+          category: string
+          created_at: string
+          delivered_at: string | null
+          failed_at: string | null
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          locked_at: string | null
+          max_attempts: number
+          next_retry_at: string | null
+          provider: string
+          reply_to: string | null
+          resend_message_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["email_job_status"]
+          template_id: string
+          template_props: Json
+          to_email: string
+          to_name: string | null
+          updated_at: string
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "email_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       detect_scraper_sequential: { Args: never; Returns: undefined }
       detect_scraper_velocity: { Args: never; Returns: undefined }
@@ -1777,11 +1996,16 @@ export type Database = {
       }
       process_due_credit_resets: { Args: never; Returns: number }
       purge_old_contact_views: { Args: never; Returns: undefined }
+      requeue_stuck_email_jobs: {
+        Args: { lock_minutes: number }
+        Returns: number
+      }
       reset_user_credits: { Args: never; Returns: undefined }
       restore_contact_list: {
         Args: { p_list_id: number; p_user_id: string }
         Returns: boolean
       }
+      retry_failed_email_job: { Args: { job_id: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       text_similarity: {
@@ -1797,7 +2021,22 @@ export type Database = {
       unlock_contact: { Args: { p_contact_id: string }; Returns: Json }
     }
     Enums: {
-      [_ in never]: never
+      email_job_status:
+        | "pending"
+        | "sending"
+        | "sent"
+        | "delivered"
+        | "delivery_delayed"
+        | "bounced"
+        | "complained"
+        | "failed"
+        | "cancelled"
+      email_suppression_reason:
+        | "bounce"
+        | "complaint"
+        | "unsubscribe"
+        | "manual"
+        | "invalid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1924,7 +2163,26 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      email_job_status: [
+        "pending",
+        "sending",
+        "sent",
+        "delivered",
+        "delivery_delayed",
+        "bounced",
+        "complained",
+        "failed",
+        "cancelled",
+      ],
+      email_suppression_reason: [
+        "bounce",
+        "complaint",
+        "unsubscribe",
+        "manual",
+        "invalid",
+      ],
+    },
   },
 } as const
 
