@@ -91,28 +91,40 @@ Split into:
 
 ### If you cannot segment at all
 
-Send all 743 users the same 5-email sequence. Prioritise honesty, specificity, and a single clear action in each email. The reply-generation email (Email 5) is your segmentation tool — use the replies to identify who is high value.
+Send all 743 users the same 5-email sequence. Prioritise honesty, specificity, and a single clear action in each email. The reply-generation email (Email 4) is your segmentation tool — use the replies to identify who is high value.
 
 ---
 
 ## Part 3 — Email Sequence
 
-### Sequence overview
+### Core broadcast sequence
 
 | # | Email | Purpose | Send day | CTA |
 |---|---|---|---|---|
 | 1 | Honest Relaunch | Rebuild trust, re-establish what the product is | Day 0 | Search the database |
-| 2 | Database Showcase | Show what's actually inside | Day 3 | Try a specific search |
-| 3 | Free Unlock Nudge | Get the first product action | Day 6 | Use a free unlock |
-| 4 | Social proof + value | Reinforce worth, reduce risk perception | Day 10 | Upgrade to Pro |
-| 5 | Reply email | Identify intent, generate leads | Day 14 | Reply with one sentence |
-| 6 | Pro conversion | Hard push to Pro at £39/month | Day 18 | Get Pro / comeback offer |
-| 7 | Final email | Last contact. Soft close or unsubscribe | Day 25 | Try one more time or unsubscribe |
+| 2 | What can you search? | Make the database concrete with specific examples | Day 3 | Try a search |
+| 3 | You have 3 free unlocks | Get the first product action | Day 6 | Use one unlock |
+| 4 | What are you looking for? | Identify intent, generate sales leads | Day 10 | Reply with one word |
+| 5 | Existing users: Pro for £19 first month | Convert highest-intent users to paid | Day 14 | Upgrade |
 
-**Total campaign length**: 25 days  
-**Cadence**: Not aggressive. One email every 3–7 days.  
-**Who gets all 7**: Everyone who has not unsubscribed or converted.  
+**Total campaign length**: 14 days  
+**Cadence**: One email every 3–4 days.  
+**Who gets all 5**: Everyone who has not unsubscribed or converted.  
 **Stop sending**: The moment someone upgrades to paid. Remove them from the reactivation sequence immediately.
+
+### Behavioural triggers (build after broadcast sequence is live)
+
+These respond to what a user actually did and outperform any broadcast email. Build them after the initial 5-email campaign runs.
+
+| Behaviour | Trigger email |
+|---|---|
+| Clicked email but did not log in | "Did the login link work?" |
+| Logged in but did not search | "Try these 5 searches" |
+| Searched but did not unlock | "You found results — unlock one for free" |
+| Unlocked 1 contact | "You have 2 unlocks left this month" |
+| Used all 3 free unlocks | "Pro gives you 150/month" |
+| Visited pricing page but did not buy | "Any questions before you upgrade?" |
+| Replied to any email | Manual founder reply within 4 hours |
 
 ---
 
@@ -141,29 +153,32 @@ Hi [First Name],
 
 You signed up to Footy Contacts at some point over the last year.
 
-If you tried to use it and hit an issue — a broken page, a confusing flow, or just nothing working — I'm sorry. That was real. The product had problems I wasn't on top of.
+If you tried it and the experience felt broken, confusing, or unfinished — you were not imagining it.
 
-I'm the founder. I built Footy Contacts, then stepped away from it, and the experience got patchy. But in the last few months I've come back to it, fixed the broken flows, rebuilt the experience, and done a proper audit of what's inside the database.
+I built the product, but I didn't give it the attention it needed after launch. Some of the core flows were not good enough, and that is on me.
 
-Here's where things stand today:
+I've now come back to it properly, fixed the main issues, and reopened the database.
 
-- **55,016 football industry contacts** in the database
-- **12,422 currently published and searchable**
-- **42,614 contacts with verified email addresses**
-- **47,154 contacts with phone numbers**
-- **54,996 contacts with LinkedIn profiles**
-- **114 countries covered**
-- Categories include: scouts, agents, coaches, academy staff, club directors, player representatives, media, recruiters, medical/performance staff, and more
+Here is what is inside Footy Contacts today:
 
-The idea is simple: instead of spending weeks on LinkedIn trying to build a list of football contacts for your specific need, you search here, find the person you need, and unlock their contact details.
+- 55,016 football industry contacts
+- 12,422 published and searchable
+- 42,614 contacts with email data
+- 47,154 contacts with phone data
+- 54,996 LinkedIn profiles
+- 114 countries covered
 
-You have **3 free unlocks** on your account right now. No card required.
+You can search for scouts, agents, academy staff, club directors, coaches, recruiters, player reps, media contacts, and more.
 
-[**Search the database →**](https://footycontacts.com/app)
+You also have 3 free unlocks on your account. No card needed.
 
-If it doesn't work, or you can't find what you're looking for, hit reply. I read every response personally.
+Search for one person you have been meaning to reach:
 
-— [Your Name]  
+[**Search Footy Contacts →**](https://footycontacts.com/app)
+
+If anything feels broken or you cannot find what you need, reply to this email. I'll read it personally.
+
+— Calvin  
 Founder, Footy Contacts
 
 ---
@@ -176,20 +191,20 @@ Founder, Footy Contacts
 - "I owe you an honest update" in the subject line is the highest-performing frame for a founder relaunch. It creates curiosity without being clickbait.
 - Do not use "exciting news" or "big announcement." That pattern is dead.
 - Keep the bullet stats visible. They do the heavy lifting. This is a data product — lead with data.
-- The apology is three sentences. Move on. Do not wallow.
-- "I read every response personally" is true and important. Make it true.
+- "didn't give it the attention it needed" is more controlled than "abandoned." Still honest — not defensive.
+- "I'll read it personally" is true and important. Make it true.
 
 ---
 
-## Part 5 — Email 2: Database Showcase
+## Part 5 — Email 2: What Can You Search?
 
-**Purpose**: Show the depth of what's inside. Make it feel alive and specific.  
+**Purpose**: Make the database concrete. Specific example searches trigger the "I could use that" moment better than category lists.  
 **Send**: Day 3 (to anyone who did not click in Email 1)
 
 ---
 
-**Subject**: `What's actually inside Footy Contacts`  
-**Preview text**: `Scouts, academy directors, agents, club staff — by league, by country, by role`
+**Subject**: `What can you actually search inside Footy Contacts?`  
+**Preview text**: `Try scout, agent, academy director, head of recruitment, journalist, club director…`
 
 ---
 
@@ -199,57 +214,56 @@ Founder, Footy Contacts
 
 Hi [First Name],
 
-In case it wasn't clear from my last email — here's what you can actually search for inside Footy Contacts.
+Footy Contacts is built around one simple action:
 
-**By role:**
-- Scouts and chief scouts (domestic and international)
-- Academy directors and heads of recruitment
-- First-team coaches and assistant coaches
-- Football agents and licensed intermediaries
-- Player representatives and management companies
-- Club directors, CEOs, and sporting directors
-- Head of medical / sports science / performance
-- Journalists, broadcasters, football media
-- Recruiters and HR at clubs and organisations
+Search for the type of football person you need to reach.
 
-**By geography:**
-- Premier League and Championship clubs
-- League One and League Two
-- Scottish Premiership and EFL
-- Bundesliga, La Liga, Serie A, Ligue 1, Eredivisie
-- 114 countries in total
+A few searches you can try right now:
 
-**By contact type:**
-- Email address
-- Phone number
-- LinkedIn profile
+- scout + England
+- chief scout + Championship
+- academy director + League One
+- agent + Spain
+- head of recruitment + Premier League
+- sporting director + Belgium
+- journalist + Nigeria
+- sports science + Germany
+- player representative + France
 
-You do not need to know the person's name. You search by role, club, or league — and the results come back.
+You do not need to know the person's name.
 
-[**Try a search now →**](https://footycontacts.com/app)
+Search by role, club, country, organisation, or keyword — then unlock the contact details if the result is useful.
 
-You have **3 free unlocks** waiting.
+You have 3 free unlocks on your account.
 
-— [Your Name]
+[**Try a search →**](https://footycontacts.com/app)
+
+If you want, reply with the type of contact you're looking for and I'll tell you what to search.
+
+— Calvin
+
+---
+
+*You're receiving this because you created a Footy Contacts account. You can [unsubscribe here] at any time.*
 
 ---
 
 **Notes**:
-- This email is a product tour in list form. Keep it scannable.
-- The goal is to get someone to think "actually, I could search for [specific person]" and click.
-- No ask for payment in this email. Let the product do the work.
+- Specific example searches are more powerful than category lists. They trigger "I could search for that" rather than "okay, it has scouts."
+- Keep it scannable. The goal is one click.
+- No payment ask in this email.
 
 ---
 
 ## Part 6 — Email 3: Free Unlock Nudge
 
-**Purpose**: Get the first product action. Show the unlock mechanism works.  
+**Purpose**: Get the first product action. Show what an unlock gives you.  
 **Send**: Day 6 (to anyone who has not yet unlocked a contact)
 
 ---
 
-**Subject**: `You have 3 free unlocks on your account`  
-**Preview text**: `No card. No trial. Just 3 contacts, on us.`
+**Subject**: `You have 3 free contact unlocks`  
+**Preview text**: `Use one to test the database. No card needed.`
 
 ---
 
@@ -259,40 +273,52 @@ You have **3 free unlocks** waiting.
 
 Hi [First Name],
 
-Quick one.
+Your Footy Contacts account includes 3 free contact unlocks.
 
-You have 3 free unlocks sitting on your Footy Contacts account. They don't expire this month, but they reset at the start of next month — so they're use-them-or-lose-them.
+An unlock reveals the full available contact record:
 
-An unlock gives you the full contact record for anyone in the database. Email address, phone number, LinkedIn profile.
+- email
+- phone
+- LinkedIn
+- role
+- organisation
+- country
 
-Go find one person you've been meaning to reach. A scout at a specific club. An agent who represents players in your league. An academy director you've been trying to get in front of. A journalist who covers your league.
+The best way to judge the product is simple:
 
-Search. Find them. Unlock.
+Search for one person you would genuinely want to reach, then use one free unlock.
+
+No card needed.
 
 [**Use a free unlock →**](https://footycontacts.com/app)
 
-If you search and can't find the person you need, reply to this email and tell me. I'll tell you if they're in the database or flag them for addition.
+If the contact you need is missing, reply with their role or club and I'll check the database manually.
 
-— [Your Name]
+— Calvin
+
+---
+
+*You're receiving this because you created a Footy Contacts account. You can [unsubscribe here] at any time.*
 
 ---
 
 **Notes**:
-- "They reset at the start of next month" is true (free plan resets monthly) and creates mild urgency without being fake.
-- The offer to personally help find contacts or add missing ones is powerful. Do this.
-- Do not mention pricing in this email.
+- Do not use "use-them-or-lose-them" urgency framing. The product needs to earn the unlock, not pressure it.
+- "The best way to judge the product is simple" is confident. It treats the reader as a buyer evaluating something — because they are.
+- The offer to check the database manually for missing contacts is powerful. Do this.
+- No pricing mention in this email.
 
 ---
 
-## Part 7 — Email 4: Value + Trust
+## Part 7 — Email 4: Reply-Generation
 
-**Purpose**: Build trust with a real example or framing. Reduce the perception that this is a shady or incomplete database.  
-**Send**: Day 10
+**Purpose**: Identify high-intent users. Generate sales leads. After 3 emails, anyone who hasn't clicked needs a different ask — not another CTA, but a reply prompt. Replies also tell you what to build next.  
+**Send**: Day 10 (to anyone who has not yet replied or unlocked)
 
 ---
 
-**Subject**: `Why 743 people signed up to a football contact database`  
-**Preview text**: `It's not about the data. It's about the 40 hours you don't spend on LinkedIn.`
+**Subject**: `What football contacts are you actually looking for?`  
+**Preview text**: `Reply with one word — scouts, agents, clubs, media, academy, anything.`
 
 ---
 
@@ -302,96 +328,54 @@ If you search and can't find the person you need, reply to this email and tell m
 
 Hi [First Name],
 
-Here's something that surprised me when I looked at the numbers.
+Quick question.
 
-743 people signed up to Footy Contacts over the last year — with no paid marketing, no ads, and a product that was honestly not in great shape.
+What type of football contact are you actually trying to find?
 
-That tells me one thing: the need is real.
+You can reply with one word:
 
-People searching for scouts. Coaches looking for their next opportunity. Agents trying to reach clubs. Recruiters trying to find the right decision-maker. People trying to break into the football industry and not knowing who to contact.
+- scouts
+- agents
+- academy staff
+- club directors
+- coaches
+- media
+- recruiters
+- player reps
+- something else
 
-LinkedIn has 900 million people. That's not a database. That's a haystack. Football contacts are in there, but finding them — finding the scout at Middlesbrough, the head of academy at any League One club, the sporting director at a Belgian second-division side — takes hours. Sometimes days.
+I'm asking because I'm rebuilding Footy Contacts around what users are actually searching for — not what I think they need.
 
-Footy Contacts has 55,000 football-specific people. Already filtered. Already categorised. Already with contact details attached.
+Reply with the contact type, club, country, or role you care about.
 
-That is the product.
+I'll read every reply personally.
 
-If you're in football and you need to reach someone, this is the fastest way to find them. Not perfect. But significantly faster than the alternative.
-
-[**Search now — 3 free unlocks on your account →**](https://footycontacts.com/app)
-
-— [Your Name]
-
----
-
-**Notes**:
-- The "743 people signed up with no marketing" line is honest and uses your own data as social proof.
-- The LinkedIn comparison is the strongest objection-handling tool you have. Use it.
-- Still not asking for payment. Still building trust.
-
----
-
-## Part 8 — Email 5: Reply-Generation Email
-
-**Purpose**: Identify high-intent users. Generate sales leads. Make users feel heard.  
-**Send**: Day 14
-
----
-
-**Subject**: `One question — what are you actually looking for?`  
-**Preview text**: `Scouts? Agents? Academy staff? Reply with one word.`
-
----
-
-**Email body**:
-
----
-
-Hi [First Name],
-
-I'm going to keep this short.
-
-I'm trying to understand who uses Footy Contacts and what they're actually searching for. Not to pitch you anything — I'm genuinely trying to make the database more useful.
-
-One question:
-
-**What type of football contact are you most trying to find?**
-
-A few examples:
-- Scouts or chief scouts at a specific level
-- Agents or licensed intermediaries
-- Academy directors or youth coaches
-- Club directors or sporting directors
-- Journalists or football media
-- Coaches looking for opportunities
-- Something else entirely
-
-You can reply with one word. One sentence. Whatever's fastest for you.
-
-I'll reply personally to every response.
-
-— [Your Name]  
+— Calvin  
 Founder, Footy Contacts
 
 ---
 
+*You're receiving this because you created a Footy Contacts account. You can [unsubscribe here] at any time.*
+
+---
+
 **Notes**:
-- This email has a low commitment ask. A single word reply is the goal.
-- Every reply is a warm sales lead. Follow up within 24 hours personally.
-- Follow-up script for replies: "Thanks for replying — [type of contact] are in the database. Want me to show you how to find them? You've still got [X] free unlocks."
-- Track reply rate. If above 5%, this audience is warmer than average.
+- Low commitment ask. A single word is enough.
+- Every reply is a warm sales lead. Respond within 4 hours. Use the scripts in Part 17.
+- Moving this to Day 10 — before the offer email — means you know who is interested before you send the conversion push. Anyone who replies gets a more personal follow-up than the broadcast Email 5.
+- This email also functions as product research. The replies tell you what categories to prioritise.
 
 ---
 
-## Part 9 — Email 6: Pro Conversion
+## Part 8 — Email 5: Pro Conversion
 
-**Purpose**: Convert highest-intent users to Pro at £39/month.  
-**Send**: Day 18 (to anyone who has not yet upgraded)
+**Purpose**: Convert highest-intent users to Pro. Everyone who has replied, clicked, or used a free unlock is now primed. This is the first and only hard sell in the sequence.  
+**Send**: Day 14 (to anyone who has not yet upgraded)
 
 ---
 
-**Subject**: `£39/month for 150 contacts. Here's the maths.`  
-**Preview text**: `If you need more than 3 contacts a month, Pro pays for itself immediately.`
+**Subject**: `Existing users: Pro is £19 for your first month`  
+**Preview text**: `150 unlocks, 75 exports, cancel anytime.`
 
 ---
 
@@ -401,53 +385,61 @@ Founder, Footy Contacts
 
 Hi [First Name],
 
-If you've used your free unlocks and you're finding contacts in the database — this email is for you.
+If Footy Contacts is useful for the kind of people you're trying to reach, Pro is the next step.
 
-The free plan gives you 3 unlocks a month. If you're actively working in football and you need to reach more than 3 people — a scout, an agent, an academy director, whoever — the maths on upgrading are simple.
+Free gives you 3 unlocks per month.
 
-**Pro plan: £39/month**
+Pro gives you:
 
 - 150 contact unlocks per month
-- 75 CSV exports
-- Every contact category
-- Email, phone, and LinkedIn access
-- Cancel anytime
+- 75 CSV exports per month
+- email, phone, and LinkedIn access
+- full search across all categories
+- cancel anytime
 
-If one contact leads to one deal, one conversation, one opportunity — £39 is not an investment. It's a rounding error.
+Normal price: £39/month.
 
-I'm also offering a **comeback discount** for the next 7 days.
+Because you signed up before the product was where it needed to be, I've added a comeback offer for existing users:
 
-**First month at £19 instead of £39** — 50% off, no code needed, applied at checkout automatically.
+**Your first month of Pro is £19.**
 
-This is for existing users only. It ends on [DATE + 7 days].
+No long contract. No annual commitment. Just a cheaper first month to properly test the database.
 
-[**Get Pro for £19 your first month →**](https://footycontacts.com/upgrade)
+[**Upgrade to Pro for £19 →**](https://footycontacts.com/upgrade)
 
-If you're running a club, an agency, or a scouting operation and you need more than 150 unlocks — [the Agency plan at £149/month](https://footycontacts.com/upgrade) covers unlimited unlocks and 500 exports.
+The offer ends on [REAL DATE — replace with exact calendar date].
 
-Any questions, hit reply.
+If Footy Contacts saves you even a few hours of manual LinkedIn research, Pro should justify itself.
 
-— [Your Name]
+If you're an agency, club, scout, or recruiter who needs bulk access, reply with "Agency" and I'll point you to the right plan.
+
+— Calvin
+
+---
+
+*You're receiving this because you created a Footy Contacts account. You can [unsubscribe here] at any time.*
 
 ---
 
 **Notes**:
-- "The maths are simple" is more compelling than "great value." Show the arithmetic.
-- The comeback offer (50% off first month) is time-limited and genuine. Do not extend it. This is the scarcity that does not feel fake because it is a real constraint you control.
-- Replace [DATE + 7 days] with an actual calendar date. Specificity builds trust.
-- Link to Agency plan inline but do not make it the main CTA. Keep the primary ask as Pro.
+- Replace [REAL DATE] with an actual calendar date — not "in 7 days." Specificity builds trust.
+- "Because you signed up before the product was where it needed to be" is the honest framing that makes the discount feel earned, not desperate.
+- Do not say "rounding error" — it sounds flippant and can alienate users with tighter budgets.
+- The Agency reply hook at the bottom is intentional. Anyone who replies "Agency" is a high-value lead — handle manually via Part 17 scripts.
+- The main CTA is Pro only. Agency is a reply, not a button. Keeps the email focused on one action.
 
 ---
 
-## Part 10 — Email 7: Final Email
+## Part 9 — Optional Sixth Email: Final Push
 
-**Purpose**: Last contact in the sequence. Soft close. Give an out.  
-**Send**: Day 25
+This email is not part of the core 5-email sequence. Send it only if you want an additional soft close after Day 14 for users who still have not converted.
+
+**Send**: Day 21 (optional)
 
 ---
 
 **Subject**: `Last email from me for a while`  
-**Preview text**: `I'll stop sending. But the offer is still live.`
+**Preview text**: `The comeback offer is still live. But I'll stop sending after this.`
 
 ---
 
@@ -457,33 +449,55 @@ Any questions, hit reply.
 
 Hi [First Name],
 
-This is the last email I'll send you as part of this relaunch campaign.
+This is the last email I'll send you as part of this relaunch.
 
-If none of the previous emails resonated — no hard feelings. Football's busy and inboxes are brutal.
+If none of it resonated — no hard feelings. Football is busy and inboxes are brutal.
 
-If you're still curious about the database, I'll leave you with the basics:
+If you're still curious:
 
-- 55,000+ football industry contacts
-- Scouts, agents, academy staff, club directors, media, player reps
+- 55,000+ football industry contacts, searchable by role, club, and country
 - 3 free unlocks every month on the free plan
-- Pro at £39/month if you need more (comeback offer still live until [DATE])
+- Pro at £39/month (£19 for the first month if the comeback offer is still live)
 
-[**footycontacts.com**](https://footycontacts.com/app)
+[footycontacts.com/app](https://footycontacts.com/app)
 
-If the product doesn't have what you need, reply and tell me. I'm building the database as this goes — feedback from this email will directly influence what gets added next.
+If the database doesn't have what you need, reply and tell me. Feedback from this campaign will directly shape what gets added next.
 
-— [Your Name]
+— Calvin
 
 ---
 
-*You'll move to my standard email list after this. If you'd prefer not to hear from me at all, [unsubscribe here].*
+*You'll move to my standard email list after this. If you'd prefer not to hear from us at all, [unsubscribe here].*
 
 ---
 
 **Notes**:
-- "Last email from me for a while" consistently outperforms re-engagement subject lines in winback data. It triggers the psychology of loss before full disengagement.
-- The offer still being live is not desperation — it is service.
-- The "feedback will influence what gets added next" is a genuine product development invite. Act on it.
+- "Last email from me for a while" consistently outperforms standard re-engagement subject lines. It triggers loss aversion before full disengagement.
+- Keep it short. This is the last chance, not a re-pitch.
+- Only send this if you ran the full sequence and still have non-converters worth contacting.
+
+---
+
+## Part 10 — Pre-Send Product Audit
+
+**This is a hard gate. Do not send any emails until every step below passes.**
+
+0 unlocks ever recorded from 743 registered users is a strong signal that something in the product flow was broken. Before sending warm users back to a broken experience, verify the entire conversion path yourself — in a fresh browser session, using a real account.
+
+### Test these 10 things in order
+
+1. **Login from email link**: Can a user sign in via magic link or standard login from a fresh browser?
+2. **Landing after login**: Does `/app` load immediately after login — not a dashboard, not a profile page?
+3. **Search loads**: Does a search query return results without errors?
+4. **Results are meaningful**: Are results relevant to the search term? Do names, roles, and organisations show?
+5. **Lock state is clear**: Are locked fields obviously gated? Is it clear what an unlock gives you?
+6. **Free unlock works**: Can a user unlock a contact without entering a card?
+7. **Unlock reveals details**: Does the unlock correctly show email, phone, and LinkedIn?
+8. **Counter updates**: Does the free unlock counter go from 3 → 2 after one unlock?
+9. **Pro checkout works**: Does the upgrade flow reach Stripe checkout without errors?
+10. **Account updates after payment**: After a test Stripe payment, does the account reflect Pro status?
+
+If any of these fail, fix it before sending. One broken step in this chain wastes your warmest users and makes the campaign worse than sending nothing.
 
 ---
 
@@ -651,7 +665,7 @@ They stay on free. The free plan is a permanent conversion surface. Every month 
 | Search rate (of logins) | < 40% | 60% | > 80% |
 | Unlock rate (of searches) | < 20% | 35% | > 50% |
 | Upgrade rate (of unlocks) | < 5% | 10–15% | > 20% |
-| Reply rate (Email 5) | < 1% | 3–5% | > 8% |
+| Reply rate (Email 4) | < 1% | 3–5% | > 8% |
 
 ### What success looks like at end of campaign
 
@@ -679,17 +693,22 @@ They stay on free. The free plan is a permanent conversion surface. Every month 
 
 ### Are you allowed to email these users?
 
-Yes — under GDPR, you have a **legitimate interest** basis to email existing registered users about material changes to a product they signed up for. This applies to transactional and service-related communications. The reactivation emails qualify.
+These are existing registered users, not a cold list. That gives you a stronger basis than cold outreach — but these emails are partly marketing (especially the discount and Pro push), not purely service communications. Do not treat the whole sequence as transactional.
 
-**The required elements:**
-1. You must identify yourself clearly (name + product)
-2. You must explain why they are receiving the email ("You created a Footy Contacts account")
-3. You must provide a one-click unsubscribe in every email
-4. You must honour unsubscribe requests immediately
-5. You must not email users who have previously unsubscribed (check your suppression list)
+**The relevant legal frameworks in the UK are GDPR and PECR.** Under PECR, the soft opt-in rule may apply if users gave their contact details in the context of a service like Footy Contacts and were given a clear opportunity to opt out at signup. If that opt-out opportunity was absent at signup, you should rely on consent or legitimate interests — but note that individuals have an absolute right to object to direct marketing under GDPR, which must be honoured immediately.
 
-Add this line to the footer of every email:
-> *You're receiving this because you created a Footy Contacts account at [footycontacts.com]. [Unsubscribe] if you don't want to hear from us.*
+**Before sending, confirm:**
+- Users who previously unsubscribed or are on the suppression list are excluded
+- You are only emailing about Footy Contacts or closely related services
+- Every email identifies you and Footy Contacts clearly
+- Every email explains why the user is receiving it
+- Every email has a working one-click unsubscribe
+- You stop emailing any user who objects or unsubscribes, immediately
+
+**The required footer for every email:**
+> *You're receiving this because you created a Footy Contacts account at footycontacts.com. [Unsubscribe] if you don't want to hear from us.*
+
+**If in doubt**: The ICO's direct marketing guidance covers GDPR and PECR in detail. For a list of 743 users, the practical risk is manageable if you include a clear unsubscribe and honour it — but the legal basis matters more as you scale.
 
 ### How to send safely to 743 users
 
@@ -736,7 +755,7 @@ Before you send Email 1:
 - [ ] Unlock flow works — tested end-to-end with a real account
 - [ ] Upgrade checkout works — tested in Stripe test mode then live
 - [ ] Email 1 CTA link goes to `/app` (not homepage)
-- [ ] [DATE] placeholders replaced with real dates in Email 6 and Email 7
+- [ ] [REAL DATE] placeholder in Email 5 replaced with an actual calendar date (7 days from send)
 - [ ] Tracking pixels or click tracking enabled in Resend
 
 ---
@@ -769,18 +788,18 @@ Replies are your highest-value leads. Treat every reply like a sales call.
 
 ## Summary: The One-Page Version
 
-**Problem**: 743 users, 0 conversions, 1 paying subscriber. Product was abandoned and had real UX issues.
+**Problem**: 743 users, 0 conversions, 1 paying subscriber. Product was not given the attention it needed after launch, and had real UX issues.
 
 **Approach**: Honest founder-led relaunch. Acknowledge the problem. Show the database is real and alive. Get users to take one small action (search, unlock). Convert the highest-intent 5–20 into paid.
 
-**The 7-email sequence**:
+**The 5-email sequence**:
 1. Honest relaunch (Day 0)
-2. Database showcase (Day 3)
+2. What can you search? (Day 3)
 3. Free unlock nudge (Day 6)
-4. Value + trust (Day 10)
-5. Reply generation (Day 14)
-6. Pro conversion with comeback offer (Day 18)
-7. Final email (Day 25)
+4. Reply generation — "what are you looking for?" (Day 10)
+5. Pro conversion — £19 first month (Day 14)
+
+**Plus**: Behavioural triggers (see Part 3) fire based on what users actually do in the product. These are more effective than any broadcast email and should be built after the sequence runs.
 
 **The one offer**: 50% off first month (£19 instead of £39). Time-limited, clearly explained, no code needed.
 

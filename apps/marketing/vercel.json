@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/blog/:slug",
+      "has": [{ "type": "host", "value": "footycontacts.com" }],
+      "destination": "/blog/:slug",
+      "permanent": false
+    }
+  ]
+}
