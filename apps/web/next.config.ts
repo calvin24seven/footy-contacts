@@ -22,7 +22,7 @@ export default withSentryConfig(nextConfig, {
   project:                 process.env.SENTRY_PROJECT,
   silent:                  !process.env.CI,
   widenClientFileUpload:   true,
-  hideSourceMaps:          true,   // never ship source maps to browser
+  sourcemaps:              { deleteSourcemapsAfterUpload: true },
   disableLogger:           true,
   automaticVercelMonitors: true,   // cron job health monitoring in Sentry Crons
 })
