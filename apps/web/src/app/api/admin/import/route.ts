@@ -1013,6 +1013,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ── Organisation resolution ──────────────────────────────────────────────
     // Upsert organisations from every non-suppressed entry, then link
     // contact.organisation_id so the FK is always populated on insert/update.
+    const keyToOrgId = new Map<string, string>()
     const orgCandidates = entries.filter(
       e => e.matchType !== "suppressed" && e.contact.organisation
     )
@@ -1056,7 +1057,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         .select("id, normalised_name")
         .in("normalised_name", allKeys)
 
-      const keyToOrgId = new Map<string, string>()
       for (const org of fetchedOrgs ?? []) {
         if (org.normalised_name) keyToOrgId.set(org.normalised_name, org.id)
       }
@@ -1074,8 +1074,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const toUpdate: ContactEntry[] = []
     // Role/org changes observed on skip-mode duplicates (recorded but not applied)
     const skipModeHistoryInserts: Array<Record<string, unknown>> = []
-    // keyToOrgId may not be in scope here if no orgCandidates existed — default to empty map
-    const resolvedKeyToOrgId: Map<string, string> = typeof keyToOrgId !== "undefined" ? keyToOrgId : new Map()
 
     for (const entry of entries) {
       if (entry.matchType === "suppressed") {
@@ -1138,7 +1136,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
               import_id:           importId,
               // Store the resolved organisation FK if available (from orgMap upsert above)
               new_organisation_id: incomingOrg
-                ? (resolvedKeyToOrgId.get(normalisedOrgKey(incomingOrg)) ?? null)
+                ? (keyToOrgId.get(normalisedOrgKey(incomingOrg)) ?? null)
                 : null,
             })
           }
