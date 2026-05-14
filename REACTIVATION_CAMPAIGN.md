@@ -14,7 +14,7 @@
 
 ### What likely went wrong
 
-1. **The product was abandoned** — no welcome sequence, no activation emails, no follow-up. Users signed up into a void and left because nothing nudged them back.
+1. **The product was not actively maintained after launch** — no welcome sequence, no activation emails, no follow-up. Users signed up into a void and left because nothing nudged them back.
 2. **The website had a broken or confusing flow** — users hit an error or unclear UX when trying to unlock contacts. The friction of a broken experience is permanent. They will not retry by default.
 3. **No value demonstration at the right moment** — even if users searched and found contacts, nothing pushed them to unlock one, and nothing explained what they would get if they did.
 4. **Free unlocks were probably unexplained or unseen** — if users didn't know they had 3 free unlocks, they left without ever experiencing the core product.
@@ -524,7 +524,7 @@ A technically working search that returns weak or irrelevant results is just as 
 ## Part 11 — Agency/High-Value User Email
 
 **Purpose**: Target users who are agents, agencies, scouts, clubs, or recruiters. Position Agency plan at £149/month.  
-**Send**: Replace Email 6 for this segment, or send as a standalone after Email 4.
+**Send**: Replace Email 5 for high-value users, or send as a standalone after Email 4.
 
 ---
 
@@ -566,7 +566,7 @@ Or try Pro first and upgrade if you need more. Either way, you have 3 free unloc
 
 [**Try it free first →**](https://footycontacts.com/app)
 
-— [Your Name]
+— Calvin
 
 ---
 
@@ -706,6 +706,17 @@ They stay on free. The free plan is a permanent conversion surface. Every month 
 - Open rate below 15%: deliverability issue. Stop campaign. Check spam score, sender reputation, DNS (SPF, DKIM, DMARC).
 - Zero unlocks after 200 logins: UX is broken. Fix the unlock flow before sending more emails.
 - Zero replies to Email 4: audience is cold, the ask is unclear, or emails are landing in spam.
+
+### Engagement gate before Email 5
+
+Do not send the offer email blindly if the first three emails show weak product engagement.
+
+If Emails 1–3 generate:
+- fewer than 20 logins,
+- fewer than 10 searches,
+- or fewer than 3 unlocks,
+
+pause before Email 5 and fix product activation. If people open and click but don't search or unlock, the issue is not copy. It is the app.
 
 ---
 
