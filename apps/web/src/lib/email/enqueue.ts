@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { TEMPLATES, type TemplateId } from "./templates"
 import { assertEmailRateLimit } from "./rate-limit"
+import { drainEmailQueue } from "./drain"
 import * as Sentry from "@sentry/nextjs"
 
 export interface EnqueueEmailOptions {
@@ -65,5 +66,20 @@ export async function enqueueEmail(opts: EnqueueEmailOptions): Promise<string | 
     throw new Error(`Failed to enqueue email: ${error.message}`)
   }
 
-  return data?.id ?? null
+  const jobId = data?.id ?? null
+
+  // Inline drain: send immediately rather than waiting for the daily cron.
+  // Runs fire-and-forget style — enqueue returns the job ID before drain completes,
+  // so caller latency is not affected. If drain fails, the job stays pending and
+  // the daily cron will pick it up as a safety net.
+  if (jobId) {
+    drainEmailQueue().catch((err) =>
+      Sentry.captureException(err, {
+        tags:  { component: "email-enqueue-drain", template: opts.templateId },
+        extra: { jobId },
+      })
+    )
+  }
+
+  return jobId
 }
