@@ -48,9 +48,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const BATCH = 500
   for (let i = 0; i < allEmails.length; i += BATCH) {
     const batch = allEmails.slice(i, i + BATCH)
+    type SuppressionReason = "bounce" | "complaint" | "unsubscribe" | "manual" | "invalid"
+    const safeReason = (["bounce","complaint","unsubscribe","manual","invalid"] as string[]).includes(reason)
+      ? (reason as SuppressionReason)
+      : ("manual" as SuppressionReason)
     await supabase.from("email_suppressions").upsert(
-      batch.map((email) => ({ email, reason, added_by: user.id })),
-      { onConflict: "email", ignoreDuplicates: true }
+      batch.map((email) => ({ email, reason: safeReason, category: "all", source: "admin" })),
+      { onConflict: "email,category,reason", ignoreDuplicates: true }
     )
     // Mark contacts as rejected — keep email for audit trail + suppression reference
     await supabase

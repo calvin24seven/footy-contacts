@@ -43,11 +43,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let imported = 0
   for (let i = 0; i < emails.length; i += BATCH) {
     const batch = emails.slice(i, i + BATCH)
+    type SuppressionReason = "bounce" | "complaint" | "unsubscribe" | "manual" | "invalid"
+    const safeReason = (["bounce","complaint","unsubscribe","manual","invalid"] as string[]).includes(reason)
+      ? (reason as SuppressionReason)
+      : ("manual" as SuppressionReason)
     const { data, error } = await supabase
       .from("email_suppressions")
       .upsert(
-        batch.map((email) => ({ email, reason, added_by: user.id })),
-        { onConflict: "email", ignoreDuplicates: true }
+        batch.map((email) => ({ email, reason: safeReason, category: "all", source: "admin" })),
+        { onConflict: "email,category,reason", ignoreDuplicates: true }
       )
       .select("id")
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

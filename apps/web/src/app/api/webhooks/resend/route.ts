@@ -69,7 +69,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         provider_event_id: svixId,          // ← svix-id header, not email_id
         event_type:        event.type,
         resend_message_id: emailId,
-        payload:           event as unknown as Record<string, unknown>,
+        payload:           event as unknown as import("@/database.types").Json,
       },
       { onConflict: "provider,provider_event_id", ignoreDuplicates: true }
     )

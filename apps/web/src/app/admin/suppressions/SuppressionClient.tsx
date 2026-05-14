@@ -7,8 +7,9 @@ interface Suppression {
   id: string
   email: string
   reason: string
-  added_at: string
-  added_by: string | null
+  category: string
+  source: string | null
+  created_at: string
 }
 
 const REASON_LABELS: Record<string, string> = {
@@ -84,7 +85,7 @@ export default function SuppressionClient({
     }
     setAddEmail("")
     startTransition(() => router.refresh())
-    const newItem: Suppression = { id: email, email, reason: addReason, added_at: new Date().toISOString(), added_by: null }
+    const newItem: Suppression = { id: email, email, reason: addReason, category: "all", source: "admin", created_at: new Date().toISOString() }
     setSuppressions((prev) => [newItem, ...prev])
     setTotal((t) => t + 1)
   }
@@ -243,7 +244,7 @@ export default function SuppressionClient({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-400">
-                      {new Date(s.added_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      {new Date(s.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button

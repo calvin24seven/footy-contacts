@@ -152,8 +152,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     await supabase
       .from("email_suppressions")
       .upsert(
-        batch.map(email => ({ email, reason: "reoon_invalid", added_by: user.id })),
-        { onConflict: "email", ignoreDuplicates: true }
+        batch.map(email => ({ email, reason: "invalid" as const, category: "all", source: "reoon-verify" })),
+        { onConflict: "email,category,reason", ignoreDuplicates: true }
       )
   }
 

@@ -145,8 +145,8 @@ function renderTemplate<K extends keyof typeof TEMPLATES>(
   const template    = TEMPLATES[templateId]
   const parsedProps = template.schema.parse(rawProps) as Parameters<(typeof TEMPLATES)[K]["component"]>[0]
   return {
-    element: template.component(parsedProps) as ReturnType<(typeof TEMPLATES)[K]["component"]>,
-    subject: template.subject(parsedProps),
+    element: template.component(parsedProps as never) as ReturnType<(typeof TEMPLATES)[K]["component"]>,
+    subject: template.subject(parsedProps as never),
   }
 }
 

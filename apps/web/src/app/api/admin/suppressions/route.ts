@@ -15,9 +15,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const cleaned = emails.map((e) => e.toLowerCase().trim()).filter((e) => e.includes("@"))
   if (!cleaned.length) return NextResponse.json({ error: "No valid emails" }, { status: 400 })
 
+  type SuppressionReason = "bounce" | "complaint" | "unsubscribe" | "manual" | "invalid"
+  const safeReason = (["bounce","complaint","unsubscribe","manual","invalid"] as string[]).includes(reason)
+    ? (reason as SuppressionReason)
+    : ("manual" as SuppressionReason)
+
   const { error } = await supabase.from("email_suppressions").upsert(
-    cleaned.map((email) => ({ email, reason, added_by: user.id })),
-    { onConflict: "email", ignoreDuplicates: true }
+    cleaned.map((email) => ({ email, reason: safeReason, category: "all", source: "admin" })),
+    { onConflict: "email,category,reason", ignoreDuplicates: true }
   )
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

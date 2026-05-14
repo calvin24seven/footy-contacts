@@ -110,7 +110,7 @@ describe("POST /api/webhooks/resend — duplicate events", () => {
     const req = makeRequest("svix-msg-duplicate-1", EVENT_DELIVERED)
     const res = await POST(req as unknown as import("next/server").NextRequest)
 
-    expect((res as { _data: Record<string, unknown> })._data).toMatchObject({
+    expect((res as unknown as { _data: Record<string, unknown> })._data).toMatchObject({
       received:  true,
       duplicate: true,
     })
