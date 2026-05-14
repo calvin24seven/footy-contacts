@@ -43,7 +43,7 @@ export default function UpdatePasswordPage() {
     <div className="min-h-screen bg-[#080c17] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <span className="text-gold font-bold text-2xl tracking-tight">Footy Contacts</span>
+          <img src="/logo.png" alt="Footy Contacts" className="h-10 w-auto mx-auto" />
           <h1 className="text-white text-xl font-bold mt-4">Set a new password</h1>
           <p className="text-gray-400 text-sm mt-1">Choose a strong password for your account.</p>
         </div>

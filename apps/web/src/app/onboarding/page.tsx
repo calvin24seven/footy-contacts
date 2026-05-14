@@ -196,7 +196,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-[#080c17] flex flex-col">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-5">
-        <span className="text-gold font-bold text-lg tracking-tight">Footy Contacts</span>
+        <img src="/logo.png" alt="Footy Contacts" className="h-8 w-auto" />
         <span className="text-xs text-gray-500">Step {step} of {totalSteps}</span>
       </div>
 

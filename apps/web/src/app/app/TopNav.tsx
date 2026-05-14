@@ -47,8 +47,8 @@ export default function TopNav({ fullName, avatarUrl, email, isAdmin }: TopNavPr
     <header className="bg-navy border-b border-navy-light shrink-0 sticky top-0 z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-3 sm:gap-6">
         {/* Logo */}
-        <Link href="/app" className="text-gold font-bold text-base shrink-0">
-          Footy Contacts
+        <Link href="/app" className="shrink-0">
+          <img src="/logo.png" alt="Footy Contacts" className="h-7 w-auto" />
         </Link>
 
         {/* Primary nav — desktop only (mobile uses BottomNav) */}

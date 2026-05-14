@@ -5,7 +5,7 @@ export default function LandingPage() {
     <main className="min-h-screen bg-navy text-white">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
-        <span className="text-xl font-bold text-gold">Footy Contacts</span>
+        <img src="/logo.png" alt="Footy Contacts" className="h-8 w-auto" />
         <div className="flex gap-4">
           <Link
             href="/login"

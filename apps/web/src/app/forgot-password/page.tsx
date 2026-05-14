@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-navy flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="text-2xl font-bold text-gold">Footy Contacts</span>
+          <img src="/logo.png" alt="Footy Contacts" className="h-10 w-auto mx-auto" />
           <h1 className="text-white text-xl font-semibold mt-2">Reset your password</h1>
         </div>
         <div className="bg-navy-light rounded-xl p-6 space-y-4">
