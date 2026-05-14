@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
-export default function UnsubscribedPage() {
+function UnsubscribedContent() {
   const params   = useSearchParams()
   const email    = params.get("email")
   const category = params.get("category") ?? "marketing"
@@ -88,5 +88,13 @@ export default function UnsubscribedPage() {
         </button>
       </div>
     </main>
+  )
+}
+
+export default function UnsubscribedPage() {
+  return (
+    <Suspense fallback={null}>
+      <UnsubscribedContent />
+    </Suspense>
   )
 }
