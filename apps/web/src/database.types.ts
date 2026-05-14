@@ -159,8 +159,14 @@ export type Database = {
           id: string
           import_id: string | null
           new_email: string | null
+          new_organisation_id: string | null
           new_phone: string | null
           organisation: string | null
+          prev_email: string | null
+          prev_organisation: string | null
+          prev_organisation_id: string | null
+          prev_phone: string | null
+          prev_role: string | null
           recorded_at: string
           review_status: string
           reviewed_at: string | null
@@ -174,8 +180,14 @@ export type Database = {
           id?: string
           import_id?: string | null
           new_email?: string | null
+          new_organisation_id?: string | null
           new_phone?: string | null
           organisation?: string | null
+          prev_email?: string | null
+          prev_organisation?: string | null
+          prev_organisation_id?: string | null
+          prev_phone?: string | null
+          prev_role?: string | null
           recorded_at?: string
           review_status?: string
           reviewed_at?: string | null
@@ -189,8 +201,14 @@ export type Database = {
           id?: string
           import_id?: string | null
           new_email?: string | null
+          new_organisation_id?: string | null
           new_phone?: string | null
           organisation?: string | null
+          prev_email?: string | null
+          prev_organisation?: string | null
+          prev_organisation_id?: string | null
+          prev_phone?: string | null
+          prev_role?: string | null
           recorded_at?: string
           review_status?: string
           reviewed_at?: string | null

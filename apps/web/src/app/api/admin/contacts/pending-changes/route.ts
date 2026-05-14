@@ -113,11 +113,37 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     id: string; contact_id: string; role: string | null; organisation: string | null
     new_email: string | null; new_phone: string | null; change_type: string | null
   }>) {
+    // Read current contact values (role, org text, org FK, location) before overwriting
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: current } = await (supabase.from("contacts") as any)
+      .select("role, organisation, organisation_id, email, phone, city, country")
+      .eq("id", signal.contact_id)
+      .single()
+
     const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
     if (signal.role)         update.role         = signal.role
-    if (signal.organisation) update.organisation = signal.organisation
     if (signal.new_email)    update.email        = signal.new_email
     if (signal.new_phone)    update.phone        = signal.new_phone
+
+    // Resolve the new organisation from the organisations table
+    let newOrgId: string | null = null
+    if (signal.organisation) {
+      update.organisation = signal.organisation
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: orgRow } = await (supabase.from("organisations") as any)
+        .select("id, city, country")
+        .ilike("name", signal.organisation)
+        .maybeSingle()
+
+      if (orgRow) {
+        newOrgId = orgRow.id as string
+        update.organisation_id = orgRow.id
+        // Update city/country from the organisation record if the org changed
+        // Only overwrite if the new org has location data
+        if (orgRow.city)    update.city    = orgRow.city
+        if (orgRow.country) update.country = orgRow.country
+      }
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: updateErr } = await (supabase.from("contacts") as any)
@@ -132,7 +158,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase.from("contact_role_history") as any)
-      .update({ review_status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: user.id })
+      .update({
+        review_status:        "approved",
+        reviewed_at:          new Date().toISOString(),
+        reviewed_by:          user.id,
+        prev_role:            current?.role             ?? null,
+        prev_organisation:    current?.organisation     ?? null,
+        prev_organisation_id: current?.organisation_id  ?? null,
+        prev_email:           current?.email            ?? null,
+        prev_phone:           current?.phone            ?? null,
+        new_organisation_id:  newOrgId,
+      })
       .eq("id", signal.id)
 
     applied++

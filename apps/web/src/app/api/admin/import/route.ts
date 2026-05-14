@@ -226,9 +226,10 @@ function normalisePhone(text: string): string {
 function normaliseOrgForComparison(s: string): string {
   return s
     .toLowerCase()
-    .replace(/[.\-']/g, "")                                    // strip punctuation
-    .replace(/\s+/g, " ")                                      // collapse spaces
-    .replace(/\s+(afc|fc|sc|fk|cf|bv|sv|ac|as|rfk|hfc)\s*$/, "") // strip trailing entity type
+    .replace(/[.\-'&]/g, " ")              // treat & and punctuation as word separators
+    .replace(/\s+/g, " ")                  // collapse spaces
+    // strip trailing legal/entity suffixes — longest patterns first so they don't partially match
+    .replace(/\s+(football club|gmbh co kgaa|gmbh co kg|co kgaa|kgaa|kg aa|afc|fc|sc|fk|cf|bv|sv|ac|as|rfk|hfc|ev|gmbh|ltd|plc|spa|srl|sa|ag|nv)\s*$/, "")
     .trim()
 }
 
@@ -1073,6 +1074,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const toUpdate: ContactEntry[] = []
     // Role/org changes observed on skip-mode duplicates (recorded but not applied)
     const skipModeHistoryInserts: Array<Record<string, unknown>> = []
+    // keyToOrgId may not be in scope here if no orgCandidates existed — default to empty map
+    const resolvedKeyToOrgId: Map<string, string> = typeof keyToOrgId !== "undefined" ? keyToOrgId : new Map()
 
     for (const entry of entries) {
       if (entry.matchType === "suppressed") {
@@ -1124,15 +1127,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             const resolvedChangeType = isCasingOnly ? "casing_only" : changeType
 
             skipModeHistoryInserts.push({
-              contact_id:    existing.id,
-              role:          incomingRole ?? existing.role,
-              organisation:  incomingOrg  ?? existing.organisation,
-              new_email:     incomingEmail ?? null,
-              new_phone:     incomingPhone ?? null,
-              change_type:   resolvedChangeType,
-              review_status: resolvedChangeType === "casing_only" ? "auto_approved" : "pending",
-              source:        "csv_import_signal",
-              import_id:     importId,
+              contact_id:          existing.id,
+              role:                incomingRole ?? existing.role,
+              organisation:        incomingOrg  ?? existing.organisation,
+              new_email:           incomingEmail ?? null,
+              new_phone:           incomingPhone ?? null,
+              change_type:         resolvedChangeType,
+              review_status:       resolvedChangeType === "casing_only" ? "auto_approved" : "pending",
+              source:              "csv_import_signal",
+              import_id:           importId,
+              // Store the resolved organisation FK if available (from orgMap upsert above)
+              new_organisation_id: incomingOrg
+                ? (resolvedKeyToOrgId.get(normalisedOrgKey(incomingOrg)) ?? null)
+                : null,
             })
           }
         }
