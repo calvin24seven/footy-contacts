@@ -5,7 +5,7 @@
 **Primary goal**: reactivate 75–150 users into product usage.  
 **Revenue goal**: convert 5–20 users into paid subscribers.  
 **Learning goal**: identify which user types and search intents are most commercially valuable.  
-**Stack**: Resend (or any email tool)
+**Stack**: Resend
 **Written**: May 2026
 
 ---
@@ -89,7 +89,7 @@ Split into:
 |---|---|---|
 | **High commercial value** | Agents, agencies, scouts, clubs, academies, recruiters | Agency plan email. Volume searches, exports, finding 10+ people at once. |
 | **Individual operators** | Coaches, player reps, journalists, people trying to break in | Pro plan email. One person, one goal, one search. |
-| **Unknown** | No profile data | Default sequence. Ask them what they're looking for in Email 5. |
+| **Unknown** | No profile data | Default sequence. Ask them what they're looking for in Email 4. |
 
 ### If you cannot segment at all
 
@@ -765,7 +765,7 @@ This spreads the load over a few hours. At 743 total, you are well within Resend
 - Never re-add an unsubscribed user
 
 **Suppression list:**
-You have a `20260428_dedup_suppressions.sql` migration — confirm your suppression logic is active and working before sending. Do not email any suppressed addresses.
+You have a `20260428_dedup_suppressions.sql` migration — confirm your suppression logic is active and working before sending. Do not email any suppressed addresses. Also exclude bounced, complained, invalid, duplicate, and role-based addresses (`admin@`, `support@`, `info@`, `noreply@` and similar). For a reactivation campaign, personal email addresses perform better and carry lower deliverability risk.
 
 ### One-line reason they're receiving this
 
@@ -780,6 +780,7 @@ Before you send Email 1:
 - [ ] SPF/DKIM/DMARC verified for sending domain
 - [ ] Test email sent to yourself — checked in Gmail, Outlook, and on mobile
 - [ ] Suppression list checked — no previously unsubscribed users in the list
+- [ ] Email sending list excludes active paid subscribers
 - [ ] Unsubscribe link tested and functional
 - [ ] "Comeback offer" Stripe coupon/code created and tested
 - [ ] Login flow works — tested with a fresh browser session

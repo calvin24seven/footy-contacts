@@ -19,11 +19,13 @@ interface PostSummary {
   slug: { current: string }
   publishedAt: string
   excerpt: string
-  mainImage?: { asset: unknown; alt?: string }
+  mainImage?: { asset: { _ref: string; _type: string }; alt?: string }
 }
 
 export default async function BlogPage() {
-  const posts: PostSummary[] = await client.fetch(allPostsQuery)
+  const posts: PostSummary[] = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+    ? await client.fetch(allPostsQuery)
+    : []
 
   return (
     <main className="min-h-screen bg-[#161E2E] text-white">

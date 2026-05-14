@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { PortableText } from "@portabletext/react"
+import { PortableText, type PortableTextBlock } from "@portabletext/react"
 import { client } from "@/sanity/lib/client"
 import { postBySlugQuery, allSlugsQuery } from "@/sanity/lib/queries"
 import { urlFor } from "@/sanity/lib/image"
@@ -15,13 +15,14 @@ interface Post {
   slug: { current: string }
   publishedAt: string
   excerpt: string
-  mainImage?: { asset: unknown; alt?: string }
-  body: unknown[]
+  mainImage?: { asset: { _ref: string; _type: string }; alt?: string }
+  body: PortableTextBlock[]
   seoTitle?: string
   seoDescription?: string
 }
 
 export async function generateStaticParams() {
+  if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) return []
   const slugs: { slug: string }[] = await client.fetch(allSlugsQuery)
   return slugs.map((s) => ({ slug: s.slug }))
 }

@@ -5,14 +5,17 @@ import { allSlugsQuery } from "@/sanity/lib/queries"
 export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const slugs: { slug: string }[] = await client.fetch(allSlugsQuery)
   const base = "https://footycontacts.com"
+  let posts: MetadataRoute.Sitemap = []
 
-  const posts = slugs.map((s) => ({
-    url: `${base}/blog/${s.slug}`,
-    changeFrequency: "monthly" as const,
-    priority: 0.7,
-  }))
+  if (process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) {
+    const slugs: { slug: string }[] = await client.fetch(allSlugsQuery)
+    posts = slugs.map((s) => ({
+      url: `${base}/blog/${s.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    }))
+  }
 
   return [
     { url: base, changeFrequency: "weekly", priority: 1.0 },
