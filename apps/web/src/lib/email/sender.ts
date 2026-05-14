@@ -121,7 +121,12 @@ export async function sendClaimedEmailJob(job: ClaimedEmailJob): Promise<void> {
         if (updateErr) throw updateErr
 
       } catch (err) {
-        await handleSendFailure(job.id, job.attempt_count, job.max_attempts, String(err))
+        const errMsg = err instanceof Error
+          ? err.message
+          : (typeof err === "object" && err !== null)
+            ? JSON.stringify(err)
+            : String(err)
+        await handleSendFailure(job.id, job.attempt_count, job.max_attempts, errMsg)
         Sentry.captureException(err, {
           tags:  { component: "email-sender", template: job.template_id },
           // NEVER include template_props — may contain PII
