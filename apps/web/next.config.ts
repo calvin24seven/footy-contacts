@@ -1,4 +1,5 @@
 import type { NextConfig } from "next"
+import { withSentryConfig } from "@sentry/nextjs"
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@footy/supabase", "@footy/types", "@footy/hooks"],
@@ -16,4 +17,12 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  org:                     process.env.SENTRY_ORG,
+  project:                 process.env.SENTRY_PROJECT,
+  silent:                  !process.env.CI,
+  widenClientFileUpload:   true,
+  hideSourceMaps:          true,   // never ship source maps to browser
+  disableLogger:           true,
+  automaticVercelMonitors: true,   // cron job health monitoring in Sentry Crons
+})

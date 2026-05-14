@@ -13,7 +13,14 @@
         "REOON_API_KEY",
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
-        "CRON_SECRET"
+        "CRON_SECRET",
+        "RESEND_API_KEY",
+        "RESEND_WEBHOOK_SECRET",
+        "UNSUBSCRIBE_SECRET",
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "SENTRY_AUTH_TOKEN",
+        "SENTRY_ORG",
+        "SENTRY_PROJECT"
       ]
     },
     "dev": {

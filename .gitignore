@@ -8,3 +8,6 @@ out/
 .env.local
 .DS_Store
 *.log
+
+# Sentry Config File
+.env.sentry-build-plugin

@@ -25,5 +25,8 @@
     "overrides": {
       "@types/react": "^19.0.0"
     }
+  },
+  "dependencies": {
+    "@sentry/nextjs": "10"
   }
 }
