@@ -1336,7 +1336,9 @@ export type Database = {
           is_suspended: boolean
           last_name: string | null
           lifetime_unlocks_used: number
+          dashboard_welcome_dismissed: boolean
           onboarding_completed: boolean | null
+          onboarding_completed_at: string | null
           onboarding_last_updated: string | null
           onboarding_step: number | null
           open_to_opportunities: string | null
@@ -1367,7 +1369,9 @@ export type Database = {
           is_suspended?: boolean
           last_name?: string | null
           lifetime_unlocks_used?: number
+          dashboard_welcome_dismissed?: boolean
           onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
           onboarding_last_updated?: string | null
           onboarding_step?: number | null
           open_to_opportunities?: string | null
@@ -1398,7 +1402,9 @@ export type Database = {
           is_suspended?: boolean
           last_name?: string | null
           lifetime_unlocks_used?: number
+          dashboard_welcome_dismissed?: boolean
           onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
           onboarding_last_updated?: string | null
           onboarding_step?: number | null
           open_to_opportunities?: string | null
