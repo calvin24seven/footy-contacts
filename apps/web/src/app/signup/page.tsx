@@ -5,10 +5,7 @@ export const dynamic = "force-dynamic"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import AuthSplitLayout from "@/components/auth/AuthSplitLayout"
-import TurnstileWidget from "@/components/auth/TurnstileWidget"
 import { createClient } from "@/lib/supabase/client"
-
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""
 
 function PasswordStrength({ password }: { password: string }) {
   const hasLength = password.length >= 8
@@ -97,7 +94,6 @@ export default function SignupPage() {
   const [resendCooldown, setResendCooldown] = useState(0)
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   function startCooldown() {
@@ -136,10 +132,6 @@ export default function SignupPage() {
       setError("Password must be at least 8 characters with a number or symbol.")
       return
     }
-    if (!turnstileToken) {
-      setError("Please complete the security check below.")
-      return
-    }
     setLoading(true)
     setError(null)
     const form = new FormData(e.currentTarget)
@@ -148,12 +140,11 @@ export default function SignupPage() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, turnstileToken }),
+      body: JSON.stringify({ email, password }),
     })
     const data = await res.json() as { error?: string; code?: string; success?: boolean }
     if (!res.ok) {
       setError(data.error ?? "Could not create account. Please try again.")
-      setTurnstileToken(null) // force re-challenge
     } else {
       setSentEmail(email)
       setSent(true)
@@ -262,13 +253,6 @@ export default function SignupPage() {
             value={confirm}
             onChange={setConfirm}
           />
-          {TURNSTILE_SITE_KEY && (
-            <TurnstileWidget
-              siteKey={TURNSTILE_SITE_KEY}
-              onToken={setTurnstileToken}
-              onExpire={() => setTurnstileToken(null)}
-            />
-          )}
           <button
             type="submit"
             disabled={loading}
