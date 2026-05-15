@@ -255,6 +255,9 @@ export default async function SearchPage({
           <ContactsList
             contacts={(contacts ?? []).map(c => ({
               ...c,
+              has_email:    c.has_email    ?? false,
+              has_phone:    c.has_phone    ?? false,
+              has_linkedin: c.has_linkedin ?? false,
               org_logo_url: getOrgLogoUrl(c.organisations as { logo_url: string | null; domain: string | null } | null),
               is_unlocked: unlockedSet.has(c.id),
             })) as ContactListRow[]}

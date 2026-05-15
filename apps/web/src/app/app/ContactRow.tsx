@@ -119,7 +119,7 @@ export default function ContactRow({
       {/* ── Desktop table row (must match ContactTableHeader grid) ── */}
       <div
         className={cn(
-          "hidden md:grid grid-cols-[32px_minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_160px] gap-x-4 items-center px-4 py-3.5",
+          "hidden md:grid grid-cols-[32px_minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_minmax(0,1fr)_120px] gap-x-4 items-center px-4 py-3.5",
           rowBase,
           isSelected ? rowSelected : rowIdle,
         )}
@@ -145,6 +145,7 @@ export default function ContactRow({
               <span className="text-white font-semibold text-[13px] leading-tight truncate">
                 {contact.name}
               </span>
+              {contact.verified_status === "verified" && <VerifiedBadge />}
             </div>
             {location && (
               <span className="text-[11px] text-gray-500 mt-0.5 block truncate">{location}</span>
@@ -173,18 +174,23 @@ export default function ContactRow({
           )}
         </div>
 
-        {/* Col 5 — Data: signal icons + verified badge */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        {/* Col 5 — Data: signal icons */}
+        <div className="flex items-center gap-1">
           <SignalIcons
             hasEmail={contact.has_email}
             hasPhone={contact.has_phone}
             hasLinkedin={contact.has_linkedin}
           />
-          {contact.verified_status === "verified" && contact.has_email && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium text-emerald-800 bg-emerald-100/80 leading-none">
-              Verified
-            </span>
-          )}
+        </div>
+
+        {/* Col 6 — Action: unlock / view */}
+        <div onClick={(e) => e.stopPropagation()}>
+          <ContactCTA
+            contactId={contact.id}
+            verifiedStatus={contact.verified_status}
+            hasEmail={contact.has_email}
+            hasPhone={contact.has_phone}
+          />
         </div>
       </div>
 
