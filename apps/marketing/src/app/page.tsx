@@ -1,7 +1,48 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import PricingSection from "./PricingSection"
 
 const APP_URL = "https://app.footycontacts.com"
+
+// ── Dynamic contact count ────────────────────────────────────────────────────
+// Fetches the live published-contact count, rounded down to nearest 10,000.
+// Result is cached for 1 hour; falls back to 10,000 if Supabase is unreachable.
+async function getContactCount(): Promise<number> {
+  const FALLBACK = 10_000
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) return FALLBACK
+
+    const res = await fetch(
+      `${url}/rest/v1/contacts?select=id&visibility_status=eq.published&suppression_status=eq.active`,
+      {
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+          Prefer: "count=exact",
+          "Range-Unit": "items",
+          Range: "0-0",
+        },
+        next: { revalidate: 3600 },
+      }
+    )
+    if (!res.ok) return FALLBACK
+    const range = res.headers.get("content-range") // e.g. "0-0/12453"
+    const total = range ? parseInt(range.split("/")[1] ?? "", 10) : NaN
+    if (isNaN(total) || total <= 0) return FALLBACK
+    return Math.floor(total / 10_000) * 10_000
+  } catch {
+    return FALLBACK
+  }
+}
+
+const POPULAR_SEARCHES = [
+  { label: "Scout · England", q: "scout england" },
+  { label: "Agent · Spain", q: "agent spain" },
+  { label: "Academy Director", q: "academy director" },
+  { label: "Head of Recruitment", q: "head of recruitment" },
+]
 
 export const metadata: Metadata = {
   title: "Footy Contacts — Search the Football Network",
@@ -70,7 +111,7 @@ const HOW_IT_WORKS = [
   {
     n: "01",
     title: "Search the network",
-    desc: "Filter by role, club, country, or level. Browse 12,400+ published contacts with names, organisations, and roles visible to everyone.",
+    desc: "Filter by role, club, country, or level. Browse published contacts with names, organisations, and roles visible to everyone.",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -101,7 +142,7 @@ const HOW_IT_WORKS = [
 
 const FEATURES = [
   {
-    title: "12,400+ published contacts",
+    title: "Published & verified contacts",
     desc: "Scouts, agents, coaches, academy directors, club secretaries, press officers, and operators. Verified and searchable.",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,42 +206,6 @@ const PERSONAS = [
   { role: "Journalists", desc: "Find press officers, media managers, and club contacts across the football world." },
   { role: "Recruiters", desc: "A searchable directory of football operators for your placements and representation pipeline." },
   { role: "Club operators", desc: "Find scouts, analysts, performance staff, and specialists — without relying on referrals alone." },
-]
-
-const PRICING = [
-  {
-    name: "Free",
-    price: "£0",
-    period: "",
-    badge: null as string | null,
-    desc: "Try it. 3 unlocks to see exactly what you get before spending a penny.",
-    features: ["3 unlock credits", "Full contact browsing", "Search & filter all 12,400+", "No credit card"],
-    cta: "Get access free",
-    href: `${APP_URL}/signup`,
-    featured: false,
-  },
-  {
-    name: "Pro",
-    price: "£39",
-    period: "/mo",
-    badge: "Most popular" as string | null,
-    desc: "For players, agents, scouts, and coaches who need the network on their side every month.",
-    features: ["150 unlocks/month", "75 CSV exports/month", "Full filter access", "Annual: £390 (save £78)"],
-    cta: "Start Pro",
-    href: `${APP_URL}/signup?plan=pro`,
-    featured: true,
-  },
-  {
-    name: "Agency",
-    price: "£149",
-    period: "/mo",
-    badge: null as string | null,
-    desc: "For professional agencies and operators who need the full network, every day.",
-    features: ["Unlimited unlocks", "500 exports/month", "Priority support", "Annual: £1,490 (save £298)"],
-    cta: "Go Agency",
-    href: `${APP_URL}/signup?plan=agency`,
-    featured: false,
-  },
 ]
 
 // ── Small icons ───────────────────────────────────────────────────────────────
@@ -368,7 +373,9 @@ function ProductMockup() {
 
 // ── Page component ────────────────────────────────────────────────────────────
 
-export default function HomePage() {
+export default async function HomePage() {
+  const count = await getContactCount()
+  const countStr = `${count.toLocaleString()}+`
   return (
     <div className="min-h-screen text-white" style={{ background: "#0D111C" }}>
 
@@ -409,20 +416,20 @@ export default function HomePage() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <Link
+            <a
               href={`${APP_URL}/login`}
               className="hidden sm:block text-sm font-medium"
               style={{ color: "rgba(255,255,255,0.45)" }}
             >
               Sign in
-            </Link>
-            <Link
+            </a>
+            <a
               href={`${APP_URL}/signup`}
               className="px-4 py-2.5 text-sm font-bold rounded-xl"
               style={{ background: "#F9D783", color: "#0D111C" }}
             >
               Get access →
-            </Link>
+            </a>
           </div>
         </nav>
       </header>
@@ -477,15 +484,15 @@ export default function HomePage() {
                 }}
               >
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#F9D783" }} />
-                12,400+ verified contacts · 114 countries
+                {countStr} verified contacts · 114 countries
               </div>
 
               {/* Headline */}
               <h1
-                className="font-extrabold leading-none tracking-tighter mb-6"
+                className="font-extrabold leading-none tracking-tighter mb-5"
                 style={{ fontSize: "clamp(52px, 7.5vw, 92px)" }}
               >
-                Find anyone
+                Find the right people
                 <br />
                 in{" "}
                 <span
@@ -502,40 +509,67 @@ export default function HomePage() {
 
               {/* Subheading */}
               <p
-                className="text-lg leading-relaxed mb-10"
-                style={{ color: "rgba(255,255,255,0.52)", maxWidth: "460px" }}
+                className="text-base leading-relaxed mb-7"
+                style={{ color: "rgba(255,255,255,0.50)", maxWidth: "460px" }}
               >
-                Scouts, agents, coaches, academy directors, and club officials — all in one
-                searchable platform. Direct email, phone, and LinkedIn included.
+                Scouts, agents, coaches, and club officials across 114 countries.
+                Search and unlock direct contact details in seconds.
               </p>
 
-              {/* CTA buttons */}
-              <div className="flex flex-wrap gap-3 mb-7">
-                <Link
-                  href={`${APP_URL}/signup`}
-                  className="inline-flex items-center gap-2 px-7 py-4 text-base font-bold rounded-xl"
+              {/* Search bar */}
+              <form
+                action={`${APP_URL}/signup`}
+                method="get"
+                className="flex gap-2 mb-5"
+              >
+                <div
+                  className="flex-1 flex items-center gap-2.5 rounded-xl px-4 py-3.5 border min-w-0"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    borderColor: "rgba(255,255,255,0.12)",
+                  }}
+                >
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="rgba(255,255,255,0.4)" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    name="q"
+                    placeholder="Search scouts, agents, clubs, trials..."
+                    className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-white/30 min-w-0"
+                    autoComplete="off"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="shrink-0 px-5 py-3.5 text-sm font-bold rounded-xl whitespace-nowrap"
                   style={{
                     background: "linear-gradient(135deg, #F9D783 0%, #E8C355 100%)",
                     color: "#0D111C",
-                    boxShadow: "0 8px 36px rgba(249,215,131,0.28)",
+                    boxShadow: "0 6px 24px rgba(249,215,131,0.28)",
                   }}
                 >
-                  Start free — 3 unlocks included
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Link>
-                <a
-                  href="#how-it-works"
-                  className="inline-flex items-center gap-2 px-6 py-4 text-base font-medium rounded-xl border"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.12)",
-                    color: "rgba(255,255,255,0.6)",
-                    background: "rgba(255,255,255,0.03)",
-                  }}
-                >
-                  See how it works
-                </a>
+                  Search →
+                </button>
+              </form>
+
+              {/* Popular searches */}
+              <div className="flex flex-wrap items-center gap-2 mb-7">
+                <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.28)" }}>Popular:</span>
+                {POPULAR_SEARCHES.map(({ label, q }) => (
+                  <a
+                    key={q}
+                    href={`${APP_URL}/signup?q=${encodeURIComponent(q)}`}
+                    className="text-xs px-3 py-1.5 rounded-full border transition-colors"
+                    style={{
+                      background: "rgba(255,255,255,0.04)",
+                      borderColor: "rgba(255,255,255,0.10)",
+                      color: "rgba(255,255,255,0.55)",
+                    }}
+                  >
+                    {label}
+                  </a>
+                ))}
               </div>
 
               {/* Trust line */}
@@ -605,7 +639,7 @@ export default function HomePage() {
             }}
           >
             {[
-              { value: "12,400+", label: "Published contacts", sub: "Searchable right now" },
+              { value: countStr, label: "Published contacts", sub: "Searchable right now" },
               { value: "114", label: "Countries covered", sub: "Global football network", divider: true },
               { value: "3 free", label: "Unlocks to start", sub: "No credit card needed", divider: true },
             ].map(({ value, label, sub, divider }) => (
@@ -807,148 +841,156 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Manifesto callout ─────────────────────────────────────────────── */}
-      <section className="py-28 relative overflow-hidden">
+      {/* ── Opportunities ─────────────────────────────────────────────────── */}
+      <section className="py-24 relative overflow-hidden" style={{ background: "rgba(255,255,255,0.012)" }}>
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(249,215,131,0.06) 0%, transparent 70%)",
+            background: "radial-gradient(ellipse 70% 50% at 50% 100%, rgba(249,215,131,0.05) 0%, transparent 65%)",
           }}
         />
-        <div className="relative max-w-3xl mx-auto px-6 text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest mb-6" style={{ color: "rgba(255,255,255,0.28)" }}>
-            Why we built this
-          </p>
-          <blockquote
-            className="font-bold tracking-tighter leading-tight text-white mb-6"
-            style={{ fontSize: "clamp(28px, 4vw, 48px)" }}
-          >
-            &ldquo;Football is a closed network.
-            <br />
-            Footy Contacts opens the door.&rdquo;
-          </blockquote>
-          <p
-            className="text-lg leading-relaxed mb-10"
-            style={{ color: "rgba(255,255,255,0.42)", maxWidth: "540px", margin: "0 auto 2.5rem" }}
-          >
-            Opportunities pass people by every single day — not for lack of talent or hard work, but
-            for lack of access. We built a searchable, direct-contact database so that changes.
-          </p>
-          <Link
-            href={`${APP_URL}/signup`}
-            className="inline-flex items-center gap-2 px-8 py-4 text-base font-bold rounded-xl"
-            style={{
-              background: "linear-gradient(135deg, #F9D783 0%, #E8C355 100%)",
-              color: "#0D111C",
-              boxShadow: "0 8px 32px rgba(249,215,131,0.24)",
-            }}
-          >
-            Get access — it&apos;s free
-          </Link>
-        </div>
-      </section>
 
-      {/* ── Pricing ──────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-24" style={{ background: "rgba(255,255,255,0.012)" }}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-14">
-            <p className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: "#F9D783" }}>
-              Pricing
-            </p>
-            <h2
-              className="font-extrabold tracking-tighter text-white mb-3"
-              style={{ fontSize: "clamp(32px, 4vw, 52px)" }}
+        <div className="relative max-w-7xl mx-auto px-6">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-12">
+            <div className="max-w-xl">
+              <p className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: "#F9D783" }}>
+                Opportunities
+              </p>
+              <h2
+                className="font-extrabold tracking-tighter text-white mb-4"
+                style={{ fontSize: "clamp(28px, 4vw, 50px)" }}
+              >
+                Contacts are the start.
+                <br />
+                <span
+                  style={{
+                    background: "linear-gradient(135deg, #F9D783 0%, #FFF5A0 50%, #E8C355 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
+                  Opportunities are the next move.
+                </span>
+              </h2>
+              <p className="text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.42)", maxWidth: "480px" }}>
+                Clubs and organisations post trials, jobs, and openings directly on Footy Contacts.
+                Browse what&apos;s live — filter by category, level, or country.
+              </p>
+            </div>
+            <Link
+              href={`${APP_URL}/signup`}
+              className="shrink-0 inline-flex items-center gap-2 px-6 py-3.5 text-sm font-bold rounded-xl border"
+              style={{
+                background: "rgba(249,215,131,0.07)",
+                borderColor: "rgba(249,215,131,0.20)",
+                color: "#F9D783",
+              }}
             >
-              Start free. Scale when you&apos;re ready.
-            </h2>
-            <p className="text-base" style={{ color: "rgba(255,255,255,0.38)" }}>
-              3 unlocks included on the free plan. No credit card required.
-            </p>
+              Browse open opportunities →
+            </Link>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
-            {PRICING.map((plan) => (
+          {/* Opportunity type cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-10">
+            {[
+              {
+                label: "Player Trials",
+                desc: "Open trials at clubs across all levels — from grassroots to professional academies.",
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+              },
+              {
+                label: "Scouting Roles",
+                desc: "Scout and talent identification positions at clubs, agencies, and national associations.",
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                ),
+              },
+              {
+                label: "Academy Openings",
+                desc: "Youth development, coaching, and support staff roles at academies and foundations.",
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l9-5-9-5-9 5 9 5z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                  </svg>
+                ),
+              },
+              {
+                label: "Club Positions",
+                desc: "Full-time and part-time roles across operations, performance, analysis, and administration.",
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                ),
+              },
+              {
+                label: "Media Openings",
+                desc: "Journalism, broadcasting, communications, and content roles across football media.",
+                icon: (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                ),
+              },
+            ].map((type) => (
               <div
-                key={plan.name}
-                className="relative rounded-2xl p-7 flex flex-col border"
-                style={
-                  plan.featured
-                    ? {
-                        background: "rgba(249,215,131,0.04)",
-                        borderColor: "rgba(249,215,131,0.28)",
-                        boxShadow: "0 0 0 1px rgba(249,215,131,0.10), 0 24px 60px rgba(249,215,131,0.07)",
-                      }
-                    : {
-                        background: "rgba(255,255,255,0.025)",
-                        borderColor: "rgba(255,255,255,0.07)",
-                      }
-                }
+                key={type.label}
+                className="rounded-2xl p-5 border flex flex-col gap-3"
+                style={{
+                  background: "rgba(255,255,255,0.025)",
+                  borderColor: "rgba(255,255,255,0.07)",
+                }}
               >
-                {plan.badge && (
-                  <span
-                    className="inline-flex self-start mb-4 text-xs font-bold px-3 py-1 rounded-full border"
+                {/* Icon + live dot */}
+                <div className="flex items-center justify-between">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center border"
                     style={{
-                      background: "rgba(249,215,131,0.12)",
-                      borderColor: "rgba(249,215,131,0.22)",
+                      background: "rgba(249,215,131,0.08)",
+                      borderColor: "rgba(249,215,131,0.14)",
                       color: "#F9D783",
                     }}
                   >
-                    {plan.badge}
-                  </span>
-                )}
-
-                <h3 className="text-white font-bold text-lg mb-1">{plan.name}</h3>
-                <div className="flex items-baseline gap-0.5 mb-3">
+                    {type.icon}
+                  </div>
                   <span
-                    className="font-extrabold tracking-tighter"
-                    style={{ fontSize: "52px", lineHeight: 1, color: plan.featured ? "#F9D783" : "#fff" }}
+                    className="flex items-center gap-1 text-xs font-medium"
+                    style={{ color: "#4ade80" }}
                   >
-                    {plan.price}
-                  </span>
-                  <span className="text-sm ml-1" style={{ color: "rgba(255,255,255,0.32)" }}>
-                    {plan.period}
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#4ade80" }} />
+                    Live
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.38)" }}>
-                  {plan.desc}
-                </p>
-
-                <ul className="space-y-3 flex-1 mb-7">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-                      <CheckIcon /> {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <Link
-                  href={plan.href}
-                  className="w-full inline-flex items-center justify-center py-3.5 rounded-xl text-sm font-bold"
-                  style={
-                    plan.featured
-                      ? {
-                          background: "linear-gradient(135deg, #F9D783 0%, #E8C355 100%)",
-                          color: "#0D111C",
-                          boxShadow: "0 6px 20px rgba(249,215,131,0.22)",
-                        }
-                      : {
-                          background: "rgba(255,255,255,0.06)",
-                          color: "rgba(255,255,255,0.75)",
-                          border: "1px solid rgba(255,255,255,0.10)",
-                        }
-                  }
-                >
-                  {plan.cta}
-                </Link>
+                <div>
+                  <p className="text-white font-semibold text-sm mb-1">{type.label}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.38)" }}>
+                    {type.desc}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
 
-          <p className="text-center text-sm mt-8" style={{ color: "rgba(255,255,255,0.22)" }}>
-            Start free — no credit card required. Upgrade or cancel anytime.
+          {/* Bottom note */}
+          <p className="text-sm text-center" style={{ color: "rgba(255,255,255,0.28)" }}>
+            Opportunities are posted by clubs and organisations directly. Sign up free to browse and respond.
           </p>
         </div>
       </section>
+
+      {/* ── Pricing ──────────────────────────────────────────────────────── */}
+      <PricingSection />
 
       {/* ── Final CTA ─────────────────────────────────────────────────────── */}
       <section className="py-32 relative overflow-hidden">

@@ -1,31 +1,50 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import UpgradeModal from "./UpgradeModal"
 import { useUnlocks } from "./UnlocksProvider"
 
-const STORAGE_KEY = "fc_welcome_v1_dismissed"
-
 export default function WelcomeBanner() {
   const { data: unlockData } = useUnlocks()
-  const [visible, setVisible] = useState(false)
+  // null = loading, true = dismissed, false = visible
+  const [dismissed, setDismissed] = useState<boolean | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
 
   useEffect(() => {
-    if (localStorage.getItem(STORAGE_KEY)) return
-    setVisible(true)
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { setDismissed(true); return }
+      supabase
+        .from("profiles")
+        .select("dashboard_welcome_dismissed")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          setDismissed((data as { dashboard_welcome_dismissed: boolean } | null)?.dashboard_welcome_dismissed ?? false)
+        })
+    })
   }, [])
 
   const unlockStats = unlockData
     ? { used: unlockData.used, limit: unlockData.limit, totalRemaining: unlockData.totalRemaining, planCode: unlockData.planCode }
     : null
 
-  function dismiss() {
-    localStorage.setItem(STORAGE_KEY, "1")
-    setVisible(false)
+  async function dismiss() {
+    setDismissed(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      supabase
+        .from("profiles")
+        .update({ dashboard_welcome_dismissed: true } as never)
+        .eq("id", user.id)
+        .then()
+    }
   }
 
-  if (!visible) return null
+  // null = still fetching, true = dismissed — either way, render nothing
+  if (dismissed !== false) return null
 
   const planCode = unlockStats?.planCode ?? "free"
   const allUsed = unlockStats !== null && unlockStats.totalRemaining <= 0

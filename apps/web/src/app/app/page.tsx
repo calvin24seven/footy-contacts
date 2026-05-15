@@ -7,9 +7,11 @@ import SearchFilters from "./SearchFilters"
 import SearchBar from "./SearchBar"
 import ContactsList from "./ContactsList"
 import WelcomeBanner from "./WelcomeBanner"
+import SuggestedSearches from "./SuggestedSearches"
 import EmptyState from "@/components/search/EmptyState"
 import { type ContactListRow } from "./ContactRow"
 import { getOrgLogoUrl } from "@/lib/orgLogo"
+import { generateSuggestedSearches } from "@/lib/onboarding/suggestions"
 
 const PAGE_SIZE = 25
 
@@ -73,6 +75,14 @@ export default async function SearchPage({
         .maybeSingle()
     : { data: null }
   const isFree = !activeSub
+
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("user_type, primary_goals, preferred_region")
+        .eq("id", user.id)
+        .single()
+    : { data: null }
 
   // Free users are hard-capped to page 1 on the server
   const page = isFree ? 1 : Math.min(500, Math.max(1, parseInt(params.page ?? "1", 10)))
@@ -161,6 +171,15 @@ export default async function SearchPage({
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0
   const hasResults = contacts && contacts.length > 0
 
+  const hasActiveSearch = !!(params.q || params.role || params.country || params.category || params.org || params.city || params.has_phone || params.email_status)
+  const suggestions = !hasActiveSearch && profile
+    ? generateSuggestedSearches(
+        profile.user_type ?? null,
+        (profile.primary_goals as string[] | null) ?? null,
+        profile.preferred_region ?? null,
+      )
+    : []
+
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
     if (params.q)            qs.set("q",            params.q)
@@ -186,8 +205,11 @@ export default async function SearchPage({
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* ── Welcome banner (free users only, client-side dismissible) ─────── */}
+      {/* ── Welcome banner (free users only, DB-backed dismiss) ──────────────────── */}
       {isFree && <WelcomeBanner />}
+
+      {/* ── Suggested searches ──────────────────────────────────────── */}
+      {suggestions.length > 0 && <SuggestedSearches suggestions={suggestions} />}
 
       {/* ── Sticky search zone ─────────────────────────────────────────────── */}
       <div className="sticky top-14 z-20 bg-navy-dark/95 backdrop-blur-sm border-b border-navy-light/40 px-4 sm:px-6 pt-4 pb-3">
