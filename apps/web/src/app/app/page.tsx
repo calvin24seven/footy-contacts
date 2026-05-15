@@ -236,11 +236,13 @@ export default async function SearchPage({
       <div className="px-4 sm:px-6 py-4">
         {/* Result meta bar */}
         {count !== null && count !== undefined && hasResults && (
-          <div className="flex items-center justify-between mb-3 text-xs text-gray-500">
-            <span>
-              {count.toLocaleString()} found · {offset + 1}–{Math.min(offset + PAGE_SIZE, count)}
-            </span>
-            <span className="hidden sm:inline">Sorted by {sortLabel[sort] ?? sort}</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-white">{count.toLocaleString()}</span>
+              <span className="text-xs text-gray-500">contacts</span>
+              <span className="text-xs text-gray-600">· {offset + 1}–{Math.min(offset + PAGE_SIZE, count)}</span>
+            </div>
+            <span className="hidden sm:inline text-xs text-gray-500">Sorted by {sortLabel[sort] ?? sort}</span>
           </div>
         )}
 

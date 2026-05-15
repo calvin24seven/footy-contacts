@@ -1,10 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
+import OrgAvatar from "./OrgAvatar"
+import SignalIcons from "./SignalIcons"
+import { ContactCTA } from "./ContactCTA"
 import SaveToListButton from "@/components/SaveToListButton"
-import UnlockWallModal from "./UnlockWallModal"
+import { cn } from "@/lib/utils"
+
+// Re-export so existing imports from "./ContactRow" continue to resolve
+export { ContactCTA } from "./ContactCTA"
 
 export type ContactListRow = {
   id: string
@@ -24,107 +28,26 @@ export type ContactListRow = {
 
 // Short country codes for common long names
 const COUNTRY_SHORT: Record<string, string> = {
-  "United Kingdom": "UK",
-  "United States": "USA",
+  "United Kingdom":           "UK",
+  "United States":            "USA",
   "United States of America": "USA",
-  "United Arab Emirates": "UAE",
-  "Republic of Ireland": "Ireland",
-  "South Africa": "S. Africa",
-  "Saudi Arabia": "KSA",
-  "New Zealand": "NZ",
-  "Czech Republic": "Czechia",
-  "Bosnia and Herzegovina": "Bosnia",
-  "Trinidad and Tobago": "T&T",
-  "Papua New Guinea": "PNG",
+  "United Arab Emirates":     "UAE",
+  "Republic of Ireland":      "Ireland",
+  "South Africa":             "S. Africa",
+  "Saudi Arabia":             "KSA",
+  "New Zealand":              "NZ",
+  "Czech Republic":           "Czechia",
+  "Bosnia and Herzegovina":   "Bosnia",
+  "Trinidad and Tobago":      "T&T",
+  "Papua New Guinea":         "PNG",
 }
 
-// ── Org / category avatar ─────────────────────────────────────────────────────
-const CATEGORY_COLORS: Record<string, string> = {
-  "Agent":        "bg-purple-900/60 text-purple-300",
-  "Scout":        "bg-blue-900/60 text-blue-300",
-  "Coach":        "bg-teal-900/60 text-teal-300",
-  "Club Official":"bg-gold/15 text-gold",
-  "Club":         "bg-gold/15 text-gold",
-  "Performance":  "bg-orange-900/60 text-orange-300",
-  "Medical":      "bg-red-900/60 text-red-300",
-  "Academy":      "bg-indigo-900/60 text-indigo-300",
-  "Player":       "bg-emerald-900/60 text-emerald-300",
-  "Media":        "bg-pink-900/60 text-pink-300",
-  "Other":        "bg-gray-700 text-gray-300",
-}
-
-function OrgAvatar({ name, category, logoUrl }: { name: string | null; category: string | null; logoUrl?: string | null }) {
-  const initials = name
-    ? name
-        .split(/[\s\-&]+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((w) => w[0]?.toUpperCase() ?? "")
-        .join("")
-    : "?"
-
-  const colorClass = CATEGORY_COLORS[category ?? ""] ?? "bg-navy text-gray-400 border border-gray-700"
-
-  if (logoUrl) {
-    return (
-      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 bg-white/5 overflow-hidden border border-gray-700/50">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={logoUrl}
-          alt={name ?? ""}
-          className="w-full h-full object-contain p-1"
-          onError={(e) => {
-            // Fall back to initials on broken image
-            const el = e.currentTarget
-            el.style.display = "none"
-            el.parentElement!.setAttribute("data-fallback", "1")
-            el.parentElement!.className = `w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 select-none ${colorClass}`
-            el.parentElement!.textContent = initials.slice(0, 2)
-          }}
-        />
-      </div>
-    )
-  }
-
-  return (
-    <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0 select-none ${colorClass}`}>
-      {initials.slice(0, 2)}
-    </div>
-  )
-}
-
-// ── Signal pills ──────────────────────────────────────────────────────────────
-function SignalPill({ type }: { type: "email" | "phone" | "linkedin" }) {
-  if (type === "email") return (
-    <span title="Email available" className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium leading-none text-emerald-400 bg-emerald-500/10">
-      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-      <span className="hidden sm:inline">Email</span>
-    </span>
-  )
-  if (type === "phone") return (
-    <span title="Phone available" className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium leading-none text-sky-400 bg-sky-500/10">
-      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-      </svg>
-      <span className="hidden sm:inline">Phone</span>
-    </span>
-  )
-  return (
-    <span title="LinkedIn available" className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium leading-none text-blue-400 bg-blue-500/10">
-      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-      </svg>
-      <span className="hidden sm:inline">LinkedIn</span>
-    </span>
-  )
-}
-
-// ── Verified badge ────────────────────────────────────────────────────────────
 function VerifiedBadge() {
   return (
-    <span title="Email verified" className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-emerald-400/70 bg-emerald-900/20 border border-emerald-900/40 px-1.5 py-0.5 rounded-full leading-none">
+    <span
+      title="Email verified"
+      className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-emerald-400/80 bg-emerald-900/20 border border-emerald-900/40 px-1.5 py-0.5 rounded-full leading-none"
+    >
       <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
       </svg>
@@ -133,128 +56,44 @@ function VerifiedBadge() {
   )
 }
 
-// ── Terms modal ───────────────────────────────────────────────────────────────
-function TermsModal({ onAccept, onClose }: { onAccept: () => void; onClose: () => void }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="bg-navy border border-navy-light rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h3 className="text-white font-bold text-lg mb-1">Before you access this contact</h3>
-        <p className="text-gray-400 text-sm mb-4">By accessing contact details you agree to our fair-use policy:</p>
-        <ul className="space-y-2 mb-5">
-          {[
-            "Do not send unsolicited bulk email (spam).",
-            "Do not sell or share contact details with third parties.",
-            "Use contact details only for legitimate professional outreach.",
-            "Respect opt-out requests immediately.",
-          ].map((term) => (
-            <li key={term} className="flex items-start gap-2 text-sm text-gray-300">
-              <span className="text-gold mt-0.5 shrink-0">✓</span>
-              {term}
-            </li>
-          ))}
-        </ul>
-        <div className="flex gap-3">
-          <button
-            onClick={onAccept}
-            className="flex-1 py-2.5 bg-gold text-navy rounded-lg font-semibold text-sm hover:bg-gold-dark transition-colors"
-          >
-            I agree — unlock
-          </button>
-          <button onClick={onClose} className="px-4 py-2.5 text-sm text-gray-400 hover:text-white transition-colors">
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── CTA (unlock / view / upgrade) ────────────────────────────────────────────
-export function ContactCTA({
-  contactId, verifiedStatus, hasEmail, hasPhone,
+// ── Mobile identity block ─────────────────────────────────────────────────────
+function MobileIdentity({
+  contact,
+  location,
 }: {
-  contactId: string; verifiedStatus: string | null; hasEmail: boolean; hasPhone: boolean
+  contact: ContactListRow
+  location: string
 }) {
-  const [state, setState] = useState<"idle" | "terms" | "loading" | "paywall" | "limit" | "error">("idle")
-  const router = useRouter()
-
-  async function doUnlock() {
-    setState("loading")
-    const res = await fetch(`/api/contacts/${contactId}/unlock`, { method: "POST" })
-    const data = await res.json() as {
-      success?: boolean; already_unlocked?: boolean; error?: string; requires_subscription?: boolean
-    }
-    if (res.status === 402 || data.requires_subscription) { setState("paywall"); return }
-    if (res.status === 429) { setState("limit"); return }
-    if (data.success || data.already_unlocked) {
-      window.dispatchEvent(new Event("unlocks-updated"))
-      router.push(`/app/contacts/${contactId}`)
-      return
-    }
-    setState("error")
-  }
-
-  function handleClick(e: React.MouseEvent) {
-    e.preventDefault(); e.stopPropagation()
-    if (sessionStorage.getItem("fc_terms_accepted") === "1") doUnlock()
-    else setState("terms")
-  }
-
-  function handleAcceptTerms() {
-    sessionStorage.setItem("fc_terms_accepted", "1"); setState("idle"); doUnlock()
-  }
-
-  if (state === "terms") return <TermsModal onAccept={handleAcceptTerms} onClose={() => setState("idle")} />
-
-  if (state === "paywall") return <UnlockWallModal type="paywall" onClose={() => setState("idle")} />
-
-  if (state === "limit") return <UnlockWallModal type="limit" onClose={() => setState("idle")} />
-
-  if (state === "error") return <span className="text-xs text-red-400 px-1">Error — retry</span>
-
-  // No contact info at all → soft link
-  if (!hasEmail && !hasPhone) return (
-    <Link href={`/app/contacts/${contactId}`} onClick={(e) => e.stopPropagation()}
-      className="px-2.5 py-1.5 rounded-lg text-gray-500 text-xs hover:text-gray-300 transition-colors whitespace-nowrap">
-      View profile
-    </Link>
-  )
-
-  // Phone only
-  if (!hasEmail && hasPhone) return (
-    <button onClick={handleClick} disabled={state === "loading"}
-      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-sky-500/40 text-sky-400 text-xs font-medium hover:bg-sky-500/10 transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer disabled:cursor-not-allowed">
-      {state === "loading"
-        ? <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
-        : <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>}
-      {state === "loading" ? "Unlocking…" : "Access phone"}
-    </button>
-  )
-
-  // Email CTA (main path)
-  const isVerified = verifiedStatus === "verified"
-  const isCatchAll = verifiedStatus === "catch_all" || verifiedStatus === "unknown"
-
   return (
-    <button onClick={handleClick} disabled={state === "loading"}
-      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gold/40 text-gold text-xs font-medium hover:bg-gold/10 active:bg-gold/20 transition-colors disabled:opacity-50 whitespace-nowrap">
-      {state === "loading"
-        ? <svg className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
-        : <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
-      {state !== "loading" && isVerified && <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" title="Verified" />}
-      {state !== "loading" && isCatchAll && <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" title="Catch-all" />}
-      <span>{state === "loading" ? "Unlocking…" : "Access email"}</span>
-    </button>
+    <>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-white font-semibold text-[14px] leading-tight">{contact.name}</span>
+        {contact.verified_status === "verified" && (
+          <svg className="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )}
+      </div>
+      {contact.role && (
+        <div className="text-[12px] text-gray-400 mt-0.5 truncate">{contact.role}</div>
+      )}
+      {(contact.organisation || location) && (
+        <div className="text-[12px] text-gray-500 mt-0.5 truncate">
+          {[contact.organisation, location].filter(Boolean).join(" · ")}
+        </div>
+      )}
+      {(contact.has_email || contact.has_phone || contact.has_linkedin) && (
+        <div className="flex items-center gap-1 mt-1.5">
+          {contact.has_email    && <span className="w-4 h-4 flex items-center justify-center text-emerald-400/70"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></span>}
+          {contact.has_phone    && <span className="w-4 h-4 flex items-center justify-center text-sky-400/70"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg></span>}
+          {contact.has_linkedin && <span className="w-4 h-4 flex items-center justify-center text-blue-400/70"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></span>}
+        </div>
+      )}
+    </>
   )
 }
 
-// ── Main contact row ───────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 export default function ContactRow({
   contact,
   onPreview,
@@ -266,75 +105,114 @@ export default function ContactRow({
 }) {
   const countryShort = contact.country ? (COUNTRY_SHORT[contact.country] ?? contact.country) : null
   const location = [contact.city, countryShort].filter(Boolean).join(", ")
+  const category = contact.role_category ?? contact.category
 
-  const identityContent = (
-    <>
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-white font-semibold text-sm leading-tight">{contact.name}</span>
-        {contact.verified_status === "verified" && <VerifiedBadge />}
-      </div>
-
-      <div className="flex items-center gap-1 mt-0.5 text-xs flex-wrap leading-snug">
-        {contact.organisation && (
-          <span className="text-gray-200 font-medium truncate max-w-[140px] sm:max-w-[220px]">{contact.organisation}</span>
-        )}
-        {contact.organisation && contact.role && <span className="text-gray-600">·</span>}
-        {contact.role && (
-          <span className="text-gray-400 truncate max-w-[140px] sm:max-w-[220px]">{contact.role}</span>
-        )}
-        {(contact.organisation || contact.role) && location && <span className="text-gray-600">·</span>}
-        {location && <span className="text-gray-500">{location}</span>}
-      </div>
-
-      {/* Signal pills + category */}
-      <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-        {contact.has_email && <SignalPill type="email" />}
-        {contact.has_phone && <SignalPill type="phone" />}
-        {contact.has_linkedin && <SignalPill type="linkedin" />}
-        {(contact.role_category ?? contact.category) && (
-          <span className="text-[10px] text-gray-500 bg-gray-700/50 px-1.5 py-0.5 rounded leading-none hidden sm:inline">
-            {contact.role_category ?? contact.category}
-          </span>
-        )}
-      </div>
-    </>
-  )
+  const rowBase     = "border-b border-white/[0.05] transition-colors cursor-pointer"
+  const rowSelected = "bg-gold/[0.06] border-l-2 border-l-gold/40"
+  const rowIdle     = "hover:bg-white/[0.025]"
 
   return (
-    <div
-      className={`flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-3 rounded-xl transition-colors group cursor-pointer ${
-        isSelected
-          ? "bg-[#2d3c58] ring-1 ring-gold/25"
-          : "bg-navy-light hover:bg-[#354460]"
-      }`}
-    >
-      {/* Org / category avatar */}
-      <OrgAvatar name={contact.organisation} category={contact.category} logoUrl={contact.org_logo_url} />
+    <>
+      {/* ── Desktop table row (must match ContactTableHeader grid) ── */}
+      <div
+        className={cn(
+          "hidden md:grid grid-cols-[2fr_1.4fr_1.4fr_80px_auto] gap-x-4 items-center px-4 py-3.5",
+          rowBase,
+          isSelected ? rowSelected : rowIdle,
+        )}
+        onClick={() => onPreview?.(contact)}
+        role="row"
+      >
+        {/* Col 1 — Avatar + Name + Category */}
+        <div className="flex items-center gap-3 min-w-0">
+          <OrgAvatar name={contact.organisation} category={contact.category} logoUrl={contact.org_logo_url} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-white font-semibold text-[13px] leading-tight truncate max-w-[180px]">
+                {contact.name}
+              </span>
+              {contact.verified_status === "verified" && <VerifiedBadge />}
+            </div>
+            {category && (
+              <span className="text-[11px] text-gray-500 mt-0.5 block truncate">{category}</span>
+            )}
+          </div>
+        </div>
 
-      {/* Identity block */}
-      {onPreview ? (
-        <button
-          className="flex-1 min-w-0 text-left cursor-pointer"
-          onClick={() => onPreview(contact)}
+        {/* Col 2 — Job title */}
+        <div className="min-w-0">
+          {contact.role
+            ? <span className="text-[13px] text-gray-300 leading-snug truncate block">{contact.role}</span>
+            : <span className="text-[13px] text-gray-600">—</span>
+          }
+        </div>
+
+        {/* Col 3 — Organisation + Location */}
+        <div className="min-w-0">
+          {contact.organisation && (
+            <span className="text-[13px] text-gray-200 font-medium truncate block">{contact.organisation}</span>
+          )}
+          {location && (
+            <span className="text-[11px] text-gray-500 truncate block mt-0.5">{location}</span>
+          )}
+          {!contact.organisation && !location && (
+            <span className="text-[13px] text-gray-600">—</span>
+          )}
+        </div>
+
+        {/* Col 4 — Signal icons */}
+        <div>
+          <SignalIcons
+            hasEmail={contact.has_email}
+            hasPhone={contact.has_phone}
+            hasLinkedin={contact.has_linkedin}
+          />
+        </div>
+
+        {/* Col 5 — Actions (stop row-click propagation) */}
+        <div
+          className="flex items-center gap-1 justify-end"
+          onClick={(e) => e.stopPropagation()}
         >
-          {identityContent}
-        </button>
-      ) : (
-        <Link href={`/app/contacts/${contact.id}`} className="flex-1 min-w-0">
-          {identityContent}
-        </Link>
-      )}
-
-      {/* Actions */}
-      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-        <SaveToListButton contactId={contact.id} compact />
-        <ContactCTA
-          contactId={contact.id}
-          verifiedStatus={contact.verified_status}
-          hasEmail={contact.has_email}
-          hasPhone={contact.has_phone}
-        />
+          <SaveToListButton contactId={contact.id} compact />
+          <ContactCTA
+            contactId={contact.id}
+            verifiedStatus={contact.verified_status}
+            hasEmail={contact.has_email}
+            hasPhone={contact.has_phone}
+          />
+        </div>
       </div>
-    </div>
+
+      {/* ── Mobile card ────────────────────────────────────────────── */}
+      <div
+        className={cn(
+          "md:hidden flex items-center gap-3 px-4 py-3.5",
+          rowBase,
+          isSelected ? rowSelected : rowIdle,
+        )}
+      >
+        <OrgAvatar name={contact.organisation} category={contact.category} logoUrl={contact.org_logo_url} />
+
+        {onPreview ? (
+          <button className="flex-1 min-w-0 text-left" onClick={() => onPreview(contact)}>
+            <MobileIdentity contact={contact} location={location} />
+          </button>
+        ) : (
+          <Link href={`/app/contacts/${contact.id}`} className="flex-1 min-w-0">
+            <MobileIdentity contact={contact} location={location} />
+          </Link>
+        )}
+
+        <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+          <ContactCTA
+            contactId={contact.id}
+            verifiedStatus={contact.verified_status}
+            hasEmail={contact.has_email}
+            hasPhone={contact.has_phone}
+          />
+        </div>
+      </div>
+    </>
   )
 }

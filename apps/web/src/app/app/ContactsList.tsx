@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import ContactRow, { type ContactListRow } from "./ContactRow"
+import ContactTableHeader from "./ContactTableHeader"
 import ContactPreview from "./ContactPreview"
 
 export default function ContactsList({ contacts }: { contacts: ContactListRow[] }) {
@@ -15,17 +16,22 @@ export default function ContactsList({ contacts }: { contacts: ContactListRow[] 
 
   return (
     <>
-      <div className={`flex gap-4 items-start ${previewContact ? "" : ""}`}>
-        {/* Results list */}
-        <div className={`flex flex-col gap-1 min-w-0 ${previewContact ? "flex-1" : "w-full"}`}>
-          {contacts.map((contact) => (
-            <ContactRow
-              key={contact.id}
-              contact={contact}
-              onPreview={handlePreview}
-              isSelected={previewContact?.id === contact.id}
-            />
-          ))}
+      <div className="flex gap-4 items-start">
+        {/* Results list wrapped in a bordered table container */}
+        <div className={`min-w-0 ${previewContact ? "flex-1" : "w-full"}`}>
+          <div className="border border-white/[0.06] rounded-xl overflow-hidden">
+            <ContactTableHeader />
+            <div>
+              {contacts.map((contact) => (
+                <ContactRow
+                  key={contact.id}
+                  contact={contact}
+                  onPreview={handlePreview}
+                  isSelected={previewContact?.id === contact.id}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Desktop side panel — hidden on mobile (mobile uses fixed overlay below) */}
