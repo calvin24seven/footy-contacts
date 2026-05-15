@@ -61,7 +61,7 @@ function contactToRow(c: Tables<"contacts">): string {
 
 // ---------------------------------------------------------------------------
 // POST /api/contacts/export
-// Body: { list_id?: string } | { contact_ids?: string[] }
+// Body: { list_id?: string } | { contact_ids?: string[] } | { search_filters?: Record<string,string> }
 // Returns: CSV file or JSON error
 // ---------------------------------------------------------------------------
 
@@ -81,8 +81,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = (await req.json()) as {
     list_id?: string
     contact_ids?: string[]
+    search_filters?: Record<string, string>
   }
-  const { list_id, contact_ids } = body
+  const { list_id, contact_ids, search_filters } = body
 
   // Resolve requested IDs
   let requestedIds: string[] = []
@@ -104,6 +105,71 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     requestedIds = lc?.map((r) => r.contact_id) ?? []
   } else if (contact_ids?.length) {
     requestedIds = contact_ids
+  } else if (search_filters) {
+    // Re-run the search query to find matching contact IDs (capped at 1000)
+    function escapeLike(s: string) {
+      return s.replace(/[%_\\]/g, "\\$&")
+    }
+    type IdRow = { id: string }
+    let q = supabase
+      .from("contacts")
+      .select("id")
+      .eq("visibility_status", "published")
+      .eq("suppression_status", "active")
+      .limit(1000)
+    if (search_filters.q?.trim()) {
+      const escaped = escapeLike(search_filters.q.trim())
+      q = q.or(`name.ilike.%${escaped}%,role.ilike.%${escaped}%,organisation.ilike.%${escaped}%`)
+    }
+    if (search_filters.role?.trim()) {
+      const roles = search_filters.role.split(",").map((s) => s.trim()).filter(Boolean)
+      if (roles.length === 1) {
+        q = q.ilike("role", `%${escapeLike(roles[0])}%`)
+      } else {
+        q = q.or(roles.map((r) => `role.ilike.%${escapeLike(r)}%`).join(","))
+      }
+    }
+    if (search_filters.role_exclude?.trim()) {
+      for (const r of search_filters.role_exclude.split(",").map((s) => s.trim()).filter(Boolean)) {
+        q = q.not("role", "ilike", `%${escapeLike(r)}%`)
+      }
+    }
+    if (search_filters.org?.trim()) {
+      const orgs = search_filters.org.split(",").map((s) => s.trim()).filter(Boolean)
+      if (orgs.length === 1) {
+        q = q.ilike("organisation", `%${escapeLike(orgs[0])}%`)
+      } else {
+        q = q.or(orgs.map((o) => `organisation.ilike.%${escapeLike(o)}%`).join(","))
+      }
+    }
+    if (search_filters.org_exclude?.trim()) {
+      for (const o of search_filters.org_exclude.split(",").map((s) => s.trim()).filter(Boolean)) {
+        q = q.not("organisation", "ilike", `%${escapeLike(o)}%`)
+      }
+    }
+    if (search_filters.city?.trim()) {
+      q = q.ilike("city", `%${escapeLike(search_filters.city.trim())}%`)
+    }
+    if (search_filters.country?.trim()) {
+      q = q.eq("country", search_filters.country.trim())
+    }
+    if (search_filters.email_status) {
+      if (search_filters.email_status === "has_email") {
+        q = q.eq("has_email", true) as typeof q
+      } else if (search_filters.email_status === "no_email") {
+        q = q.eq("has_email", false) as typeof q
+      } else {
+        q = q.eq("verified_status", search_filters.email_status)
+      }
+    }
+    if (search_filters.category?.trim()) {
+      q = q.eq("category", search_filters.category.trim())
+    }
+    if (search_filters.has_phone === "1") {
+      q = q.eq("has_phone", true) as typeof q
+    }
+    const { data: matching } = await q
+    requestedIds = ((matching ?? []) as IdRow[]).map((c) => c.id)
   }
 
   if (requestedIds.length === 0) {

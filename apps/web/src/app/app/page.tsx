@@ -252,11 +252,20 @@ export default async function SearchPage({
         )}
 
         {hasResults ? (
-          <ContactsList contacts={(contacts ?? []).map(c => ({
-            ...c,
-            org_logo_url: getOrgLogoUrl(c.organisations as { logo_url: string | null; domain: string | null } | null),
-            is_unlocked: unlockedSet.has(c.id),
-          })) as ContactListRow[]} />
+          <ContactsList
+            contacts={(contacts ?? []).map(c => ({
+              ...c,
+              org_logo_url: getOrgLogoUrl(c.organisations as { logo_url: string | null; domain: string | null } | null),
+              is_unlocked: unlockedSet.has(c.id),
+            })) as ContactListRow[]}
+            totalCount={count ?? 0}
+            isFree={isFree}
+            searchFilters={
+              Object.fromEntries(
+                Object.entries(params).filter(([k, v]) => v && k !== "page" && k !== "sort")
+              ) as Record<string, string>
+            }
+          />
         ) : (
           <EmptyState query={params.q} />
         )}

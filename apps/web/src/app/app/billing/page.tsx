@@ -58,9 +58,6 @@ export default async function BillingPage({
     </div>
   )
 }
-
-  searchParams,
-}: {
   searchParams: Promise<{ success?: string }>
 }) {
   const { success } = await searchParams
