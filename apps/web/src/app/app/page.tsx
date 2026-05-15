@@ -175,6 +175,17 @@ export default async function SearchPage({
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0
   const hasResults = contacts && contacts.length > 0
 
+  // Check which of the visible contacts the current user has already unlocked
+  const contactIds = (contacts ?? []).map((c) => c.id)
+  const { data: unlocks } = user && contactIds.length > 0
+    ? await supabase
+        .from("contact_unlocks")
+        .select("contact_id")
+        .eq("user_id", user.id)
+        .in("contact_id", contactIds)
+    : { data: [] }
+  const unlockedSet = new Set((unlocks ?? []).map((u) => u.contact_id))
+
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
     if (params.q)            qs.set("q",            params.q)
@@ -244,6 +255,7 @@ export default async function SearchPage({
           <ContactsList contacts={(contacts ?? []).map(c => ({
             ...c,
             org_logo_url: getOrgLogoUrl(c.organisations as { logo_url: string | null; domain: string | null } | null),
+            is_unlocked: unlockedSet.has(c.id),
           })) as ContactListRow[]} />
         ) : (
           <EmptyState query={params.q} />

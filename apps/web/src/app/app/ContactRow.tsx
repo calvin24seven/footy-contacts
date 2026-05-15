@@ -24,6 +24,7 @@ export type ContactListRow = {
   has_phone: boolean
   has_linkedin: boolean
   role_category: string | null
+  is_unlocked?: boolean
 }
 
 // Short country codes for common long names
