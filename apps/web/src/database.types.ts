@@ -104,6 +104,33 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_enrollments: {
+        Row: {
+          campaign: string
+          completed_at: string | null
+          enrolled_at: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          campaign: string
+          completed_at?: string | null
+          enrolled_at?: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          campaign?: string
+          completed_at?: string | null
+          enrolled_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contact_reports: {
         Row: {
           contact_id: string
@@ -1880,6 +1907,15 @@ export type Database = {
           title: string
           username: string
           website_url: string
+        }[]
+      }
+      get_reactivation_audience: {
+        Args: never
+        Returns: {
+          email: string
+          first_name: string
+          full_name: string
+          id: string
         }[]
       }
       get_unlock_usage: { Args: never; Returns: Json }

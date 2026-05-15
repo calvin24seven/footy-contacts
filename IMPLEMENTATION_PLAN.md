@@ -1,8 +1,11 @@
-# Football Contacts — Implementation Plan
+# Footy Contacts — Full Product Implementation Plan
 
-> Last analysed: April 2026  
-> Status: Pre-revenue · 598 active users · 0 paying subscribers  
-> Objective: First £ in → repeatable growth loop → two-sided platform
+> Version: 2.0 — May 2026  
+> Status: 743 registered users · organic signups · 0 paying subscribers  
+> Built from: Phase 0 Audit + Product Vision brief  
+> Objective: Premium football access platform · Visitor → Signup → Activated → Paying
+
+---
 
 ---
 

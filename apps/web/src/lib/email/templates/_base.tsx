@@ -48,9 +48,11 @@ export function BaseEmail({ children, unsubscribeUrl }: BaseEmailProps) {
               <Text
                 style={{ fontSize: "12px", color: "#9ca3af", textAlign: "center", margin: 0 }}
               >
+                You&apos;re receiving this because you created a Footy Contacts account.{" "}
                 <Link href={unsubscribeUrl} style={{ color: "#9ca3af" }}>
                   Unsubscribe
-                </Link>
+                </Link>{" "}
+                if you&apos;d prefer not to hear from us.
               </Text>
             </>
           )}

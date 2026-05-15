@@ -139,7 +139,7 @@ These respond to what a user actually did and outperform any broadcast email. Bu
 ---
 
 **Subject line options** (A/B test two):  
-- `You signed up to Footy Contacts. I owe you an honest update.`  
+- `You signed up to Footy Contacts. I owe you an honest update.`    
 - `Something was broken. I fixed it. Here's what's inside now.`
 
 **Preview text**:  

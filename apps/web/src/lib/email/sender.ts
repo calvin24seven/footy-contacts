@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import * as Sentry from "@sentry/nextjs"
 
 const FROM_TRANSACTIONAL = "Footy Contacts <noreply@mail.footycontacts.com>"
-const FROM_MARKETING     = "Footy Contacts <hello@mail.footycontacts.com>"
+const FROM_MARKETING     = "Calvin | Footy Contacts <hello@mail.footycontacts.com>"
 const UNSUBSCRIBE_BASE   = "https://footycontacts.com/unsubscribe"
 
 /** Shape of a job row returned by the claim_email_jobs() RPC. Exported for drain.ts. */

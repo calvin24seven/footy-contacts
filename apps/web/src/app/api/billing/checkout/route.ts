@@ -8,8 +8,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
 
-  const body = await req.json() as { planId?: string; planCode?: string; billingPeriod?: "monthly" | "yearly" }
-  const { planId, planCode, billingPeriod = "monthly" } = body
+  const body = await req.json() as { planId?: string; planCode?: string; billingPeriod?: "monthly" | "yearly"; coupon?: string }
+  const { planId, planCode, billingPeriod = "monthly", coupon } = body
 
   if (!planId && !planCode) {
     return NextResponse.json({ error: "plan_id or plan_code required" }, { status: 400 })
@@ -77,7 +77,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         plan_id: plan.id,
       },
     },
-    allow_promotion_codes: true,
+    ...(coupon
+      ? { discounts: [{ coupon }] }
+      : { allow_promotion_codes: true }),
   })
 
   return NextResponse.json({ url: session.url })
