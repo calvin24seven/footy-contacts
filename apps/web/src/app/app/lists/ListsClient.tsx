@@ -210,7 +210,8 @@ export default function ListsClient({ initialLists }: Props) {
 
     const { data, error: err } = await supabase
       .from("lists")
-      .insert({ name, description: desc || null, tags, user_id: user.id })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert({ name, description: desc || null, tags, user_id: user.id } as any)
       .select("*")
       .single()
 
@@ -230,7 +231,8 @@ export default function ListsClient({ initialLists }: Props) {
 
     const { error: err } = await supabase
       .from("lists")
-      .update({ name, description: desc || null, tags })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ name, description: desc || null, tags } as any)
       .eq("id", editingList.id)
 
     if (err) {
