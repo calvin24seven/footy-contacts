@@ -174,7 +174,6 @@ export default function OnboardingShell() {
         country: final.country ?? null,
         onboarding_completed: true,
         onboarding_step: 3,
-        onboarding_completed_at: new Date().toISOString(),
       },
       { onConflict: "id" },
     )

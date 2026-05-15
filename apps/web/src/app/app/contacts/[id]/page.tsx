@@ -3,7 +3,6 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import UnlockButton from "./UnlockButton"
-import LockedField from "./LockedField"
 import SaveToListButton from "@/components/SaveToListButton"
 import { getOrgLogoUrl } from "@/lib/orgLogo"
 import { headers as nextHeaders } from "next/headers"
@@ -197,13 +196,11 @@ export default async function ContactPage({
               )}
             </div>
           ) : (
-            <div className="space-y-1">
-              {contact.has_email    && <LockedField type="email" />}
-              {contact.has_phone    && <LockedField type="phone" />}
-              {contact.has_linkedin && <LockedField type="linkedin" />}
-              <div className="pt-4">
-                <UnlockButton contactId={id} contactName={contact.name} emailConfirmed={emailConfirmed} />
-              </div>
+            <div className="text-center py-6">
+              <p className="text-gray-400 text-sm mb-4">
+                Unlock this contact to view email, phone and social profiles
+              </p>
+              <UnlockButton contactId={id} contactName={contact.name} emailConfirmed={emailConfirmed} />
             </div>
           )}
         </div>
