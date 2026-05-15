@@ -4,7 +4,6 @@ import Link from "next/link"
 import OrgAvatar from "./OrgAvatar"
 import SignalIcons from "./SignalIcons"
 import { ContactCTA } from "./ContactCTA"
-import SaveToListButton from "@/components/SaveToListButton"
 import { cn } from "@/lib/utils"
 
 // Re-export so existing imports from "./ContactRow" continue to resolve
@@ -110,7 +109,6 @@ export default function ContactRow({
 }) {
   const countryShort = contact.country ? (COUNTRY_SHORT[contact.country] ?? contact.country) : null
   const location = [contact.city, countryShort].filter(Boolean).join(", ")
-  const category = contact.role_category ?? contact.category
 
   const rowBase     = "border-b border-white/[0.05] transition-colors cursor-pointer"
   const rowSelected = "bg-gold/[0.06] border-l-2 border-l-gold/40"
@@ -121,7 +119,7 @@ export default function ContactRow({
       {/* ── Desktop table row (must match ContactTableHeader grid) ── */}
       <div
         className={cn(
-          "hidden md:grid grid-cols-[32px_minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_90px_120px] gap-x-4 items-center px-4 py-3.5",
+          "hidden md:grid grid-cols-[32px_minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_160px] gap-x-4 items-center px-4 py-3.5",
           rowBase,
           isSelected ? rowSelected : rowIdle,
         )}
@@ -139,7 +137,7 @@ export default function ContactRow({
           />
         </div>
 
-        {/* Col 2 — Avatar + Name + Category */}
+        {/* Col 2 — Avatar + Name + Location */}
         <div className="flex items-center gap-3 min-w-0">
           <OrgAvatar name={contact.organisation} category={contact.category} logoUrl={contact.org_logo_url} />
           <div className="min-w-0">
@@ -147,10 +145,9 @@ export default function ContactRow({
               <span className="text-white font-semibold text-[13px] leading-tight truncate">
                 {contact.name}
               </span>
-              {contact.verified_status === "verified" && <VerifiedBadge />}
             </div>
-            {category && (
-              <span className="text-[11px] text-gray-500 mt-0.5 block truncate">{category}</span>
+            {location && (
+              <span className="text-[11px] text-gray-500 mt-0.5 block truncate">{location}</span>
             )}
           </div>
         </div>
@@ -176,27 +173,18 @@ export default function ContactRow({
           )}
         </div>
 
-        {/* Col 5 — Signal icons */}
-        <div>
+        {/* Col 5 — Data: signal icons + verified badge */}
+        <div className="flex flex-wrap items-center gap-1.5">
           <SignalIcons
             hasEmail={contact.has_email}
             hasPhone={contact.has_phone}
             hasLinkedin={contact.has_linkedin}
           />
-        </div>
-
-        {/* Col 6 — Status / CTA */}
-        <div
-          className="flex items-center gap-1 justify-end"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <SaveToListButton contactId={contact.id} compact />
-          <ContactCTA
-            contactId={contact.id}
-            verifiedStatus={contact.verified_status}
-            hasEmail={contact.has_email}
-            hasPhone={contact.has_phone}
-          />
+          {contact.verified_status === "verified" && contact.has_email && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium text-emerald-800 bg-emerald-100/80 leading-none">
+              Verified
+            </span>
+          )}
         </div>
       </div>
 
