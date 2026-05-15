@@ -114,7 +114,6 @@ export default async function ContactPage({
                 src={orgLogoUrl}
                 alt={contact.organisation ?? ""}
                 className="w-full h-full object-contain p-1.5 bg-white/5"
-                onError={(e) => { e.currentTarget.style.display = "none" }}
               />
             ) : (
               contact.name[0]?.toUpperCase()

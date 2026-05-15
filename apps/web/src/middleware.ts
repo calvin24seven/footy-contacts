@@ -138,7 +138,7 @@ export async function middleware(request: NextRequest) {
       "style-src 'self' 'unsafe-inline'",
       "connect-src 'self' https://*.supabase.co https://api.stripe.com https://js.stripe.com https://challenges.cloudflare.com",
       "frame-src https://js.stripe.com https://challenges.cloudflare.com",
-      "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://www.google.com https://*.gstatic.com",
       "font-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",

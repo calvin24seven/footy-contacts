@@ -13,6 +13,20 @@ import { getOrgLogoUrl } from "@/lib/orgLogo"
 
 const PAGE_SIZE = 25
 
+// Returns page numbers + "…" placeholders for the pagination bar.
+function getPageNumbers(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages: (number | "…")[] = []
+  pages.push(1)
+  if (current > 4) pages.push("…")
+  const start = Math.max(2, current - 2)
+  const end = Math.min(total - 1, current + 2)
+  for (let i = start; i <= end; i++) pages.push(i)
+  if (current < total - 3) pages.push("…")
+  pages.push(total)
+  return pages
+}
+
 const CONTACT_COLUMNS =
   "id, name, role, organisation, category, country, city, verified_status, has_email, has_phone, has_linkedin, role_category, organisations(logo_url, domain)" as const
 
@@ -260,24 +274,56 @@ export default async function SearchPage({
           )}
           {totalPages > 1 && !isFree && (
             <div className="fixed bottom-20 md:bottom-0 left-0 right-0 z-20 bg-navy-dark/95 backdrop-blur-sm border-t border-white/[0.06]">
-              <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-center gap-3">
-                {page > 1 && (
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2 flex flex-col items-center gap-1 md:flex-row md:justify-center md:gap-1">
+
+                {/* Previous */}
+                {page > 1 ? (
                   <Link
                     href={pageUrl(page - 1)}
-                    className="px-4 py-2 bg-navy-light text-gray-300 rounded-lg text-sm hover:bg-navy transition-colors"
+                    className="px-3 py-1.5 rounded-lg text-sm text-gray-300 hover:bg-navy-light transition-colors"
                   >
                     ← Previous
                   </Link>
+                ) : (
+                  <span className="px-3 py-1.5 rounded-lg text-sm text-gray-600 cursor-not-allowed select-none">← Previous</span>
                 )}
-                <span className="text-sm text-gray-500">{page} / {totalPages}</span>
-                {page < totalPages && (
+
+                {/* Desktop: numbered pages */}
+                <div className="hidden md:flex items-center gap-0.5">
+                  {getPageNumbers(page, totalPages).map((p, i) =>
+                    p === "…" ? (
+                      <span key={`el-${i}`} className="w-8 text-center text-gray-600 text-sm select-none">…</span>
+                    ) : (
+                      <Link
+                        key={p}
+                        href={pageUrl(p)}
+                        className={`min-w-[32px] h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${
+                          p === page
+                            ? "bg-gold text-navy-dark font-bold"
+                            : "text-gray-400 hover:bg-navy-light hover:text-white"
+                        }`}
+                      >
+                        {p}
+                      </Link>
+                    )
+                  )}
+                </div>
+
+                {/* Mobile: page label */}
+                <span className="md:hidden text-xs text-gray-500">Page {page} of {totalPages}</span>
+
+                {/* Next */}
+                {page < totalPages ? (
                   <Link
                     href={pageUrl(page + 1)}
-                    className="px-4 py-2 bg-navy-light text-gray-300 rounded-lg text-sm hover:bg-navy transition-colors"
+                    className="px-3 py-1.5 rounded-lg text-sm text-gray-300 hover:bg-navy-light transition-colors"
                   >
                     Next →
                   </Link>
+                ) : (
+                  <span className="px-3 py-1.5 rounded-lg text-sm text-gray-600 cursor-not-allowed select-none">Next →</span>
                 )}
+
               </div>
             </div>
           )}
