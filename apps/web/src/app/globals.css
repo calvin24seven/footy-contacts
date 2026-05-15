@@ -120,12 +120,12 @@
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
   .badge-gold {
-    @apply badge bg-gold/20 text-gold;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gold/20 text-gold;
   }
   .badge-green {
-    @apply badge bg-green-500/20 text-green-400;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400;
   }
   .badge-red {
-    @apply badge bg-red-500/20 text-red-400;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400;
   }
 }
