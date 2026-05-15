@@ -34,10 +34,10 @@ function ListsIcon({ active }: { active: boolean }) {
     </svg>
   )
 }
-function MoreIcon() {
+function AccountIcon({ active }: { active: boolean }) {
   return (
-    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+    <svg className={`w-5 h-5 transition-colors ${active ? "text-gold" : "text-gray-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
     </svg>
   )
 }
@@ -77,13 +77,14 @@ export default function BottomNav({ isAdmin, fullName, avatarUrl, email }: Botto
               </Link>
             )
           })}
-          {/* More tab */}
+          {/* Account tab */}
           <button
             className="flex-1 flex flex-col items-center justify-center gap-1 py-2"
             onClick={() => setSheetOpen(true)}
+            aria-label="Account"
           >
-            <MoreIcon />
-            <span className="text-[10px] font-medium text-gray-500 leading-none">More</span>
+            <AccountIcon active={sheetOpen} />
+            <span className={`text-[10px] font-medium leading-none ${sheetOpen ? "text-gold" : "text-gray-500"}`}>Account</span>
           </button>
         </div>
       </nav>

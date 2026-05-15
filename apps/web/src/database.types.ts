@@ -1342,6 +1342,7 @@ export type Database = {
           open_to_opportunities: string | null
           player_age_group: string | null
           position: string | null
+          preferred_region: string | null
           primary_goals: Json | null
           role: string | null
           suspended_reason: string | null
@@ -1372,6 +1373,7 @@ export type Database = {
           open_to_opportunities?: string | null
           player_age_group?: string | null
           position?: string | null
+          preferred_region?: string | null
           primary_goals?: Json | null
           role?: string | null
           suspended_reason?: string | null
@@ -1402,6 +1404,7 @@ export type Database = {
           open_to_opportunities?: string | null
           player_age_group?: string | null
           position?: string | null
+          preferred_region?: string | null
           primary_goals?: Json | null
           role?: string | null
           suspended_reason?: string | null

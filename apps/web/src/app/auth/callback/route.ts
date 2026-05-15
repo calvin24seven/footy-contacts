@@ -25,7 +25,9 @@ export async function GET(request: Request) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // `verified=1` is appended by the signup page's emailRedirectTo — show a success toast
+      const destination = searchParams.get("verified") === "1" ? "/app?verified=1" : next
+      return NextResponse.redirect(`${origin}${destination}`)
     }
   }
 

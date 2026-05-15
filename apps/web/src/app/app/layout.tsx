@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import type { JSX, ReactNode } from "react"
+import { Suspense } from "react"
 import TopNav from "./TopNav"
 import BottomNav from "./BottomNav"
 import { UnlocksProvider } from "./UnlocksProvider"
+import VerificationBanner from "./VerificationBanner"
+import VerifiedToast from "./VerifiedToast"
 
 export default async function AppLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
   const supabase = await createClient()
@@ -18,6 +21,7 @@ export default async function AppLayout({ children }: { children: ReactNode }): 
     .single()
 
   const isAdmin = profile?.role === "admin"
+  const emailConfirmed = !!user.email_confirmed_at
 
   return (
     <div className="min-h-screen bg-navy-dark text-white flex flex-col">
@@ -28,6 +32,17 @@ export default async function AppLayout({ children }: { children: ReactNode }): 
           email={user.email ?? null}
           isAdmin={isAdmin}
         />
+
+        {/* Verification banner — shown until email is confirmed */}
+        {!emailConfirmed && user.email && (
+          <VerificationBanner email={user.email} />
+        )}
+
+        {/* Toast for ?verified=1 — needs Suspense (useSearchParams) */}
+        <Suspense>
+          <VerifiedToast />
+        </Suspense>
+
         <main className="flex-1 pb-20 md:pb-0">{children}</main>
         <BottomNav
           fullName={profile?.full_name ?? null}

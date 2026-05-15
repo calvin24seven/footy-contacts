@@ -64,6 +64,7 @@ export default async function ContactPage({
   const orgLogoUrl = getOrgLogoUrl(orgRow as { logo_url: string | null; domain: string | null } | null)
 
   const { data: { user } } = await supabase.auth.getUser()
+  const emailConfirmed = !!user?.email_confirmed_at
 
   // Check if already unlocked
   let isUnlocked = false
@@ -199,7 +200,7 @@ export default async function ContactPage({
               <p className="text-gray-400 text-sm mb-4">
                 Unlock this contact to view email, phone and social profiles
               </p>
-              <UnlockButton contactId={id} />
+              <UnlockButton contactId={id} contactName={contact.name} emailConfirmed={emailConfirmed} />
             </div>
           )}
         </div>

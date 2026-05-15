@@ -5,8 +5,12 @@
  * Requires env vars: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
  * (set in Vercel dashboard → Settings → Environment Variables)
  *
- * Falls back to allowing the request if Redis is unavailable, so the
- * app stays online if Redis has an outage.
+ * Fail behaviour:
+ *   - Per-call: pass { failClosed: true } to reject on Redis unavailability/error.
+ *   - Global:   set RATE_LIMIT_FAIL_CLOSED=1 env var to fail closed by default.
+ *   - Default:  fail open (allow) so the app stays online if Redis has an outage.
+ *
+ * The unlock endpoint always passes failClosed: true regardless of the env var.
  */
 
 import { Redis } from "@upstash/redis"
@@ -28,22 +32,32 @@ interface RateLimitResult {
   resetAt: number // unix ms
 }
 
+interface RateLimitOptions {
+  /** When true, a Redis outage rejects the request (returns allowed:false). Default: false. */
+  failClosed?: boolean
+}
+
 /**
  * Sliding-window rate limiter using Redis INCR + EXPIRE.
  *
  * @param key     Unique key, e.g. `unlock:${userId}`
  * @param limit   Max requests allowed in the window
  * @param windowSecs  Window duration in seconds
+ * @param options Optional behaviour flags (failClosed)
  */
 export async function rateLimit(
   key: string,
   limit: number,
-  windowSecs: number
+  windowSecs: number,
+  options: RateLimitOptions = {}
 ): Promise<RateLimitResult> {
   const r = getRedis()
+  const failClosed = options.failClosed ?? process.env.RATE_LIMIT_FAIL_CLOSED === "1"
+
   if (!r) {
-    // Redis not configured — fail open (don't break the app)
-    return { allowed: true, remaining: limit, resetAt: Date.now() + windowSecs * 1000 }
+    return failClosed
+      ? { allowed: false, remaining: 0, resetAt: Date.now() + windowSecs * 1000 }
+      : { allowed: true, remaining: limit, resetAt: Date.now() + windowSecs * 1000 }
   }
 
   try {
@@ -60,8 +74,9 @@ export async function rateLimit(
       resetAt,
     }
   } catch {
-    // Redis error — fail open
-    return { allowed: true, remaining: limit, resetAt: Date.now() + windowSecs * 1000 }
+    return failClosed
+      ? { allowed: false, remaining: 0, resetAt: Date.now() + windowSecs * 1000 }
+      : { allowed: true, remaining: limit, resetAt: Date.now() + windowSecs * 1000 }
   }
 }
 
@@ -71,9 +86,11 @@ export async function rateLimit(
  */
 export async function rateLimitDaily(
   key: string,
-  limit: number
+  limit: number,
+  options: RateLimitOptions = {}
 ): Promise<RateLimitResult> {
   const today = new Date().toISOString().slice(0, 10) // "2026-05-01"
   const secondsUntilMidnight = 86400 - (Math.floor(Date.now() / 1000) % 86400)
-  return rateLimit(`${key}:${today}`, limit, secondsUntilMidnight)
+  return rateLimit(`${key}:${today}`, limit, secondsUntilMidnight, options)
 }
+

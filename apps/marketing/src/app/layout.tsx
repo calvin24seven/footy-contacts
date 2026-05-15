@@ -6,11 +6,11 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: {
-    default: "Footy Contacts — Football Contact Intelligence",
+    default: "Footy Contacts — Search the Football Network",
     template: "%s | Footy Contacts",
   },
   description:
-    "Find and connect with football agents, scouts, clubs, coaches and media professionals worldwide.",
+    "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 12,400+ published football industry contacts. Start with 3 free unlocks.",
   metadataBase: new URL("https://footycontacts.com"),
   openGraph: {
     siteName: "Footy Contacts",
@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 }
 
