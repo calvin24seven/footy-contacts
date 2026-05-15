@@ -1,5 +1,4 @@
 import type { NextConfig } from "next"
-import { withSentryConfig } from "@sentry/nextjs"
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@footy/supabase", "@footy/types", "@footy/hooks"],
@@ -17,12 +16,6 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withSentryConfig(nextConfig, {
-  org:                     process.env.SENTRY_ORG,
-  project:                 process.env.SENTRY_PROJECT,
-  silent:                  !process.env.CI,
-  widenClientFileUpload:   true,
-  sourcemaps:              { deleteSourcemapsAfterUpload: true },
-  disableLogger:           true,
-  automaticVercelMonitors: true,   // cron job health monitoring in Sentry Crons
-})
+// Sentry build instrumentation disabled on all environments for now.
+// Runtime error capture still works via sentry.client/server/edge.config.ts.
+export default nextConfig
