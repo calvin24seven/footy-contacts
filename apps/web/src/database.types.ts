@@ -2055,6 +2055,7 @@ export type Database = {
         Returns: number
       }
       unlock_contact: { Args: { p_contact_id: string }; Returns: Json }
+      get_contact_for_user: { Args: { p_contact_id: string }; Returns: Json }
     }
     Enums: {
       email_job_status:

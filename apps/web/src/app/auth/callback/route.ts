@@ -6,6 +6,9 @@ export async function GET(request: Request) {
   const code = searchParams.get("code")
   const tokenHash = searchParams.get("token_hash")
   const type = searchParams.get("type")
+  // Only allow same-origin relative paths to prevent open redirect
+  const nextParam = searchParams.get("next")
+  const next = nextParam && nextParam.startsWith("/") ? nextParam : "/app"
 
   const supabase = await createClient()
 
@@ -22,7 +25,7 @@ export async function GET(request: Request) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}/app`)
+      return NextResponse.redirect(`${origin}${next}`)
     }
   }
 

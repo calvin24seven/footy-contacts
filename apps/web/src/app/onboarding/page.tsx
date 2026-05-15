@@ -79,14 +79,14 @@ const USER_TYPES = [
 ]
 
 const GOALS = [
-  { label: "Find agents to represent me", icon: "ðŸ¤" },
-  { label: "Scout players", icon: "ðŸ”­" },
-  { label: "Connect with clubs", icon: "ðŸŸï¸" },
-  { label: "Find coaching staff", icon: "ðŸ“‹" },
-  { label: "Media & PR contacts", icon: "ðŸ“°" },
-  { label: "Find opportunities", icon: "â­" },
-  { label: "Build my network", icon: "ðŸŒ" },
-  { label: "Research the industry", icon: "ðŸ”" },
+  { label: "Find agents to represent me" },
+  { label: "Scout players" },
+  { label: "Connect with clubs" },
+  { label: "Find coaching staff" },
+  { label: "Media & PR contacts" },
+  { label: "Find opportunities" },
+  { label: "Build my network" },
+  { label: "Research the industry" },
 ]
 
 const LEVELS = [
@@ -283,7 +283,7 @@ function Step1({
         </div>
       </div>
 
-      <label className="block text-xs font-medium text-gray-400 mb-2">I am aâ€¦</label>
+      <label className="block text-xs font-medium text-gray-400 mb-2">I am a…</label>
       <div className="grid grid-cols-2 gap-2 mb-7">
         {USER_TYPES.map((t) => (
           <button
@@ -332,7 +332,7 @@ function Step2({ onNext }: { onNext: (goals: string[]) => void }) {
   return (
     <div className="p-6 sm:p-8">
       <h2 className="text-white text-xl font-bold mb-1">What are your main goals?</h2>
-      <p className="text-gray-400 text-sm mb-6">Select everything that applies â€” we&apos;ll tailor your feed.</p>
+      <p className="text-gray-400 text-sm mb-6">Select everything that applies — we&apos;ll tailor your feed.</p>
 
       <div className="grid grid-cols-1 gap-2 mb-7">
         {GOALS.map((goal) => {
@@ -348,7 +348,6 @@ function Step2({ onNext }: { onNext: (goals: string[]) => void }) {
                   : "border-white/10 hover:border-white/25 hover:bg-white/[0.04]"
               }`}
             >
-              <span className="text-base shrink-0">{goal.icon}</span>
               <span className={`text-sm font-medium flex-1 transition-colors ${active ? "text-gold" : "text-gray-200"}`}>
                 {goal.label}
               </span>
@@ -398,7 +397,7 @@ function Step3({
               onChange={(e) => setCountry(e.target.value)}
               className="w-full px-3.5 py-2.5 bg-white/[0.05] text-white rounded-xl border border-white/10 focus:outline-none focus:border-gold/60 appearance-none text-sm transition-colors cursor-pointer"
             >
-              <option value="" disabled className="bg-[#111827] text-gray-500">Select your countryâ€¦</option>
+              <option value="" disabled className="bg-[#111827] text-gray-500">Select your country…</option>
               {COUNTRIES.map((c) => (
                 <option key={c} value={c} className="bg-[#111827]">{c}</option>
               ))}

@@ -1,10 +1,39 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { notFound } from "next/navigation"
+import Link from "next/link"
 import UnlockButton from "./UnlockButton"
 import SaveToListButton from "@/components/SaveToListButton"
 import { getOrgLogoUrl } from "@/lib/orgLogo"
 import { headers as nextHeaders } from "next/headers"
+
+// Shape returned by the get_contact_for_user RPC.
+// Sensitive fields (email, phone, linkedin_url) are only present when unlocked.
+type ContactRow = {
+  id: string
+  name: string
+  role: string | null
+  organisation: string | null
+  category: string | null
+  role_category: string | null
+  country: string | null
+  city: string | null
+  verified_status: string | null
+  has_email: boolean | null
+  has_phone: boolean | null
+  has_linkedin: boolean | null
+  visibility_status: string | null
+  created_at: string | null
+  updated_at: string | null
+  // Only present after unlock
+  email: string | null
+  phone: string | null
+  linkedin_url: string | null
+  level: string | null
+  region: string | null
+  tags: string[] | null
+  website: string | null
+}
 
 export default async function ContactPage({
   params,
@@ -14,16 +43,25 @@ export default async function ContactPage({
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: contact } = await supabase
-    .from("contacts")
-    .select("*, organisations(logo_url, domain)")
-    .eq("id", id)
-    .eq("visibility_status", "published")
-    .single()
+  // Use the RPC so sensitive fields (email, phone, linkedin_url) are only
+  // returned when the calling user has already unlocked this contact.
+  // Never use select("*") here — it would expose gated data in the HTML source.
+  const { data: contactRaw } = await supabase
+    .rpc("get_contact_for_user", { p_contact_id: id })
 
+  const contact = contactRaw as ContactRow | null
   if (!contact) notFound()
 
-  const orgLogoUrl = getOrgLogoUrl(contact.organisations as { logo_url: string | null; domain: string | null } | null)
+  // Fetch org logo separately (safe — no sensitive contact fields)
+  const { data: orgRow } = contact.organisation
+    ? await supabase
+        .from("organisations")
+        .select("logo_url, domain")
+        .eq("name", contact.organisation)
+        .maybeSingle()
+    : { data: null }
+
+  const orgLogoUrl = getOrgLogoUrl(orgRow as { logo_url: string | null; domain: string | null } | null)
 
   const { data: { user } } = await supabase.auth.getUser()
 

@@ -12,6 +12,11 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
 
+  // Require email verification before any unlock
+  if (!user.email_confirmed_at) {
+    return NextResponse.json({ error: "email_verification_required" }, { status: 403 })
+  }
+
   // 20 unlocks per user per minute
   const perMin = await rateLimit(`unlock:${user.id}:min`, 20, 60)
   if (!perMin.allowed) {

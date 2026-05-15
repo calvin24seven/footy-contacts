@@ -61,7 +61,7 @@ export async function middleware(request: NextRequest) {
   // ── Logged in — fetch profile for role/suspension/onboarding checks ────────
   const { data: profileData } = await supabase
     .from("profiles")
-    .select("*")
+    .select("role, is_suspended, onboarding_completed")
     .eq("id", user.id)
     .single()
 
