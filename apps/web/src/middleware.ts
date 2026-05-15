@@ -134,10 +134,10 @@ export async function middleware(request: NextRequest) {
     "Content-Security-Policy",
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://challenges.cloudflare.com",
       "style-src 'self' 'unsafe-inline'",
-      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://js.stripe.com",
-      "frame-src https://js.stripe.com",
+      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://js.stripe.com https://challenges.cloudflare.com",
+      "frame-src https://js.stripe.com https://challenges.cloudflare.com",
       "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
       "font-src 'self'",
       "object-src 'none'",
