@@ -7,6 +7,7 @@ import ContactPreview from "./ContactPreview"
 
 export default function ContactsList({ contacts }: { contacts: ContactListRow[] }) {
   const [previewContact, setPreviewContact] = useState<ContactListRow | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const handlePreview = useCallback((contact: ContactListRow) => {
     setPreviewContact((prev) => (prev?.id === contact.id ? null : contact))
@@ -14,22 +15,45 @@ export default function ContactsList({ contacts }: { contacts: ContactListRow[] 
 
   const handleClose = useCallback(() => setPreviewContact(null), [])
 
+  const toggleSelected = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }, [])
+
+  const toggleAll = useCallback(() => {
+    setSelectedIds((prev) =>
+      prev.size === contacts.length ? new Set() : new Set(contacts.map((c) => c.id))
+    )
+  }, [contacts])
+
+  const allSelected = contacts.length > 0 && selectedIds.size === contacts.length
+  const someSelected = selectedIds.size > 0 && selectedIds.size < contacts.length
+
   return (
     <>
       <div className="flex gap-4 items-start">
         {/* Results list wrapped in a bordered table container */}
         <div className={`min-w-0 ${previewContact ? "flex-1" : "w-full"}`}>
           <div className="border border-white/[0.06] rounded-xl overflow-hidden">
-            <ContactTableHeader />
-            <div>
-              {contacts.map((contact) => (
-                <ContactRow
-                  key={contact.id}
-                  contact={contact}
-                  onPreview={handlePreview}
-                  isSelected={previewContact?.id === contact.id}
-                />
-              ))}
+            <div className="overflow-x-auto">
+              <div className="min-w-[780px]">
+                <ContactTableHeader allSelected={allSelected} someSelected={someSelected} onToggleAll={toggleAll} />
+                <div>
+                  {contacts.map((contact) => (
+                    <ContactRow
+                      key={contact.id}
+                      contact={contact}
+                      onPreview={handlePreview}
+                      isSelected={previewContact?.id === contact.id}
+                      selected={selectedIds.has(contact.id)}
+                      onToggle={toggleSelected}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -211,32 +211,38 @@ export default async function SearchPage({
       </div>
 
       {/* ── Results area ───────────────────────────────────────────────────── */}
-      <div className="px-4 sm:px-6 py-4">
+      <div className="px-4 sm:px-6 py-4 pb-20">
         {/* Result meta bar */}
         {count !== null && count !== undefined && hasResults && (
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-white">{count.toLocaleString()}</span>
-              <span className="text-xs text-gray-500">contacts</span>
-              <span className="text-xs text-gray-600">· {offset + 1}–{Math.min(offset + PAGE_SIZE, count)}</span>
-            </div>
+            <span className="text-sm text-gray-400">
+              Showing{" "}
+              <span className="font-semibold text-white">{(offset + 1).toLocaleString()}–{Math.min(offset + PAGE_SIZE, count).toLocaleString()}</span>
+              {" "}of{" "}
+              <span className="font-semibold text-white">{count.toLocaleString()}</span>
+              {" "}contacts
+            </span>
             <span className="hidden sm:inline text-xs text-gray-500">Sorted by {sortLabel[sort] ?? sort}</span>
           </div>
         )}
 
         {hasResults ? (
-          <>
-            <div className="mb-5">
-              <ContactsList contacts={(contacts ?? []).map(c => ({
-                ...c,
-                org_logo_url: getOrgLogoUrl(c.organisations as { logo_url: string | null; domain: string | null } | null),
-              })) as ContactListRow[]} />
-            </div>
+          <ContactsList contacts={(contacts ?? []).map(c => ({
+            ...c,
+            org_logo_url: getOrgLogoUrl(c.organisations as { logo_url: string | null; domain: string | null } | null),
+          })) as ContactListRow[]} />
+        ) : (
+          <EmptyState query={params.q} />
+        )}
+      </div>
 
-            {/* Free upgrade nudge — shown when results are capped at page 1 */}
-            {isFree && count !== null && count > PAGE_SIZE && (
-              <div className="flex items-center justify-between gap-4 px-4 py-3.5 bg-gold/[0.06] border border-gold/20 rounded-xl mb-4 text-sm">
-                <p className="text-gray-300">
+      {/* Sticky bottom bar — free nudge or pagination */}
+      {hasResults && (
+        <>
+          {isFree && count !== null && count > PAGE_SIZE && (
+            <div className="fixed bottom-20 md:bottom-0 left-0 right-0 z-20 bg-navy-dark/95 backdrop-blur-sm border-t border-white/[0.06]">
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+                <p className="text-sm text-gray-300">
                   Showing{" "}
                   <span className="font-semibold text-white">{PAGE_SIZE}</span>{" "}
                   of{" "}
@@ -250,10 +256,11 @@ export default async function SearchPage({
                   Upgrade to see all results →
                 </Link>
               </div>
-            )}
-
-            {totalPages > 1 && !isFree && (
-              <div className="flex items-center justify-center gap-3 pb-4">
+            </div>
+          )}
+          {totalPages > 1 && !isFree && (
+            <div className="fixed bottom-20 md:bottom-0 left-0 right-0 z-20 bg-navy-dark/95 backdrop-blur-sm border-t border-white/[0.06]">
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-center gap-3">
                 {page > 1 && (
                   <Link
                     href={pageUrl(page - 1)}
@@ -262,9 +269,7 @@ export default async function SearchPage({
                     ← Previous
                   </Link>
                 )}
-                <span className="text-sm text-gray-500">
-                  {page} / {totalPages}
-                </span>
+                <span className="text-sm text-gray-500">{page} / {totalPages}</span>
                 {page < totalPages && (
                   <Link
                     href={pageUrl(page + 1)}
@@ -274,12 +279,10 @@ export default async function SearchPage({
                   </Link>
                 )}
               </div>
-            )}
-          </>
-        ) : (
-          <EmptyState query={params.q} />
-        )}
-      </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

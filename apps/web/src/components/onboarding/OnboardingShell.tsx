@@ -12,9 +12,10 @@ import OnboardingDone from "./OnboardingDone"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Screen = "welcome" | 1 | 2 | 3 | "done"
+type Screen = "welcome" | "name" | 1 | 2 | 3 | "done"
 
 interface OnboardingData {
+  full_name?: string
   user_type?: string
   goals?: string[]
   preferred_region?: string
@@ -82,7 +83,40 @@ function WelcomeScreen({ onContinue }: { onContinue: () => void }) {
     </div>
   )
 }
+// ── Name screen ─────────────────────────────────────────────────────────────────
 
+function NameScreen({ onNext }: { onNext: (fullName: string) => void }) {
+  const [value, setValue] = useState("")
+  const trimmed = value.trim()
+  return (
+    <div>
+      <h2 className="text-white text-2xl font-bold mb-2 tracking-tight">What&apos;s your name?</h2>
+      <p className="text-gray-400 text-sm mb-8">So we know what to call you.</p>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Your full name"
+        autoFocus
+        className="w-full px-4 py-3.5 rounded-xl bg-navy border border-white/10 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-gold/50 mb-4"
+        onKeyDown={(e) => { if (e.key === "Enter" && trimmed) onNext(trimmed) }}
+      />
+      <button
+        onClick={() => { if (trimmed) onNext(trimmed) }}
+        disabled={!trimmed}
+        className="w-full py-4 bg-gold text-navy-dark font-bold rounded-xl hover:bg-gold-dark transition-colors text-base disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Continue →
+      </button>
+      <button
+        onClick={() => onNext("")}
+        className="w-full mt-3 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+      >
+        Skip
+      </button>
+    </div>
+  )
+}
 // ── Back button ───────────────────────────────────────────────────────────────
 
 function BackButton({
@@ -134,7 +168,8 @@ export default function OnboardingShell() {
   function goNext(updates: Partial<OnboardingData> = {}) {
     setData((prev) => ({ ...prev, ...updates }))
     setScreen((prev) => {
-      if (prev === "welcome") return 1
+      if (prev === "welcome") return "name"
+      if (prev === "name") return 1
       if (prev === 1) return 2
       if (prev === 2) return 3
       return "done"
@@ -168,6 +203,7 @@ export default function OnboardingShell() {
     const { error: upsertError } = await supabase.from("profiles").upsert(
       {
         id: user.id,
+        full_name: final.full_name ?? null,
         user_type: final.user_type ?? null,
         primary_goals: (final.goals ?? null) as string[] | null,
         preferred_region: final.preferred_region ?? null,
@@ -191,7 +227,8 @@ export default function OnboardingShell() {
 
   function goBack() {
     setScreen((prev) => {
-      if (prev === 1) return "welcome"
+      if (prev === "name") return "welcome"
+      if (prev === 1) return "name"
       if (prev === 2) return 1
       if (prev === 3) return 2
       return "welcome"
@@ -223,7 +260,14 @@ export default function OnboardingShell() {
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           {screen === "welcome" && (
-            <WelcomeScreen onContinue={() => setScreen(1)} />
+            <WelcomeScreen onContinue={() => goNext()} />
+          )}
+
+          {screen === "name" && (
+            <>
+              <BackButton onClick={goBack} />
+              <NameScreen onNext={(fullName) => goNext({ full_name: fullName })} />
+            </>
           )}
 
           {screen === 1 && (

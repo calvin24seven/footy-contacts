@@ -98,10 +98,14 @@ export default function ContactRow({
   contact,
   onPreview,
   isSelected,
+  selected = false,
+  onToggle,
 }: {
   contact: ContactListRow
   onPreview?: (contact: ContactListRow) => void
   isSelected?: boolean
+  selected?: boolean
+  onToggle?: (id: string) => void
 }) {
   const countryShort = contact.country ? (COUNTRY_SHORT[contact.country] ?? contact.country) : null
   const location = [contact.city, countryShort].filter(Boolean).join(", ")
@@ -116,19 +120,30 @@ export default function ContactRow({
       {/* ── Desktop table row (must match ContactTableHeader grid) ── */}
       <div
         className={cn(
-          "hidden md:grid grid-cols-[2fr_1.4fr_1.4fr_80px_auto] gap-x-4 items-center px-4 py-3.5",
+          "hidden md:grid grid-cols-[32px_minmax(0,2fr)_minmax(0,1.4fr)_minmax(0,1.4fr)_90px_120px] gap-x-4 items-center px-4 py-3.5",
           rowBase,
           isSelected ? rowSelected : rowIdle,
         )}
         onClick={() => onPreview?.(contact)}
         role="row"
       >
-        {/* Col 1 — Avatar + Name + Category */}
+        {/* Col 1 — Bulk select */}
+        <div onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onToggle?.(contact.id)}
+            className="w-3.5 h-3.5 rounded accent-gold cursor-pointer"
+            aria-label={`Select ${contact.name}`}
+          />
+        </div>
+
+        {/* Col 2 — Avatar + Name + Category */}
         <div className="flex items-center gap-3 min-w-0">
           <OrgAvatar name={contact.organisation} category={contact.category} logoUrl={contact.org_logo_url} />
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-white font-semibold text-[13px] leading-tight truncate max-w-[180px]">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-white font-semibold text-[13px] leading-tight truncate">
                 {contact.name}
               </span>
               {contact.verified_status === "verified" && <VerifiedBadge />}
@@ -139,7 +154,7 @@ export default function ContactRow({
           </div>
         </div>
 
-        {/* Col 2 — Job title */}
+        {/* Col 3 — Job title */}
         <div className="min-w-0">
           {contact.role
             ? <span className="text-[13px] text-gray-300 leading-snug truncate block">{contact.role}</span>
@@ -147,7 +162,7 @@ export default function ContactRow({
           }
         </div>
 
-        {/* Col 3 — Organisation + Location */}
+        {/* Col 4 — Organisation + Location */}
         <div className="min-w-0">
           {contact.organisation && (
             <span className="text-[13px] text-gray-200 font-medium truncate block">{contact.organisation}</span>
@@ -160,7 +175,7 @@ export default function ContactRow({
           )}
         </div>
 
-        {/* Col 4 — Signal icons */}
+        {/* Col 5 — Signal icons */}
         <div>
           <SignalIcons
             hasEmail={contact.has_email}
@@ -169,7 +184,7 @@ export default function ContactRow({
           />
         </div>
 
-        {/* Col 5 — Actions (stop row-click propagation) */}
+        {/* Col 6 — Status / CTA */}
         <div
           className="flex items-center gap-1 justify-end"
           onClick={(e) => e.stopPropagation()}
