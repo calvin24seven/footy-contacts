@@ -238,6 +238,7 @@ function PreviewFooter({ contact }: { contact: ContactListRow }) {
           verifiedStatus={contact.verified_status}
           hasEmail={contact.has_email}
           hasPhone={contact.has_phone}
+          isUnlocked={contact.is_unlocked ?? false}
         />
       </div>
       <div className="flex gap-2">

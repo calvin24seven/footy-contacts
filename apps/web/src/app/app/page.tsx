@@ -103,9 +103,13 @@ export default async function SearchPage({
   const page = isFree && requestedPage > 1 ? 1 : requestedPage
   const offset = (page - 1) * PAGE_SIZE
 
+  // count:"exact" forces a full sequential scan of ~55k rows which consistently
+  // hits the 8-second statement_timeout on the authenticated role.
+  // count:"planned" uses the query-planner estimate — instant, accurate enough
+  // for pagination on an append-only table.
   let query = supabase
     .from("contacts")
-    .select(CONTACT_COLUMNS, { count: "exact" })
+    .select(CONTACT_COLUMNS, { count: "planned" })
     .eq("visibility_status", "published")
     .eq("suppression_status", "active")
 

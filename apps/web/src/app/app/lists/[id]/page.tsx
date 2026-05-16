@@ -4,6 +4,16 @@ import Link from "next/link"
 import type { Tables } from "@/database.types"
 import ExportListButton from "./ExportListButton"
 
+// Subset of columns that the authenticated role can SELECT on contacts
+// (email/phone/linkedin_url were revoked by the phase-5 security migration).
+type ListContactRow = Pick<
+  Tables<"contacts">,
+  | "id" | "name" | "organisation" | "role" | "category" | "role_category"
+  | "country" | "city" | "verified_status" | "has_email" | "has_phone"
+  | "has_linkedin" | "visibility_status" | "suppression_status"
+  | "created_at" | "updated_at" | "organisation_id"
+>
+
 export default async function ListDetailPage({
   params,
 }: {
@@ -32,13 +42,22 @@ export default async function ListDetailPage({
 
   const contactIds = listContacts?.map((lc) => lc.contact_id) ?? []
 
-  let contacts: Tables<"contacts">[] = []
+  // select(*) would fail — authenticated role only has column-level SELECT
+  // (email/phone/linkedin_url were revoked in the phase-5 security migration).
+  // Enumerate the columns the role is actually granted.
+  const CONTACT_COLS =
+    "id, name, organisation, role, category, role_category, country, city," +
+    " verified_status, has_email, has_phone, has_linkedin," +
+    " visibility_status, suppression_status, created_at, updated_at, organisation_id"
+
+  let contacts: ListContactRow[] = []
   if (contactIds.length > 0) {
-    const { data } = await supabase
+    const { data, error: contactsErr } = await supabase
       .from("contacts")
-      .select("*")
+      .select(CONTACT_COLS)
       .in("id", contactIds)
-    contacts = data ?? []
+    if (contactsErr) console.error("[list/[id]] contacts query error:", contactsErr)
+    contacts = (data ?? []) as ListContactRow[]
   }
 
   const isSystem = (list as unknown as { is_system?: boolean }).is_system ?? false
@@ -95,7 +114,7 @@ function ContactRow({
   listId,
   isSystem,
 }: {
-  contact: Tables<"contacts">
+  contact: ListContactRow
   listId: string
   isSystem: boolean
 }) {
