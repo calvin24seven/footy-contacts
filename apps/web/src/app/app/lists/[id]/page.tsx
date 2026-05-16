@@ -57,7 +57,7 @@ export default async function ListDetailPage({
       .select(CONTACT_COLS)
       .in("id", contactIds)
     if (contactsErr) console.error("[list/[id]] contacts query error:", contactsErr)
-    contacts = (data ?? []) as ListContactRow[]
+    contacts = (data ?? []) as unknown as ListContactRow[]
   }
 
   const isSystem = (list as unknown as { is_system?: boolean }).is_system ?? false
