@@ -51,13 +51,16 @@ export function ContactCTA({
   verifiedStatus,
   hasEmail,
   hasPhone,
+  isUnlocked: isUnlockedProp = false,
 }: {
   contactId: string
   verifiedStatus: string | null
   hasEmail: boolean
   hasPhone: boolean
+  isUnlocked?: boolean
 }) {
   const [state, setState] = useState<"idle" | "terms" | "loading" | "paywall" | "limit" | "error">("idle")
+  const [unlocked, setUnlocked] = useState(isUnlockedProp)
   const router = useRouter()
 
   async function doUnlock() {
@@ -70,7 +73,9 @@ export function ContactCTA({
     if (res.status === 429) { setState("limit"); return }
     if (data.success || data.already_unlocked) {
       window.dispatchEvent(new Event("unlocks-updated"))
-      router.push(`/app/contacts/${contactId}`)
+      setUnlocked(true)
+      setState("idle")
+      router.refresh()
       return
     }
     setState("error")
@@ -90,6 +95,17 @@ export function ContactCTA({
   if (state === "paywall") return <UnlockWallModal type="paywall" onClose={() => setState("idle")} />
   if (state === "limit")   return <UnlockWallModal type="limit"   onClose={() => setState("idle")} />
   if (state === "error")   return <span className="text-xs text-red-400 px-1">Error — retry</span>
+
+  // Already unlocked — show View link
+  if (unlocked) return (
+    <Link
+      href={`/app/contacts/${contactId}`}
+      onClick={(e) => e.stopPropagation()}
+      className="w-full flex items-center justify-center px-3 py-2 rounded-lg bg-emerald-900/20 border border-emerald-700/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-900/30 transition-colors whitespace-nowrap cursor-pointer"
+    >
+      View
+    </Link>
+  )
 
   // No contact info at all
   if (!hasEmail && !hasPhone) return (

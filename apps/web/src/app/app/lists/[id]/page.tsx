@@ -41,6 +41,8 @@ export default async function ListDetailPage({
     contacts = data ?? []
   }
 
+  const isSystem = (list as unknown as { is_system?: boolean }).is_system ?? false
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -67,7 +69,7 @@ export default async function ListDetailPage({
             {contacts.length} contact{contacts.length !== 1 ? "s" : ""}
           </p>
           {contacts.map((contact) => (
-            <ContactRow key={contact.id} contact={contact} listId={id} />
+            <ContactRow key={contact.id} contact={contact} listId={id} isSystem={isSystem} />
           ))}
         </div>
       ) : (
@@ -91,9 +93,11 @@ export default async function ListDetailPage({
 function ContactRow({
   contact,
   listId,
+  isSystem,
 }: {
   contact: Tables<"contacts">
   listId: string
+  isSystem: boolean
 }) {
   return (
     <div className="flex items-center justify-between bg-navy-light rounded-xl px-5 py-4">
@@ -111,7 +115,7 @@ function ContactRow({
           </p>
         </div>
       </Link>
-      <RemoveFromListForm contactId={contact.id} listId={listId} />
+      {!isSystem && <RemoveFromListForm contactId={contact.id} listId={listId} />}
     </div>
   )
 }

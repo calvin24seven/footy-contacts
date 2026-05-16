@@ -83,6 +83,11 @@ export default async function SearchPage({
     supabase.auth.getUser(),
     getPublishedCountries(),
   ])
+
+  // Run the subscription check first so we know whether this is a free user
+  // before deciding which page/offset to fetch contacts for.
+  const requestedPage = Math.min(500, Math.max(1, parseInt(params.page ?? "1", 10)))
+
   const { data: activeSub } = user
     ? await supabase
         .from("subscriptions")
@@ -91,10 +96,11 @@ export default async function SearchPage({
         .in("status", ["active", "trialing"])
         .maybeSingle()
     : { data: null }
+
   const isFree = !activeSub
 
-  // Free users are hard-capped to page 1 on the server
-  const page = isFree ? 1 : Math.min(500, Math.max(1, parseInt(params.page ?? "1", 10)))
+  // Free users are capped at page 1; clamp silently if they edit the URL.
+  const page = isFree && requestedPage > 1 ? 1 : requestedPage
   const offset = (page - 1) * PAGE_SIZE
 
   let query = supabase
@@ -173,7 +179,11 @@ export default async function SearchPage({
     query = query.order("name")
   }
 
-  const { data: contacts, error: contactsError, count } = await query.range(offset, offset + PAGE_SIZE - 1)
+  // Fire subscription check and contacts query in parallel — the subscription
+  // check was previously blocking the contacts query (~1 extra RTT per navigation).
+  const contactsQueryPromise = query.range(offset, offset + PAGE_SIZE - 1)
+  const { data: contacts, error: contactsError, count } = await contactsQueryPromise
+
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0
 
   // Distinguish an empty result set from a DB error so we don't show

@@ -190,6 +190,7 @@ export default function ContactRow({
             verifiedStatus={contact.verified_status}
             hasEmail={contact.has_email}
             hasPhone={contact.has_phone}
+            isUnlocked={contact.is_unlocked ?? false}
           />
         </div>
       </div>
@@ -220,6 +221,7 @@ export default function ContactRow({
             verifiedStatus={contact.verified_status}
             hasEmail={contact.has_email}
             hasPhone={contact.has_phone}
+            isUnlocked={contact.is_unlocked ?? false}
           />
         </div>
       </div>

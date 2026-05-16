@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useSearchTransition } from "./SearchTransitionContext"
 
@@ -10,9 +11,11 @@ interface Props {
 }
 
 /**
- * Drop-in replacement for plain <Link> in pagination.
- * Wraps the navigation in the shared startTransition so the results
- * area dims and the loading bar appears while the new page loads.
+ * Pagination link that:
+ * 1. Renders as a real Next.js <Link> so the RSC payload is prefetched as
+ *    soon as the link enters the viewport (full prefetch) — clicking feels instant.
+ * 2. Intercepts the click to wrap router.push in startTransition so the results
+ *    area dims and the loading bar appears during the brief render phase.
  */
 export default function PaginationLink({ href, children, className }: Props) {
   const router = useRouter()
@@ -24,8 +27,8 @@ export default function PaginationLink({ href, children, className }: Props) {
   }
 
   return (
-    <a href={href} onClick={handleClick} className={className}>
+    <Link href={href} prefetch={true} onClick={handleClick} className={className}>
       {children}
-    </a>
+    </Link>
   )
 }

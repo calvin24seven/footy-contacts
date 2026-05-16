@@ -13,6 +13,7 @@ type ListRow = {
   contact_count: number
   created_at: string
   updated_at: string
+  is_system: boolean
 }
 
 interface Props {
@@ -218,7 +219,7 @@ export default function ListsClient({ initialLists }: Props) {
     if (err) {
       setError(err.message)
     } else if (data) {
-      setLists((prev) => [{ ...data, tags: (data as unknown as { tags?: string[] }).tags ?? [], contact_count: 0 }, ...prev])
+      setLists((prev) => [{ ...data, tags: (data as unknown as { tags?: string[] }).tags ?? [], is_system: false, contact_count: 0 }, ...prev])
       setShowCreate(false)
     }
     setCreating(false)
@@ -337,7 +338,7 @@ export default function ListsClient({ initialLists }: Props) {
 
       {lists.length > 0 ? (
         <div className="space-y-2">
-          {lists.map((list) => (
+          {[...lists].sort((a, b) => (a.is_system === b.is_system ? 0 : a.is_system ? -1 : 1)).map((list) => (
             <div
               key={list.id}
               className="bg-navy-light border border-white/[0.05] rounded-xl px-5 py-4 hover:border-white/10 transition-colors"
@@ -349,6 +350,13 @@ export default function ListsClient({ initialLists }: Props) {
                     <p className="text-white font-semibold group-hover:text-gold transition-colors leading-tight">
                       {list.name}
                     </p>
+                    {/* System list badge */}
+                    {list.is_system && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gold/70 bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded-full leading-none shrink-0">
+                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                        Auto
+                      </span>
+                    )}
                     {/* Contact count badge */}
                     <span className="text-[11px] text-gray-500 font-medium bg-white/[0.04] border border-white/[0.06] px-1.5 py-0.5 rounded-full leading-none shrink-0">
                       {list.contact_count === 0
@@ -374,6 +382,7 @@ export default function ListsClient({ initialLists }: Props) {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                  {!list.is_system && (
                   <button
                     onClick={() => { setError(null); setEditingList(list) }}
                     className="px-2.5 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-colors font-medium"
@@ -381,6 +390,7 @@ export default function ListsClient({ initialLists }: Props) {
                   >
                     Edit
                   </button>
+                  )}
                   {list.contact_count > 0 && (
                     <button
                       onClick={() => handleExportList(list.id, list.name)}
@@ -397,8 +407,8 @@ export default function ListsClient({ initialLists }: Props) {
                         deleteList(list.id)
                       }
                     }}
-                    disabled={deletingId === list.id}
-                    className="px-2.5 py-1.5 rounded-lg text-xs text-gray-500 hover:text-red-400 hover:bg-red-400/[0.06] transition-colors disabled:opacity-40"
+                    disabled={deletingId === list.id || list.is_system}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs transition-colors ${list.is_system ? "hidden" : "text-gray-500 hover:text-red-400 hover:bg-red-400/[0.06] disabled:opacity-40"}`}
                     title="Delete list"
                   >
                     {deletingId === list.id ? "…" : "Delete"}

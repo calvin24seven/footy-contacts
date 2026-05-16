@@ -29,8 +29,9 @@ export default async function ListsPage() {
 
   const listsWithCounts = lists.map((l) => ({
     ...l,
-    // tags column may not yet be in the generated types — cast safely
+    // tags and is_system may not yet be in the generated types — cast safely
     tags: ((l as unknown as { tags?: string[] }).tags ?? []) as string[],
+    is_system: ((l as unknown as { is_system?: boolean }).is_system ?? false),
     contact_count: countByList[l.id] ?? 0,
   }))
 
