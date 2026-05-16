@@ -4,11 +4,11 @@ import type { Metadata } from "next"
 const APP_URL = "https://app.footycontacts.com"
 
 export const metadata: Metadata = {
-  title: "Footy Contacts ΓÇö Search the Football Network",
+  title: "Footy Contacts — Search the Football Network",
   description:
     "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 12,400+ published football industry contacts. Start with 3 free unlocks.",
   openGraph: {
-    title: "Footy Contacts ΓÇö Search the Football Network",
+    title: "Footy Contacts — Search the Football Network",
     description:
       "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 12,400+ published football industry contacts. Start with 3 free unlocks.",
     type: "website",
@@ -16,27 +16,27 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Footy Contacts ΓÇö Search the Football Network",
+    title: "Footy Contacts — Search the Football Network",
     description:
       "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Start with 3 free unlocks.",
   },
 }
 
-// ΓöÇΓöÇ Data ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── Data ─────────────────────────────────────────────────────────────────────
 
 const MARQUEE_ITEMS = [
-  "Scout ┬╖ England ┬╖ Premier League",
-  "Agent ┬╖ Spain ┬╖ LaLiga",
-  "Academy Director ┬╖ Germany",
-  "Head of Recruitment ┬╖ France",
-  "Goalkeeping Coach ┬╖ Championship",
-  "Performance Director ┬╖ Belgium",
-  "Press Officer ┬╖ Brazil",
-  "Club Secretary ┬╖ Nigeria",
-  "Technical Director ┬╖ Portugal",
-  "Youth Coach ┬╖ Netherlands",
-  "Sporting Director ┬╖ Italy",
-  "Analyst ┬╖ Scotland",
+  "Scout · England · Premier League",
+  "Agent · Spain · LaLiga",
+  "Academy Director · Germany",
+  "Head of Recruitment · France",
+  "Goalkeeping Coach · Championship",
+  "Performance Director · Belgium",
+  "Press Officer · Brazil",
+  "Club Secretary · Nigeria",
+  "Technical Director · Portugal",
+  "Youth Coach · Netherlands",
+  "Sporting Director · Italy",
+  "Analyst · Scotland",
 ]
 
 const PREVIEW_CONTACTS = [
@@ -59,7 +59,7 @@ const PREVIEW_CONTACTS = [
   {
     name: "Amara Diallo",
     role: "Academy Director",
-    org: "FC Lom├⌐",
+    org: "FC Lomé",
     country: "Togo",
     initials: "AD",
     color: "from-emerald-500 to-emerald-700",
@@ -80,7 +80,7 @@ const HOW_IT_WORKS = [
   {
     n: "02",
     title: "Unlock their details",
-    desc: "Use a credit to reveal their direct email, phone number, and LinkedIn. Confirm before spending ΓÇö no wasted credits.",
+    desc: "Use a credit to reveal their direct email, phone number, and LinkedIn. Confirm before spending — no wasted credits.",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
@@ -120,7 +120,7 @@ const FEATURES = [
   },
   {
     title: "Direct contact details",
-    desc: "Email address, phone number, and LinkedIn URL. Unlocked in one click ΓÇö held behind a credit to prevent scraping.",
+    desc: "Email address, phone number, and LinkedIn URL. Unlocked in one click — held behind a credit to prevent scraping.",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
@@ -160,17 +160,17 @@ const PERSONAS = [
   { role: "Players", desc: "Find the scouts, agents, and club contacts who can open the next door for your career." },
   { role: "Agents", desc: "Search club executives, heads of recruitment, and potential clients faster than any other method." },
   { role: "Scouts", desc: "Build a direct network of coaches, performance directors, and talent contacts at every level." },
-  { role: "Coaches", desc: "Find clubs, technical directors, and academy roles ΓÇö without going through a CV black hole." },
+  { role: "Coaches", desc: "Find clubs, technical directors, and academy roles — without going through a CV black hole." },
   { role: "Academy staff", desc: "Connect with recruitment networks, talent pipelines, and decision-makers in youth football." },
   { role: "Journalists", desc: "Find press officers, media managers, and club contacts across the football world." },
   { role: "Recruiters", desc: "A searchable directory of football operators for your placements and representation pipeline." },
-  { role: "Club operators", desc: "Find scouts, analysts, performance staff, and specialists ΓÇö without relying on referrals alone." },
+  { role: "Club operators", desc: "Find scouts, analysts, performance staff, and specialists — without relying on referrals alone." },
 ]
 
 const PRICING = [
   {
     name: "Free",
-    price: "┬ú0",
+    price: "£0",
     period: "",
     badge: null as string | null,
     desc: "Try it. 3 unlocks to see exactly what you get before spending a penny.",
@@ -181,29 +181,29 @@ const PRICING = [
   },
   {
     name: "Pro",
-    price: "┬ú39",
+    price: "£39",
     period: "/mo",
     badge: "Most popular" as string | null,
     desc: "For players, agents, scouts, and coaches who need the network on their side every month.",
-    features: ["150 unlocks/month", "75 CSV exports/month", "Full filter access", "Annual: ┬ú390 (save ┬ú78)"],
+    features: ["150 unlocks/month", "75 CSV exports/month", "Full filter access", "Annual: £390 (save £78)"],
     cta: "Start Pro",
     href: `${APP_URL}/signup?plan=pro`,
     featured: true,
   },
   {
     name: "Agency",
-    price: "┬ú149",
+    price: "£149",
     period: "/mo",
     badge: null as string | null,
     desc: "For professional agencies and operators who need the full network, every day.",
-    features: ["Unlimited unlocks", "500 exports/month", "Priority support", "Annual: ┬ú1,490 (save ┬ú298)"],
+    features: ["Unlimited unlocks", "500 exports/month", "Priority support", "Annual: £1,490 (save £298)"],
     cta: "Go Agency",
     href: `${APP_URL}/signup?plan=agency`,
     featured: false,
   },
 ]
 
-// ΓöÇΓöÇ Small icons ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── Small icons ───────────────────────────────────────────────────────────────
 
 function LockIcon() {
   return (
@@ -221,7 +221,7 @@ function CheckIcon() {
   )
 }
 
-// ΓöÇΓöÇ Browser-frame product mockup ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── Browser-frame product mockup ──────────────────────────────────────────────
 
 function ProductMockup() {
   return (
@@ -273,9 +273,9 @@ function ProductMockup() {
         {/* Filter chips */}
         <div className="flex gap-2 flex-wrap">
           {[
-            { label: "Role Γû╛", active: false },
-            { label: "Country: England ├ù", active: true },
-            { label: "Category Γû╛", active: false },
+            { label: "Role ▾", active: false },
+            { label: "Country: England ×", active: true },
+            { label: "Category ▾", active: false },
           ].map(({ label, active }) => (
             <span
               key={label}
@@ -321,7 +321,7 @@ function ProductMockup() {
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>{c.role}</p>
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
-                    {c.org} ┬╖ {c.country}
+                    {c.org} · {c.country}
                   </p>
                 </div>
               </div>
@@ -335,13 +335,13 @@ function ProductMockup() {
                   border: "1px solid rgba(249,215,131,0.20)",
                 }}
               >
-                Unlock ΓåÆ
+                Unlock →
               </button>
             </div>
 
             {/* Masked contact fields */}
             <div className="mt-2.5 flex gap-2 flex-wrap">
-              {["ΓÇóΓÇó@ΓÇóΓÇó.com", "+ΓÇóΓÇó ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"].map((masked) => (
+              {["••@••.com", "+•• •••••••"].map((masked) => (
                 <span
                   key={masked}
                   className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md"
@@ -359,20 +359,20 @@ function ProductMockup() {
         ))}
 
         <p className="text-center text-xs pb-0.5" style={{ color: "rgba(255,255,255,0.18)" }}>
-          3 free unlocks ┬╖ No credit card required
+          3 free unlocks · No credit card required
         </p>
       </div>
     </div>
   )
 }
 
-// ΓöÇΓöÇ Page component ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ── Page component ────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   return (
     <div className="min-h-screen text-white" style={{ background: "#0D111C" }}>
 
-      {/* ΓöÇΓöÇ Navbar ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Navbar ────────────────────────────────────────────────────── */}
       <header
         className="sticky top-0 z-30 border-b"
         style={{
@@ -421,16 +421,16 @@ export default function HomePage() {
               className="px-4 py-2.5 text-sm font-bold rounded-xl"
               style={{ background: "#F9D783", color: "#0D111C" }}
             >
-              Get access ΓåÆ
+              Get access →
             </Link>
           </div>
         </nav>
       </header>
 
-      {/* ΓöÇΓöÇ Hero ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden" style={{ paddingTop: "88px", paddingBottom: "96px" }}>
 
-        {/* Ambient glow ΓÇö top left gold */}
+        {/* Ambient glow — top left gold */}
         <div
           className="absolute pointer-events-none"
           style={{
@@ -440,7 +440,7 @@ export default function HomePage() {
             filter: "blur(60px)",
           }}
         />
-        {/* Ambient glow ΓÇö bottom right purple */}
+        {/* Ambient glow — bottom right purple */}
         <div
           className="absolute pointer-events-none"
           style={{
@@ -464,7 +464,7 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-[1fr_1fr] gap-12 xl:gap-16 items-center">
 
-            {/* Left: copy ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+            {/* Left: copy ───────────────────────────────────────────── */}
             <div className="max-w-[540px]">
 
               {/* Eyebrow */}
@@ -477,7 +477,7 @@ export default function HomePage() {
                 }}
               >
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#F9D783" }} />
-                12,400+ verified contacts ┬╖ 114 countries
+                12,400+ verified contacts · 114 countries
               </div>
 
               {/* Headline */}
@@ -505,7 +505,7 @@ export default function HomePage() {
                 className="text-lg leading-relaxed mb-10"
                 style={{ color: "rgba(255,255,255,0.52)", maxWidth: "460px" }}
               >
-                Scouts, agents, coaches, academy directors, and club officials ΓÇö all in one
+                Scouts, agents, coaches, academy directors, and club officials — all in one
                 searchable platform. Direct email, phone, and LinkedIn included.
               </p>
 
@@ -520,7 +520,7 @@ export default function HomePage() {
                     boxShadow: "0 8px 36px rgba(249,215,131,0.28)",
                   }}
                 >
-                  Start free ΓÇö 3 unlocks included
+                  Start free — 3 unlocks included
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -543,11 +543,11 @@ export default function HomePage() {
                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                <span className="text-sm">No credit card ┬╖ Cancel anytime ┬╖ GDPR compliant</span>
+                <span className="text-sm">No credit card · Cancel anytime · GDPR compliant</span>
               </div>
             </div>
 
-            {/* Right: product mockup ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+            {/* Right: product mockup ─────────────────────────────────── */}
             <div className="relative">
               {/* Gold glow halo */}
               <div
@@ -566,7 +566,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇ Scrolling marquee strip ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Scrolling marquee strip ───────────────────────────────────── */}
       <div
         className="overflow-hidden border-y"
         style={{
@@ -587,14 +587,14 @@ export default function HomePage() {
                 background: "rgba(255,255,255,0.03)",
               }}
             >
-              <span style={{ color: "#F9D783", opacity: 0.65, marginRight: "2px" }}>ΓåÆ</span>
+              <span style={{ color: "#F9D783", opacity: 0.65, marginRight: "2px" }}>→</span>
               {item}
             </span>
           ))}
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Stats band ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Stats band ──────────────────────────────────────────────────── */}
       <section className="py-24">
         <div className="max-w-5xl mx-auto px-6">
           <div
@@ -639,7 +639,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇ How it works ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── How it works ────────────────────────────────────────────────── */}
       <section id="how-it-works" className="py-24" style={{ background: "rgba(255,255,255,0.012)" }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
@@ -721,13 +721,13 @@ export default function HomePage() {
                 boxShadow: "0 8px 24px rgba(249,215,131,0.20)",
               }}
             >
-              Try it free ΓÇö no card needed
+              Try it free — no card needed
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ΓöÇΓöÇ Features ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Features ─────────────────────────────────────────────────────── */}
       <section id="features" className="py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
@@ -772,7 +772,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇ Who it&apos;s for ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Who it&apos;s for ─────────────────────────────────────────────── */}
       <section className="py-24" style={{ background: "rgba(255,255,255,0.012)" }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
@@ -807,7 +807,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ΓöÇΓöÇ Manifesto callout ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Manifesto callout ─────────────────────────────────────────────── */}
       <section className="py-28 relative overflow-hidden">
         <div
           className="absolute inset-0 pointer-events-none"
@@ -831,7 +831,7 @@ export default function HomePage() {
             className="text-lg leading-relaxed mb-10"
             style={{ color: "rgba(255,255,255,0.42)", maxWidth: "540px", margin: "0 auto 2.5rem" }}
           >
-            Opportunities pass people by every single day ΓÇö not for lack of talent or hard work, but
+            Opportunities pass people by every single day — not for lack of talent or hard work, but
             for lack of access. We built a searchable, direct-contact database so that changes.
           </p>
           <Link
@@ -843,12 +843,12 @@ export default function HomePage() {
               boxShadow: "0 8px 32px rgba(249,215,131,0.24)",
             }}
           >
-            Get access ΓÇö it&apos;s free
+            Get access — it&apos;s free
           </Link>
         </div>
       </section>
 
-      {/* ΓöÇΓöÇ Pricing ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Pricing ──────────────────────────────────────────────────────── */}
       <section id="pricing" className="py-24" style={{ background: "rgba(255,255,255,0.012)" }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-14">
@@ -945,12 +945,12 @@ export default function HomePage() {
           </div>
 
           <p className="text-center text-sm mt-8" style={{ color: "rgba(255,255,255,0.22)" }}>
-            Start free ΓÇö no credit card required. Upgrade or cancel anytime.
+            Start free — no credit card required. Upgrade or cancel anytime.
           </p>
         </div>
       </section>
 
-      {/* ΓöÇΓöÇ Final CTA ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Final CTA ─────────────────────────────────────────────────────── */}
       <section className="py-32 relative overflow-hidden">
         {/* Dramatic background */}
         <div
@@ -994,18 +994,18 @@ export default function HomePage() {
               boxShadow: "0 12px 52px rgba(249,215,131,0.30)",
             }}
           >
-            Get access ΓÇö it&apos;s free
+            Get access — it&apos;s free
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>
           <p className="text-sm mt-5" style={{ color: "rgba(255,255,255,0.22)" }}>
-            No credit card required ┬╖ Cancel anytime ┬╖ Join the professionals already using Footy Contacts
+            No credit card required · Cancel anytime · Join the professionals already using Footy Contacts
           </p>
         </div>
       </section>
 
-      {/* ΓöÇΓöÇ Footer ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className="border-t" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
         <div className="max-w-7xl mx-auto px-6 py-14">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
@@ -1070,10 +1070,10 @@ export default function HomePage() {
                   color: "#F9D783",
                 }}
               >
-                Get access free ΓåÆ
+                Get access free →
               </Link>
               <p className="text-xs mt-3 text-center" style={{ color: "rgba(255,255,255,0.22)" }}>
-                3 unlocks ┬╖ No credit card
+                3 unlocks · No credit card
               </p>
             </div>
           </div>
@@ -1082,7 +1082,7 @@ export default function HomePage() {
             className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t text-xs"
             style={{ borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.22)" }}
           >
-            <p>┬⌐ 2026 Footy Contacts Ltd. All rights reserved.</p>
+            <p>© 2026 Footy Contacts Ltd. All rights reserved.</p>
             <div className="flex items-center gap-4">
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>

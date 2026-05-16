@@ -304,7 +304,7 @@ export default async function SearchPage({
       {hasResults && (
         <>
           {isFree && count !== null && count > PAGE_SIZE && (
-            <div className="fixed bottom-20 md:bottom-0 left-0 right-0 z-20 bg-navy-dark/95 backdrop-blur-sm border-t border-white/[0.06]">
+            <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-20 bg-navy-dark/95 backdrop-blur-sm border-t border-white/[0.06]">
               <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
                 <p className="text-sm text-gray-300">
                   Showing{" "}
@@ -323,8 +323,8 @@ export default async function SearchPage({
             </div>
           )}
           {totalPages > 1 && !isFree && (
-            <div className="fixed bottom-20 md:bottom-0 left-0 right-0 z-20 bg-navy-dark/95 backdrop-blur-sm border-t border-white/[0.06]">
-              <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2 flex flex-col items-center gap-1 md:flex-row md:justify-center md:gap-1">
+            <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-20 bg-navy-dark/95 backdrop-blur-sm border-t border-white/[0.06]">
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between md:justify-center gap-1">
 
                 {/* Previous */}
                 {page > 1 ? (
@@ -360,7 +360,7 @@ export default async function SearchPage({
                 </div>
 
                 {/* Mobile: page label */}
-                <span className="md:hidden text-xs text-gray-500">Page {page} of {totalPages}</span>
+                <span className="md:hidden text-xs text-gray-500 shrink-0">Page {page} of {totalPages}</span>
 
                 {/* Next */}
                 {page < totalPages ? (
