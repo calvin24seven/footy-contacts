@@ -1,7 +1,8 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState, useTransition, useRef } from "react"
+import { useState, useRef } from "react"
+import { useSearchTransition } from "./SearchTransitionContext"
 
 const MAX_VALUES = 5
 const CATEGORIES = ["Agent", "Scout", "Coach", "Club Official", "Performance", "Medical", "Academy", "Player", "Media"]
@@ -43,7 +44,7 @@ interface Props {
 export default function SearchFilters({ countries, currentSort = "name_asc" }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isPending, startTransition] = useTransition()
+  const { isPending, startTransition } = useSearchTransition()
   const [open, setOpen] = useState(false)
   const [showRoleExclude, setShowRoleExclude] = useState(false)
   const [showOrgExclude, setShowOrgExclude] = useState(false)

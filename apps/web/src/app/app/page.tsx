@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { unstable_cache } from "next/cache"
-import Link from "next/link"
 import { Suspense } from "react"
 import SearchFilters from "./SearchFilters"
 import SearchBar from "./SearchBar"
@@ -10,6 +9,8 @@ import WelcomeBanner from "./WelcomeBanner"
 import EmptyState from "@/components/search/EmptyState"
 import { type ContactListRow } from "./ContactRow"
 import { getOrgLogoUrl } from "@/lib/orgLogo"
+import { SearchTransitionProvider } from "./SearchTransitionContext"
+import PaginationLink from "./PaginationLink"
 
 const PAGE_SIZE = 25
 
@@ -77,7 +78,11 @@ export default async function SearchPage({
 
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // Run auth and the (cached) countries list in parallel — saves one RTT on every request.
+  const [{ data: { user } }, countries] = await Promise.all([
+    supabase.auth.getUser(),
+    getPublishedCountries(),
+  ])
   const { data: activeSub } = user
     ? await supabase
         .from("subscriptions")
@@ -168,12 +173,13 @@ export default async function SearchPage({
     query = query.order("name")
   }
 
-  const [{ data: contacts, count }, countries] = await Promise.all([
-    query.range(offset, offset + PAGE_SIZE - 1),
-    getPublishedCountries(),
-  ])
+  const { data: contacts, error: contactsError, count } = await query.range(offset, offset + PAGE_SIZE - 1)
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0
-  const hasResults = contacts && contacts.length > 0
+
+  // Distinguish an empty result set from a DB error so we don't show
+  // "No contacts found" when the query simply failed transiently.
+  const hasError = !!contactsError
+  const hasResults = !hasError && contacts != null && contacts.length > 0
 
   // Check which of the visible contacts the current user has already unlocked
   const contactIds = (contacts ?? []).map((c) => c.id)
@@ -210,6 +216,7 @@ export default async function SearchPage({
   }
 
   return (
+    <SearchTransitionProvider>
     <div className="max-w-5xl mx-auto">
       {/* ── Welcome banner (free users only, client-side dismissible) ─────── */}
       {isFree && <WelcomeBanner />}
@@ -251,7 +258,12 @@ export default async function SearchPage({
           </div>
         )}
 
-        {hasResults ? (
+        {hasError ? (
+          <div className="text-center py-16">
+            <p className="text-gray-400 text-sm mb-3">Something went wrong loading contacts. Please try again.</p>
+            <a href="/app" className="text-gold text-sm hover:underline">Reload</a>
+          </div>
+        ) : hasResults ? (
           <ContactsList
             contacts={(contacts ?? []).map(c => ({
               ...c,
@@ -287,12 +299,12 @@ export default async function SearchPage({
                   <span className="font-semibold text-white">{count.toLocaleString()}</span>{" "}
                   contacts.
                 </p>
-                <Link
+                <PaginationLink
                   href="/app/billing"
                   className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 bg-gold text-navy-dark rounded-lg font-bold text-xs hover:bg-yellow-400 transition-colors whitespace-nowrap"
                 >
                   Upgrade to see all results →
-                </Link>
+                </PaginationLink>
               </div>
             </div>
           )}
@@ -302,12 +314,12 @@ export default async function SearchPage({
 
                 {/* Previous */}
                 {page > 1 ? (
-                  <Link
+                  <PaginationLink
                     href={pageUrl(page - 1)}
                     className="px-3 py-1.5 rounded-lg text-sm text-gray-300 hover:bg-navy-light transition-colors"
                   >
                     ← Previous
-                  </Link>
+                  </PaginationLink>
                 ) : (
                   <span className="px-3 py-1.5 rounded-lg text-sm text-gray-600 cursor-not-allowed select-none">← Previous</span>
                 )}
@@ -318,7 +330,7 @@ export default async function SearchPage({
                     p === "…" ? (
                       <span key={`el-${i}`} className="w-8 text-center text-gray-600 text-sm select-none">…</span>
                     ) : (
-                      <Link
+                      <PaginationLink
                         key={p}
                         href={pageUrl(p)}
                         className={`min-w-[32px] h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${
@@ -328,7 +340,7 @@ export default async function SearchPage({
                         }`}
                       >
                         {p}
-                      </Link>
+                      </PaginationLink>
                     )
                   )}
                 </div>
@@ -338,12 +350,12 @@ export default async function SearchPage({
 
                 {/* Next */}
                 {page < totalPages ? (
-                  <Link
+                  <PaginationLink
                     href={pageUrl(page + 1)}
                     className="px-3 py-1.5 rounded-lg text-sm text-gray-300 hover:bg-navy-light transition-colors"
                   >
                     Next →
-                  </Link>
+                  </PaginationLink>
                 ) : (
                   <span className="px-3 py-1.5 rounded-lg text-sm text-gray-600 cursor-not-allowed select-none">Next →</span>
                 )}
@@ -354,6 +366,6 @@ export default async function SearchPage({
         </>
       )}
     </div>
+    </SearchTransitionProvider>
   )
 }
-

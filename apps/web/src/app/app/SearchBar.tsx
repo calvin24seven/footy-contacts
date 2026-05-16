@@ -1,7 +1,8 @@
 "use client"
 
 import { useSearchParams, useRouter } from "next/navigation"
-import { useTransition, useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
+import { useSearchTransition } from "./SearchTransitionContext"
 
 interface Props {
   initialQ?: string
@@ -10,7 +11,7 @@ interface Props {
 export default function SearchBar({ initialQ }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isPending, startTransition] = useTransition()
+  const { isPending, startTransition } = useSearchTransition()
   const [q, setQ] = useState(initialQ ?? "")
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 

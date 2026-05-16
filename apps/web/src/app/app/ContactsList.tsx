@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import ContactRow, { type ContactListRow } from "./ContactRow"
 import ContactTableHeader from "./ContactTableHeader"
 import ContactPreview from "./ContactPreview"
+import { useSearchTransition } from "./SearchTransitionContext"
 
 type SearchFilters = Record<string, string>
 
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function ContactsList({ contacts, totalCount, isFree, searchFilters }: Props) {
+  const { isPending } = useSearchTransition()
   const [previewContact, setPreviewContact] = useState<ContactListRow | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [selectAllMode, setSelectAllMode] = useState(false)
@@ -155,10 +157,16 @@ export default function ContactsList({ contacts, totalCount, isFree, searchFilte
 
   return (
     <>
+      {/* Loading bar — slides in at the top while any search transition is pending */}
+      {isPending && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-0.5 bg-navy-dark overflow-hidden">
+          <div className="h-full bg-gold animate-[loading-bar_1.4s_ease-in-out_infinite]" />
+        </div>
+      )}
       <div className="flex gap-4 items-start">
         {/* Results list wrapped in a bordered table container */}
         <div className={`min-w-0 ${previewContact ? "flex-1" : "w-full"}`}>
-          <div className="border border-white/[0.06] rounded-xl overflow-hidden">
+          <div className={`border border-white/[0.06] rounded-xl overflow-hidden transition-opacity duration-150 ${isPending ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
             <div className="overflow-x-auto">
               <div className="min-w-[780px]">
                 {/* Bulk action bar — appears when rows are selected */}
