@@ -54,6 +54,64 @@ function escapeLike(s: string) {
   return s.replace(/[%_\\]/g, "\\$&")
 }
 
+// Applies all user-supplied search filters to a Supabase query builder.
+// Using `any` avoids duplicating the complex generic type across count + data queries.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyContactFilters(query: any, params: SearchParams): any {
+  if (params.q?.trim()) {
+    const q = escapeLike(params.q.trim())
+    query = query.or(`name.ilike.%${q}%,role.ilike.%${q}%,organisation.ilike.%${q}%`)
+  }
+  if (params.role?.trim()) {
+    const roles = params.role.split(",").map((s) => s.trim()).filter(Boolean)
+    if (roles.length === 1) {
+      query = query.ilike("role", `%${escapeLike(roles[0])}%`)
+    } else if (roles.length > 1) {
+      query = query.or(roles.map((r) => `role.ilike.%${escapeLike(r)}%`).join(","))
+    }
+  }
+  if (params.role_exclude?.trim()) {
+    for (const r of params.role_exclude.split(",").map((s) => s.trim()).filter(Boolean)) {
+      query = query.not("role", "ilike", `%${escapeLike(r)}%`)
+    }
+  }
+  if (params.org?.trim()) {
+    const orgs = params.org.split(",").map((s) => s.trim()).filter(Boolean)
+    if (orgs.length === 1) {
+      query = query.ilike("organisation", `%${escapeLike(orgs[0])}%`)
+    } else if (orgs.length > 1) {
+      query = query.or(orgs.map((o) => `organisation.ilike.%${escapeLike(o)}%`).join(","))
+    }
+  }
+  if (params.org_exclude?.trim()) {
+    for (const o of params.org_exclude.split(",").map((s) => s.trim()).filter(Boolean)) {
+      query = query.not("organisation", "ilike", `%${escapeLike(o)}%`)
+    }
+  }
+  if (params.city?.trim()) {
+    query = query.ilike("city", `%${escapeLike(params.city.trim())}%`)
+  }
+  if (params.country?.trim()) {
+    query = query.eq("country", params.country.trim())
+  }
+  if (params.email_status) {
+    if (params.email_status === "has_email") {
+      query = query.eq("has_email", true)
+    } else if (params.email_status === "no_email") {
+      query = query.eq("has_email", false)
+    } else {
+      query = query.eq("verified_status", params.email_status)
+    }
+  }
+  if (params.category?.trim()) {
+    query = query.eq("category", params.category.trim())
+  }
+  if (params.has_phone === "1") {
+    query = query.eq("has_phone", true)
+  }
+  return query
+}
+
 interface SearchParams {
   q?: string
   role?: string         // comma-separated OR values
@@ -105,88 +163,46 @@ export default async function SearchPage({
 
   // count:"exact" forces a full sequential scan of ~55k rows which consistently
   // hits the 8-second statement_timeout on the authenticated role.
-  // count:"planned" uses the query-planner estimate — instant, accurate enough
-  // for pagination on an append-only table.
-  let query = supabase
-    .from("contacts")
-    .select(CONTACT_COLUMNS, { count: "planned" })
-    .eq("visibility_status", "published")
-    .eq("suppression_status", "active")
+  // Count: use admin client (service role) so we get an exact count via
+  // Index Only Scan without hitting the statement_timeout or the RLS
+  // selectivity bug where auth.role()='authenticated' causes the query
+  // planner to apply a ~1/3 selectivity factor, returning ~18k instead of 55k.
+  const adminSupabase = createAdminClient()
+  const countQueryPromise = applyContactFilters(
+    adminSupabase
+      .from("contacts")
+      .select("*", { count: "exact", head: true })
+      .eq("visibility_status", "published")
+      .eq("suppression_status", "active"),
+    params,
+  )
 
-  if (params.q?.trim()) {
-    const q = escapeLike(params.q.trim())
-    query = query.or(`name.ilike.%${q}%,role.ilike.%${q}%,organisation.ilike.%${q}%`)
-  }
-
-  // Multi-value role (OR between values)
-  if (params.role?.trim()) {
-    const roles = params.role.split(",").map((s) => s.trim()).filter(Boolean)
-    if (roles.length === 1) {
-      query = query.ilike("role", `%${escapeLike(roles[0])}%`)
-    } else if (roles.length > 1) {
-      query = query.or(roles.map((r) => `role.ilike.%${escapeLike(r)}%`).join(","))
-    }
-  }
-  // Role excludes (AND NOT per value)
-  if (params.role_exclude?.trim()) {
-    for (const r of params.role_exclude.split(",").map((s) => s.trim()).filter(Boolean)) {
-      query = query.not("role", "ilike", `%${escapeLike(r)}%`)
-    }
-  }
-
-  // Multi-value org (OR between values)
-  if (params.org?.trim()) {
-    const orgs = params.org.split(",").map((s) => s.trim()).filter(Boolean)
-    if (orgs.length === 1) {
-      query = query.ilike("organisation", `%${escapeLike(orgs[0])}%`)
-    } else if (orgs.length > 1) {
-      query = query.or(orgs.map((o) => `organisation.ilike.%${escapeLike(o)}%`).join(","))
-    }
-  }
-  // Org excludes (AND NOT per value)
-  if (params.org_exclude?.trim()) {
-    for (const o of params.org_exclude.split(",").map((s) => s.trim()).filter(Boolean)) {
-      query = query.not("organisation", "ilike", `%${escapeLike(o)}%`)
-    }
-  }
-
-  if (params.city?.trim()) {
-    query = query.ilike("city", `%${escapeLike(params.city.trim())}%`)
-  }
-
-  if (params.country?.trim()) {
-    query = query.eq("country", params.country.trim())
-  }
-  if (params.email_status) {
-    if (params.email_status === "has_email") {
-      query = query.eq("has_email", true) as typeof query
-    } else if (params.email_status === "no_email") {
-      query = query.eq("has_email", false) as typeof query
-    } else {
-      query = query.eq("verified_status", params.email_status)
-    }
-  }
-  if (params.category?.trim()) {
-    query = query.eq("category", params.category.trim())
-  }
-  if (params.has_phone === "1") {
-    query = query.eq("has_phone", true) as typeof query
-  }
-
-  // Sort
+  // Data: authenticated client (respects RLS, includes org logo join)
   const sort = params.sort ?? "name_asc"
+  let dataQuery = applyContactFilters(
+    supabase
+      .from("contacts")
+      .select(CONTACT_COLUMNS)
+      .eq("visibility_status", "published")
+      .eq("suppression_status", "active"),
+    params,
+  )
   if (sort === "recently_added") {
-    query = query.order("created_at", { ascending: false })
+    dataQuery = dataQuery.order("created_at", { ascending: false })
   } else if (sort === "recently_verified") {
-    query = query.order("last_verified_at", { ascending: false, nullsFirst: false })
+    dataQuery = dataQuery.order("last_verified_at", { ascending: false, nullsFirst: false })
   } else {
-    query = query.order("name")
+    dataQuery = dataQuery.order("name")
   }
 
-  // Fire subscription check and contacts query in parallel — the subscription
-  // check was previously blocking the contacts query (~1 extra RTT per navigation).
-  const contactsQueryPromise = query.range(offset, offset + PAGE_SIZE - 1)
-  const { data: contacts, error: contactsError, count } = await contactsQueryPromise
+  // Fire count and data in parallel
+  const [
+    { count },
+    { data: contacts, error: contactsError },
+  ] = await Promise.all([
+    countQueryPromise,
+    dataQuery.range(offset, offset + PAGE_SIZE - 1),
+  ]) as [{ count: number | null }, { data: ContactListRow[] | null, error: Error | null }]
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0
 

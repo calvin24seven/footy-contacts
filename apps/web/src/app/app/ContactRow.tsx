@@ -24,6 +24,8 @@ export type ContactListRow = {
   has_linkedin: boolean
   role_category: string | null
   is_unlocked?: boolean
+  /** Present when the query includes organisations(logo_url, domain) join */
+  organisations?: { logo_url: string | null; domain: string | null } | null
 }
 
 // Short country codes for common long names
@@ -215,7 +217,7 @@ export default function ContactRow({
           </Link>
         )}
 
-        <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="shrink-0 w-[88px]" onClick={(e) => e.stopPropagation()}>
           <ContactCTA
             contactId={contact.id}
             verifiedStatus={contact.verified_status}
