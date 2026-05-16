@@ -47,8 +47,13 @@ export default function UnlockButton({ contactId, contactName, emailConfirmed }:
       return
     }
 
-    if (res.status === 429 && data.error === "limit_reached") {
-      setLimitInfo({ used: data.used!, limit: data.limit!, plan: data.plan! })
+    if (res.status === 429) {
+      if (data.error === "limit_reached") {
+        setLimitInfo({ used: data.used!, limit: data.limit!, plan: data.plan! })
+      } else {
+        // Rate-limit hit (too_many_requests / daily_limit_reached) — show generic message
+        setError("Too many attempts. Please wait a moment and try again.")
+      }
       return
     }
 

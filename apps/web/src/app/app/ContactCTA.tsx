@@ -96,7 +96,7 @@ export function ContactCTA({
     <Link
       href={`/app/contacts/${contactId}`}
       onClick={(e) => e.stopPropagation()}
-      className="flex items-center justify-center px-3 py-2 rounded-lg bg-white/[0.05] border border-white/10 text-gray-400 text-xs font-semibold hover:bg-white/10 hover:text-gray-200 transition-colors whitespace-nowrap min-w-[96px]"
+      className="w-full flex items-center justify-center px-3 py-2 rounded-lg bg-white/[0.05] border border-white/10 text-gray-400 text-xs font-semibold hover:bg-white/10 hover:text-gray-200 transition-colors whitespace-nowrap cursor-pointer"
     >
       View
     </Link>
@@ -107,7 +107,7 @@ export function ContactCTA({
     <button
       onClick={handleClick}
       disabled={state === "loading"}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gold/10 border border-gold/30 text-gold text-xs font-semibold hover:bg-gold/20 active:bg-gold/25 transition-colors disabled:opacity-50 whitespace-nowrap min-w-[96px] justify-center cursor-pointer"
+      className="w-full flex items-center gap-1.5 justify-center px-3 py-2 rounded-lg bg-gold/10 border border-gold/30 text-gold text-xs font-semibold hover:bg-gold/20 active:bg-gold/25 transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
     >
       {state === "loading" && <svg className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
       <span>{state === "loading" ? "Unlocking…" : "Unlock"}</span>
@@ -122,7 +122,7 @@ export function ContactCTA({
     <button
       onClick={handleClick}
       disabled={state === "loading"}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gold/10 border border-gold/30 text-gold text-xs font-semibold hover:bg-gold/20 active:bg-gold/25 transition-colors disabled:opacity-50 whitespace-nowrap min-w-[96px] justify-center"
+      className="w-full flex items-center gap-1.5 justify-center px-3 py-2 rounded-lg bg-gold/10 border border-gold/30 text-gold text-xs font-semibold hover:bg-gold/20 active:bg-gold/25 transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
     >
       {state === "loading" && <svg className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>}
       {state !== "loading" && isVerified  && <span className="w-1.5 h-1.5 rounded-full bg-green-500  shrink-0" title="Verified" />}

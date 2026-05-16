@@ -55,9 +55,10 @@ export async function rateLimit(
   const failClosed = options.failClosed ?? process.env.RATE_LIMIT_FAIL_CLOSED === "1"
 
   if (!r) {
-    return failClosed
-      ? { allowed: false, remaining: 0, resetAt: Date.now() + windowSecs * 1000 }
-      : { allowed: true, remaining: limit, resetAt: Date.now() + windowSecs * 1000 }
+    // Redis not configured (missing env vars) — fail open regardless of failClosed.
+    // failClosed is intended for Redis outages, not for environments where Redis was
+    // never set up. Blocking all users when Redis is simply absent is wrong.
+    return { allowed: true, remaining: limit, resetAt: Date.now() + windowSecs * 1000 }
   }
 
   try {
