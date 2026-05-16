@@ -112,7 +112,7 @@ export function ContactCTA({
     <Link
       href={`/app/contacts/${contactId}`}
       onClick={(e) => e.stopPropagation()}
-      className="w-full flex items-center justify-center px-3 py-2 rounded-lg bg-white/[0.05] border border-white/10 text-gray-400 text-xs font-semibold hover:bg-white/10 hover:text-gray-200 transition-colors whitespace-nowrap cursor-pointer"
+      className="w-full flex items-center justify-center px-3 py-2 rounded-lg bg-white/[0.08] border border-white/20 text-gray-300 text-xs font-semibold hover:bg-white/[0.14] hover:text-white transition-colors whitespace-nowrap cursor-pointer"
     >
       View
     </Link>
