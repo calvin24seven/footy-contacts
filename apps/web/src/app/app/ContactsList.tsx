@@ -168,7 +168,7 @@ export default function ContactsList({ contacts, totalCount, isFree, searchFilte
         <div className={`min-w-0 ${previewContact ? "flex-1" : "w-full"}`}>
           <div className={`border border-white/[0.06] rounded-xl overflow-hidden transition-opacity duration-150 ${isPending ? "opacity-50 pointer-events-none" : "opacity-100"}`}>
             <div className="overflow-x-auto">
-              <div className="min-w-[780px]">
+              <div className="md:min-w-[780px]">
                 {/* Bulk action bar — appears when rows are selected */}
                 {(selectedIds.size > 0 || selectAllMode) && (
                   <div className="flex flex-wrap items-center gap-2 px-4 py-2 bg-gold/[0.05] border-b border-gold/20">
