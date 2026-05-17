@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { sendClaimedEmailJob, type ClaimedEmailJob } from "./sender"
 import * as Sentry from "@sentry/nextjs"
 
-const BATCH_SIZE   = 25  // safe below Resend's 100 req/s limit
+const BATCH_SIZE   = 350  // ~half the reactivation audience — spreads Email 1 over 2 days
 const LOCK_MINUTES = 5   // requeue jobs stuck in 'sending' longer than this
 
 export async function drainEmailQueue(): Promise<{
