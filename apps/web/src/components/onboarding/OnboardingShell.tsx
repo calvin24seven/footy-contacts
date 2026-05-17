@@ -8,11 +8,12 @@ import type { SearchSuggestion } from "@/lib/onboarding/suggestions"
 import StepWho from "./StepWho"
 import StepWhat from "./StepWhat"
 import StepWhere from "./StepWhere"
+import StepOrg from "./StepOrg"
 import OnboardingDone from "./OnboardingDone"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Screen = "welcome" | "name" | 1 | 2 | 3 | "done"
+type Screen = "welcome" | "name" | 1 | 2 | 3 | 4 | "done"
 
 interface OnboardingData {
   full_name?: string
@@ -20,26 +21,22 @@ interface OnboardingData {
   goals?: string[]
   preferred_region?: string
   country?: string
+  current_club?: string
 }
 
-// ── Progress bar ──────────────────────────────────────────────────────────────
-// Three segments. completed = gold, active = gold/60, upcoming = navy-light.
+// ── Thin top progress bar ─────────────────────────────────────────────────────
+// Fills smoothly as user advances through the 4 numbered steps.
 
-function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
+const STEP_PROGRESS: Record<string, number> = { "1": 25, "2": 50, "3": 75, "4": 100 }
+
+function TopProgress({ screen }: { screen: Screen }) {
+  const pct = STEP_PROGRESS[String(screen)] ?? 0
   return (
-    <div className="flex gap-1.5" style={{ width: 240 }} role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
-      {([1, 2, 3] as const).map((s) => (
-        <div
-          key={s}
-          className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-            s < step
-              ? "bg-gold"
-              : s === step
-              ? "bg-gold/60"
-              : "bg-navy-light"
-          }`}
-        />
-      ))}
+    <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/[0.04]">
+      <div
+        className="h-full bg-gold transition-all duration-700 ease-out"
+        style={{ width: `${pct}%` }}
+      />
     </div>
   )
 }
@@ -48,109 +45,66 @@ function ProgressBar({ step }: { step: 1 | 2 | 3 }) {
 
 function WelcomeScreen({ onContinue }: { onContinue: () => void }) {
   return (
-    <div className="text-center">
-      <div className="w-16 h-16 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto mb-8">
-        <svg
-          className="w-8 h-8 text-gold"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 004 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+    <div className="step-animate flex flex-col justify-center min-h-[calc(100vh-56px)] px-8 max-w-lg mx-auto">
+      <div className="mb-12">
+        <div className="w-8 h-[2px] bg-gold mb-10" />
+        <h1 className="text-white text-4xl sm:text-5xl font-bold leading-[1.1] tracking-tight mb-6">
+          The football<br />network,<br />at your fingertips.
+        </h1>
+        <p className="text-gray-400 text-base leading-relaxed max-w-xs">
+          12,400 scouts, agents, clubs and coaches across 114 countries.
+          Direct contact details — no middleman.
+        </p>
       </div>
-
-      <h1 className="text-white text-2xl font-bold mb-3 tracking-tight">
-        Let&apos;s set up your access.
-      </h1>
-      <p className="text-gray-400 text-base leading-relaxed mb-10 max-w-xs mx-auto">
-        This takes 2 minutes. We&apos;ll use your answers to show you the right
-        contacts and opportunities from the start.
-      </p>
-
       <button
         onClick={onContinue}
-        className="w-full py-4 bg-gold text-navy-dark font-bold rounded-xl hover:bg-gold-dark transition-colors text-base"
+        className="w-full py-4 bg-gold text-navy-dark font-bold rounded-2xl hover:bg-gold-dark transition-colors text-[15px] mb-4"
       >
-        Continue →
+        Get started
       </button>
+      <p className="text-center text-xs text-gray-600">Takes about 90 seconds</p>
     </div>
   )
 }
-// ── Name screen ─────────────────────────────────────────────────────────────────
+// ── Name screen ───────────────────────────────────────────────────────────────
 
 function NameScreen({ onNext }: { onNext: (fullName: string) => void }) {
   const [value, setValue] = useState("")
   const trimmed = value.trim()
   return (
-    <div>
-      <h2 className="text-white text-2xl font-bold mb-2 tracking-tight">What&apos;s your name?</h2>
-      <p className="text-gray-400 text-sm mb-8">So we know what to call you.</p>
+    <div className="step-animate flex flex-col justify-center min-h-[calc(100vh-56px)] px-8 max-w-lg mx-auto">
+      <h2 className="text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-3">
+        What should we<br />call you?
+      </h2>
+      <p className="text-gray-500 text-sm mb-10">This appears on your account.</p>
       <input
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Your full name"
+        placeholder="Your name"
         autoFocus
-        className="w-full px-4 py-3.5 rounded-xl bg-navy border border-white/10 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-gold/50 mb-4"
+        autoComplete="name"
+        className="w-full px-0 py-3 bg-transparent text-white text-xl border-b border-white/20 focus:outline-none focus:border-gold/70 placeholder-gray-600 transition-colors mb-12"
         onKeyDown={(e) => { if (e.key === "Enter" && trimmed) onNext(trimmed) }}
       />
       <button
         onClick={() => { if (trimmed) onNext(trimmed) }}
         disabled={!trimmed}
-        className="w-full py-4 bg-gold text-navy-dark font-bold rounded-xl hover:bg-gold-dark transition-colors text-base disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full py-4 bg-gold text-navy-dark font-bold rounded-2xl hover:bg-gold-dark transition-colors text-[15px] disabled:opacity-30 disabled:cursor-not-allowed mb-3"
       >
-        Continue →
+        Continue
       </button>
       <button
+        type="button"
         onClick={() => onNext("")}
-        className="w-full mt-3 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+        className="w-full py-2.5 text-sm text-gray-600 hover:text-gray-400 transition-colors"
       >
         Skip
       </button>
     </div>
   )
 }
-// ── Back button ───────────────────────────────────────────────────────────────
 
-function BackButton({
-  onClick,
-  disabled,
-}: {
-  onClick: () => void
-  disabled?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="flex items-center gap-1.5 text-gray-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed text-sm mb-5 transition-colors"
-    >
-      <svg
-        className="w-4 h-4"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15 19l-7-7 7-7"
-        />
-      </svg>
-      Back
-    </button>
-  )
-}
 
 // ── Shell ─────────────────────────────────────────────────────────────────────
 
@@ -164,7 +118,6 @@ export default function OnboardingShell() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Advance to the next step, merging new data
   function goNext(updates: Partial<OnboardingData> = {}) {
     setData((prev) => ({ ...prev, ...updates }))
     setScreen((prev) => {
@@ -172,16 +125,16 @@ export default function OnboardingShell() {
       if (prev === "name") return 1
       if (prev === 1) return 2
       if (prev === 2) return 3
+      if (prev === 3) return 4
       return "done"
     })
   }
 
-  // Step 3 completion — merges final data, writes to DB, then shows done screen
+  // Step 4 (region) — writes to DB, then shows done screen
   async function handleDone(updates: Partial<OnboardingData> = {}) {
     const final = { ...data, ...updates }
     setData(final)
 
-    // Compute chips from the completed profile before async work
     const chips = generateSuggestedSearches(
       final.user_type,
       final.goals,
@@ -208,8 +161,10 @@ export default function OnboardingShell() {
         primary_goals: (final.goals ?? null) as string[] | null,
         preferred_region: final.preferred_region ?? null,
         country: final.country ?? null,
+        current_club: final.current_club ?? null,
         onboarding_completed: true,
-        onboarding_step: 3,
+        onboarding_step: 4,
+        onboarding_completed_at: new Date().toISOString(),
       },
       { onConflict: "id" },
     )
@@ -231,81 +186,99 @@ export default function OnboardingShell() {
       if (prev === 1) return "name"
       if (prev === 2) return 1
       if (prev === 3) return 2
+      if (prev === 4) return 3
       return "welcome"
     })
   }
 
-  const numericStep =
-    screen === 1 || screen === 2 || screen === 3 ? screen : null
+  const showBack = screen !== "welcome" && screen !== "done"
 
   return (
-    <div className="min-h-screen bg-navy-dark flex flex-col">
-      {/* ── Top bar ── */}
-      <div className="relative flex items-center justify-between px-6 py-5">
-        {/* Logo */}
-        <div className="flex items-center shrink-0">
-          <span className="text-white font-bold text-lg tracking-tight">Footy</span>
-          <span className="text-gold font-bold text-lg tracking-tight">Contacts</span>
-        </div>
+    <div className="relative min-h-screen bg-navy-dark overflow-hidden">
+      <style>{`
+        @keyframes stepIn {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .step-animate { animation: stepIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+      `}</style>
 
-        {/* Progress bar — centred absolutely, only during steps 1–3 */}
-        {numericStep && (
-          <div className="absolute left-1/2 -translate-x-1/2">
-            <ProgressBar step={numericStep} />
-          </div>
+      {/* Progress bar — thin gold line at top edge */}
+      <TopProgress screen={screen} />
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 h-14">
+        <div className="flex items-center">
+          <span className="text-white font-bold text-base tracking-tight">Footy</span>
+          <span className="text-gold font-bold text-base tracking-tight">Contacts</span>
+        </div>
+        {showBack && (
+          <button
+            onClick={goBack}
+            disabled={loading}
+            aria-label="Go back"
+            className="text-gray-500 hover:text-white disabled:opacity-40 transition-colors -mr-1 p-1"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
         )}
       </div>
 
-      {/* ── Step content ── */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-md">
-          {screen === "welcome" && (
-            <WelcomeScreen onContinue={() => goNext()} />
-          )}
+      {/* Step content */}
+      {screen === "welcome" && (
+        <WelcomeScreen onContinue={() => goNext()} />
+      )}
 
-          {screen === "name" && (
-            <>
-              <BackButton onClick={goBack} />
-              <NameScreen onNext={(fullName) => goNext({ full_name: fullName })} />
-            </>
-          )}
+      {screen === "name" && (
+        <NameScreen onNext={(fullName) => goNext({ full_name: fullName })} />
+      )}
 
-          {screen === 1 && (
-            <StepWho onNext={(userType) => goNext({ user_type: userType })} />
-          )}
-
-          {screen === 2 && (
-            <>
-              <BackButton onClick={goBack} />
-              <StepWhat
-                onNext={(goals) => goNext({ goals })}
-                onSkip={() => goNext({ goals: [] })}
-              />
-            </>
-          )}
-
-          {screen === 3 && (
-            <>
-              <BackButton onClick={goBack} disabled={loading} />
-              <StepWhere
-                onNext={(region, country) =>
-                  handleDone({ preferred_region: region, country })
-                }
-                onSkip={() => handleDone()}
-                loading={loading}
-                error={error}
-              />
-            </>
-          )}
-
-          {screen === "done" && (
-            <OnboardingDone
-              suggestions={suggestions}
-              onGoToSearch={() => router.push("/app")}
-            />
-          )}
+      {screen === 1 && (
+        <div className="step-animate px-8 pt-8 pb-10 max-w-lg mx-auto">
+          <StepWho onNext={(userType) => goNext({ user_type: userType })} />
         </div>
-      </div>
+      )}
+
+      {screen === 2 && (
+        <div className="step-animate px-8 pt-8 pb-10 max-w-lg mx-auto">
+          <StepOrg
+            userType={data.user_type}
+            onNext={(club) => goNext({ current_club: club })}
+            onSkip={() => goNext()}
+          />
+        </div>
+      )}
+
+      {screen === 3 && (
+        <div className="step-animate px-8 pt-8 pb-10 max-w-lg mx-auto">
+          <StepWhat
+            onNext={(goals) => goNext({ goals })}
+            onSkip={() => goNext({ goals: [] })}
+          />
+        </div>
+      )}
+
+      {screen === 4 && (
+        <div className="step-animate px-8 pt-8 pb-10 max-w-lg mx-auto">
+          <StepWhere
+            onNext={(region, country) =>
+              handleDone({ preferred_region: region, country })
+            }
+            onSkip={() => handleDone()}
+            loading={loading}
+            error={error}
+          />
+        </div>
+      )}
+
+      {screen === "done" && (
+        <OnboardingDone
+          suggestions={suggestions}
+          onGoToSearch={() => router.push("/app")}
+        />
+      )}
     </div>
   )
 }

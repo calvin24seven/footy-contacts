@@ -9,54 +9,40 @@ export default function OnboardingDone({
   onGoToSearch: () => void
 }) {
   return (
-    <div className="text-center">
-      {/* Success icon */}
-      <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-8">
-        <svg
-          className="w-8 h-8 text-green-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
+    <div className="step-animate flex flex-col justify-center min-h-[calc(100vh-56px)] px-8 max-w-lg mx-auto">
+      <div className="mb-12">
+        <div className="w-8 h-[2px] bg-gold mb-10" />
+        <h2 className="text-white text-4xl sm:text-5xl font-bold leading-tight tracking-tight mb-4">
+          You&apos;re in.
+        </h2>
+        <p className="text-gray-400 text-base leading-relaxed">
+          {suggestions.length > 0
+            ? "Based on your answers, here\u2019s where to start."
+            : "Start searching the network."}
+        </p>
       </div>
 
-      <h2 className="text-white text-2xl font-bold mb-3">
-        Your access is ready.
-      </h2>
-      <p className="text-gray-400 text-base leading-relaxed mb-8 max-w-xs mx-auto">
-        Based on your answers, here are your first suggested searches.
-      </p>
-
-      {suggestions.length > 0 ? (
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
+      {suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-10">
           {suggestions.map((s) => (
             <Link
               key={s.href}
               href={s.href}
-              className="px-4 py-2 bg-gold/10 border border-gold/25 text-gold text-sm font-medium rounded-full hover:bg-gold/20 transition-colors"
+              className="px-4 py-2 bg-white/[0.05] border border-white/[0.1] text-white/80 text-sm font-medium rounded-xl hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-colors"
             >
               {s.label}
             </Link>
           ))}
         </div>
-      ) : (
-        <div className="mb-8" />
       )}
 
       <button
         onClick={onGoToSearch}
-        className="w-full max-w-xs mx-auto block py-4 bg-gold text-navy-dark font-bold rounded-xl hover:bg-gold-dark transition-colors text-sm"
+        className="w-full py-4 bg-gold text-navy-dark font-bold rounded-2xl hover:bg-gold-dark transition-colors text-[15px]"
       >
-        Go to search →
+        Start searching
       </button>
     </div>
   )
 }
+

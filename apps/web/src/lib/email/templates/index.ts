@@ -3,6 +3,7 @@ import type { ReactElement } from "react"
 import WelcomeEmail from "./welcome"
 import ExportReadyEmail from "./export-ready"
 import UnlockConfirmationEmail from "./unlock-confirmation"
+import TeamInviteEmail from "./team-invite"
 import Reactivation1Email from "./reactivation-1"
 import Reactivation2Email from "./reactivation-2"
 import Reactivation3Email from "./reactivation-3"
@@ -60,6 +61,17 @@ export const TEMPLATES = {
     component: UnlockConfirmationEmail,
     subject:   ({ contactName }: z.infer<typeof UnlockConfirmationSchema>) =>
       `Contact unlocked: ${contactName}`,
+    category:  "transactional",
+  },
+  "team-invite": {
+    schema: z.object({
+      inviterName: z.string().min(1).max(120),
+      teamName:    z.string().min(1).max(120),
+      acceptUrl:   z.string().url(),
+    }),
+    component: TeamInviteEmail,
+    subject:   ({ inviterName }: { inviterName: string }) =>
+      `${inviterName} invited you to their Footy Contacts team`,
     category:  "transactional",
   },
   "reactivation-1": {

@@ -28,11 +28,11 @@ export default function StepWhere({
   const [country, setCountry] = useState("")
 
   return (
-    <div className="bg-navy-light border border-white/[0.06] rounded-2xl p-6 sm:p-8 shadow-2xl">
-      <h2 className="text-white text-xl font-bold mb-1.5">
-        Which region matters most to you?
+    <>
+      <h2 className="text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-3">
+        Where&apos;s your<br />football world?
       </h2>
-      <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+      <p className="text-gray-500 text-sm mb-8">
         We&apos;ll prioritise contacts from your region.
       </p>
 
@@ -42,10 +42,10 @@ export default function StepWhere({
             key={r}
             type="button"
             onClick={() => setRegion(r)}
-            className={`py-2.5 px-3.5 rounded-xl border text-sm font-medium text-left transition-all duration-150 ${
+            className={`py-3.5 px-4 rounded-xl border text-sm font-medium text-left transition-all duration-150 ${
               region === r
                 ? "bg-gold text-navy-dark border-gold"
-                : "bg-navy/60 border-white/[0.08] text-white hover:border-gold/50 hover:bg-navy"
+                : "bg-white/[0.04] border-white/[0.08] text-white/80 hover:border-gold/40 hover:bg-white/[0.06]"
             }`}
           >
             {r}
@@ -53,16 +53,13 @@ export default function StepWhere({
         ))}
       </div>
 
-      <div className="mb-7">
-        <label className="block text-xs font-medium text-gray-400 mb-1.5">
-          Your country (optional)
-        </label>
+      <div className="mb-8">
         <input
           type="text"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-          placeholder="e.g. England, Nigeria, France"
-          className="w-full px-3.5 py-2.5 bg-white/[0.05] text-white rounded-xl border border-white/10 focus:outline-none focus:border-gold/60 placeholder-gray-600 text-sm transition-colors"
+          placeholder="Your country (optional)"
+          className="w-full px-0 py-2.5 bg-transparent text-white border-b border-white/15 focus:outline-none focus:border-gold/60 placeholder-gray-600 text-sm transition-colors"
         />
       </div>
 
@@ -77,18 +74,18 @@ export default function StepWhere({
         onClick={() =>
           onNext(region ?? undefined, country.trim() || undefined)
         }
-        className="w-full py-3.5 bg-gold text-navy-dark font-bold rounded-xl hover:bg-gold-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-sm mb-3"
+        className="w-full py-4 bg-gold text-navy-dark font-bold rounded-2xl hover:bg-gold-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-[15px] mb-3"
       >
-        {loading ? "Saving…" : "Continue →"}
+        {loading ? "Setting up your access..." : "Finish"}
       </button>
       <button
         type="button"
-        disabled={loading}
         onClick={onSkip}
-        className="w-full text-center text-sm text-gray-500 hover:text-gray-300 transition-colors py-1 disabled:opacity-40 disabled:cursor-not-allowed"
+        disabled={loading}
+        className="w-full py-2.5 text-sm text-gray-600 hover:text-gray-400 disabled:opacity-40 transition-colors"
       >
-        Skip this step →
+        Skip
       </button>
-    </div>
+    </>
   )
 }

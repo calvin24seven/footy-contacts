@@ -30,24 +30,22 @@ export default function StepWhat({
   }
 
   return (
-    <div className="bg-navy-light border border-white/[0.06] rounded-2xl p-6 sm:p-8 shadow-2xl">
-      <h2 className="text-white text-xl font-bold mb-1.5">
-        What are you looking for?
+    <>
+      <h2 className="text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-3">
+        What are you<br />here to do?
       </h2>
-      <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-        Select all that apply. We&apos;ll suggest relevant searches.
-      </p>
+      <p className="text-gray-500 text-sm mb-8">Select all that apply.</p>
 
-      <div className="grid grid-cols-2 gap-2 mb-7">
+      <div className="grid grid-cols-2 gap-2 mb-8">
         {LOOKING_FOR.map((goal) => (
           <button
             key={goal}
             type="button"
             onClick={() => toggle(goal)}
-            className={`py-2.5 px-3.5 rounded-xl border text-sm font-medium text-left transition-all duration-150 ${
+            className={`py-3 px-3.5 rounded-xl border text-sm font-medium text-left transition-all duration-150 ${
               selected.includes(goal)
                 ? "bg-gold text-navy-dark border-gold"
-                : "bg-navy/60 border-white/[0.08] text-white hover:border-gold/50 hover:bg-navy"
+                : "bg-white/[0.04] border-white/[0.08] text-white/80 hover:border-gold/40 hover:bg-white/[0.06]"
             }`}
           >
             {goal}
@@ -57,17 +55,17 @@ export default function StepWhat({
 
       <button
         onClick={() => onNext(selected)}
-        className="w-full py-3.5 bg-gold text-navy-dark font-bold rounded-xl hover:bg-gold-dark transition-colors text-sm mb-3"
+        className="w-full py-4 bg-gold text-navy-dark font-bold rounded-2xl hover:bg-gold-dark transition-colors text-[15px] mb-3"
       >
-        Continue →
+        Continue
       </button>
       <button
         type="button"
         onClick={onSkip}
-        className="w-full text-center text-sm text-gray-500 hover:text-gray-300 transition-colors py-1"
+        className="w-full py-2.5 text-sm text-gray-600 hover:text-gray-400 transition-colors"
       >
-        Skip this step →
+        Skip
       </button>
-    </div>
+    </>
   )
 }

@@ -68,6 +68,29 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           ...getPeriodDates(sub),
           cancelAtPeriodEnd: sub.cancel_at_period_end,
         })
+
+        // Handle additional seat purchases
+        const action = session.metadata?.action
+        if (action === "add_team_seats") {
+          const teamId        = session.metadata?.team_id
+          const addSeats      = parseInt(session.metadata?.additional_seats ?? "0", 10)
+          if (teamId && addSeats > 0) {
+            const { data: team } = await admin
+              .from("teams").select("seat_limit").eq("id", teamId).maybeSingle()
+            if (team) {
+              await admin
+                .from("teams")
+                .update({ seat_limit: team.seat_limit + addSeats })
+                .eq("id", teamId)
+            }
+          }
+        } else {
+          // Auto-provision a team for Agency subscribers
+          await admin.rpc("provision_team_for_subscription", {
+            p_user_id:   userId,
+            p_plan_code: (planId ? await getPlanCode(admin, planId) : ""),
+          })
+        }
         break
       }
 
@@ -102,6 +125,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           ...getPeriodDates(sub),
           cancelAtPeriodEnd: sub.cancel_at_period_end,
         })
+
+        // Auto-provision team on Agency subscription creation
+        if (event.type === "customer.subscription.created" && planId) {
+          await admin.rpc("provision_team_for_subscription", {
+            p_user_id:   resolvedUserId,
+            p_plan_code: await getPlanCode(admin, planId),
+          })
+        }
         break
       }
 
@@ -241,4 +272,13 @@ async function upsertSubscription(
       onConflict: "stripe_subscription_id",
     }
   )
+}
+
+/** Look up plan code by plan_id UUID */
+async function getPlanCode(
+  admin: ReturnType<typeof createAdminClient>,
+  planId: string
+): Promise<string> {
+  const { data } = await admin.from("plans").select("code").eq("id", planId).maybeSingle()
+  return data?.code ?? ""
 }

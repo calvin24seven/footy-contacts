@@ -1069,7 +1069,9 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_system: boolean
           name: string
+          tags: string[]
           updated_at: string
           user_id: string
         }
@@ -1077,7 +1079,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_system?: boolean
           name: string
+          tags?: string[]
           updated_at?: string
           user_id: string
         }
@@ -1085,7 +1089,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_system?: boolean
           name?: string
+          tags?: string[]
           updated_at?: string
           user_id?: string
         }
@@ -1326,6 +1332,7 @@ export type Database = {
           country: string | null
           created_at: string
           current_club: string | null
+          dashboard_welcome_dismissed: boolean
           email: string | null
           first_name: string | null
           football_level: string | null
@@ -1336,7 +1343,6 @@ export type Database = {
           is_suspended: boolean
           last_name: string | null
           lifetime_unlocks_used: number
-          dashboard_welcome_dismissed: boolean
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
           onboarding_last_updated: string | null
@@ -1359,6 +1365,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           current_club?: string | null
+          dashboard_welcome_dismissed?: boolean
           email?: string | null
           first_name?: string | null
           football_level?: string | null
@@ -1369,7 +1376,6 @@ export type Database = {
           is_suspended?: boolean
           last_name?: string | null
           lifetime_unlocks_used?: number
-          dashboard_welcome_dismissed?: boolean
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           onboarding_last_updated?: string | null
@@ -1392,6 +1398,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           current_club?: string | null
+          dashboard_welcome_dismissed?: boolean
           email?: string | null
           first_name?: string | null
           football_level?: string | null
@@ -1402,7 +1409,6 @@ export type Database = {
           is_suspended?: boolean
           last_name?: string | null
           lifetime_unlocks_used?: number
-          dashboard_welcome_dismissed?: boolean
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
           onboarding_last_updated?: string | null
@@ -1668,6 +1674,83 @@ export type Database = {
           },
         ]
       }
+      team_members: {
+        Row: {
+          created_at: string
+          id: string
+          invite_email: string
+          invite_token: string
+          invited_at: string
+          joined_at: string | null
+          role: string
+          status: string
+          team_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invite_email: string
+          invite_token?: string
+          invited_at?: string
+          joined_at?: string | null
+          role?: string
+          status?: string
+          team_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invite_email?: string
+          invite_token?: string
+          invited_at?: string
+          joined_at?: string | null
+          role?: string
+          status?: string
+          team_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          owner_user_id: string
+          seat_limit: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          owner_user_id: string
+          seat_limit?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          owner_user_id?: string
+          seat_limit?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           created_at: string
@@ -1901,6 +1984,12 @@ export type Database = {
         Returns: undefined
       }
       get_admin_secret: { Args: { name: string }; Returns: string }
+      get_contact_for_user: { Args: { p_contact_id: string }; Returns: Json }
+      get_my_team_owner_id: { Args: never; Returns: string }
+      get_or_create_unlocks_list: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       get_public_profile_fields: {
         Args: { p_username: string }
         Returns: {
@@ -2040,6 +2129,10 @@ export type Database = {
         Returns: undefined
       }
       process_due_credit_resets: { Args: never; Returns: number }
+      provision_team_for_subscription: {
+        Args: { p_plan_code: string; p_user_id: string }
+        Returns: undefined
+      }
       purge_old_contact_views: { Args: never; Returns: undefined }
       requeue_stuck_email_jobs: {
         Args: { lock_minutes: number }
@@ -2064,7 +2157,6 @@ export type Database = {
         Returns: number
       }
       unlock_contact: { Args: { p_contact_id: string }; Returns: Json }
-      get_contact_for_user: { Args: { p_contact_id: string }; Returns: Json }
     }
     Enums: {
       email_job_status:
@@ -2231,4 +2323,3 @@ export const Constants = {
     },
   },
 } as const
-

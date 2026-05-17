@@ -130,17 +130,33 @@ export default function UnlocksWidget() {
 
           {/* Upgrade CTA */}
           {showUpgradeCTA && (
-            <button
-              onClick={() => { setOpen(false); setShowUpgrade(true) }}
-              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-yellow-400 transition-colors cursor-pointer whitespace-nowrap"
-            >
-              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              {data.planCode === "free"
-                ? `Upgrade — get ${nextPlanContacts} unlocks/mo`
-                : "Upgrade to Agency — unlimited"}
-            </button>
+            pct >= 80 || data.planCode === "free" ? (
+              /* Urgent: prominent gold button when credits are low */
+              <button
+                onClick={() => { setOpen(false); setShowUpgrade(true) }}
+                className="mt-3 flex items-center justify-center gap-2 w-full py-2 bg-gold text-navy rounded-lg text-xs font-semibold hover:bg-yellow-400 transition-colors cursor-pointer"
+              >
+                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                {data.planCode === "free"
+                  ? `Upgrade — get ${nextPlanContacts} unlocks/mo`
+                  : "Upgrade to Agency — unlimited"}
+              </button>
+            ) : (
+              /* Passive: subtle text link when credits are healthy */
+              <button
+                onClick={() => { setOpen(false); setShowUpgrade(true) }}
+                className="mt-2 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+              >
+                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                {data.planCode === "free"
+                  ? `Upgrade for ${nextPlanContacts} unlocks/mo`
+                  : "Upgrade to Agency"}
+              </button>
+            )
           )}
 
           {data.planCode === "agency" && (
