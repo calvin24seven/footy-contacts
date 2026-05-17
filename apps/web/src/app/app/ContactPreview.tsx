@@ -421,30 +421,3 @@ export default function ContactPreview({ contact, onClose, desktopMode = false }
     </div>
   )
 }
-
-function PreviewFooter({ contact }: { contact: ContactListRow }) {
-  return (
-    <div className="px-5 py-4 border-t border-navy-light/40 shrink-0 space-y-2">
-      <div className="[&>*]:w-full [&>*]:justify-center">
-        <ContactCTA
-          contactId={contact.id}
-          verifiedStatus={contact.verified_status}
-          hasEmail={contact.has_email}
-          hasPhone={contact.has_phone}
-          isUnlocked={contact.is_unlocked ?? false}
-        />
-      </div>
-      <div className="flex gap-2">
-        <div className="flex-1">
-          <SaveToListButton contactId={contact.id} />
-        </div>
-        <Link
-          href={`/app/contacts/${contact.id}`}
-          className="px-3 py-2 text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded-lg transition-colors whitespace-nowrap"
-        >
-          Full profile →
-        </Link>
-      </div>
-    </div>
-  )
-}
