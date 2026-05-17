@@ -130,8 +130,9 @@ export default function ContactPreview({ contact, onClose, desktopMode = false }
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                    title="Email verified"
+                    aria-label="Email verified"
                   >
+                    <title>Email verified</title>
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
