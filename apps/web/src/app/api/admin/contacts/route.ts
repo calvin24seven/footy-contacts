@@ -87,7 +87,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     .select(
       "id, name, role, organisation, email, phone, country, city, category, level, " +
       "verified_status, visibility_status, suppression_status, import_status, " +
-      "has_email, has_phone, has_linkedin, is_honeypot, created_at, updated_at",
+      "has_email, has_phone, has_linkedin, is_honeypot, linkedin_url, created_at, updated_at",
       { count: "exact" }
     )
 

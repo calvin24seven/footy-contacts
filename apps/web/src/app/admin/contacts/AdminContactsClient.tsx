@@ -22,6 +22,7 @@ interface AdminContact {
   has_email: boolean | null
   has_phone: boolean | null
   has_linkedin: boolean | null
+  linkedin_url: string | null
   is_honeypot: boolean
   created_at: string
   updated_at: string
@@ -682,17 +683,18 @@ export default function AdminContactsClient() {
               <th className="text-left px-4 py-3 text-gray-400 font-medium">Verified</th>
               <th className="text-left px-4 py-3 text-gray-400 font-medium">Visibility</th>
               <th className="text-left px-4 py-3 text-gray-400 font-medium">Suppression</th>
+              <th className="text-left px-4 py-3 text-gray-400 font-medium">LI</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={11} className="px-4 py-8 text-center text-gray-500">Loading…</td>
+                <td colSpan={12} className="px-4 py-8 text-center text-gray-500">Loading…</td>
               </tr>
             ) : !contacts.length ? (
               <tr>
-                <td colSpan={11} className="px-4 py-8 text-center text-gray-500">No contacts found</td>
+                <td colSpan={12} className="px-4 py-8 text-center text-gray-500">No contacts found</td>
               </tr>
             ) : contacts.map(c => (
               <tr
@@ -734,8 +736,25 @@ export default function AdminContactsClient() {
                 </td>
                 <td className="px-4 py-3">
                   <span className={`text-xs px-2 py-0.5 rounded ${SUPPRESSION_COLOURS[c.suppression_status] ?? "text-gray-400"}`}>
-                    {c.suppression_status}
+                    {c.suppression_status === "active" ? "Live" : c.suppression_status}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  {c.linkedin_url ? (
+                    <a
+                      href={c.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#0A66C2] hover:opacity-80 transition-opacity"
+                      title={c.linkedin_url}
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                    </a>
+                  ) : (
+                    <span className="text-gray-700">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <Link
