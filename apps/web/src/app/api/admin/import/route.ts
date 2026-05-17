@@ -224,7 +224,10 @@ function normalisePhone(text: string): string {
  * "Newport County AFC" ≡ "Newport County" and "U.c. Sampdoria" ≡ "UC Sampdoria".
  */
 function normaliseOrgForComparison(s: string): string {
-  return s
+  return fixMojibake(s)
+    // Remove dots used as abbreviation separators (e.g. "F.C." → "FC", "B.c." → "Bc")
+    // so that "Palermo F.c." ≡ "Palermo FC" and "Atalanta B.c." ≡ "Atalanta BC"
+    .replace(/\b([A-Za-z])\./g, "$1")
     .toLowerCase()
     .replace(/[.\-'&]/g, " ")              // treat & and punctuation as word separators
     .replace(/\s+/g, " ")                  // collapse spaces
@@ -1103,8 +1106,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           const incomingEmail = entry.contact.email as string | undefined
           const incomingPhone = entry.contact.phone as string | undefined
 
-          const roleLower    = incomingRole?.toLowerCase()
-          const existRole    = existing.role?.toLowerCase()
+          const roleLower    = incomingRole ? fixMojibake(incomingRole).toLowerCase() : undefined
+          const existRole    = existing.role ? fixMojibake(existing.role).toLowerCase() : undefined
           const orgLower     = incomingOrg ? normaliseOrgForComparison(incomingOrg) : undefined
           const existOrg     = existing.organisation ? normaliseOrgForComparison(existing.organisation) : undefined
 

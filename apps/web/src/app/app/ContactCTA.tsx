@@ -52,12 +52,15 @@ export function ContactCTA({
   hasEmail,
   hasPhone,
   isUnlocked: isUnlockedProp = false,
+  onUnlocked,
 }: {
   contactId: string
   verifiedStatus: string | null
   hasEmail: boolean
   hasPhone: boolean
   isUnlocked?: boolean
+  /** Called immediately after a successful unlock, before the page refreshes. */
+  onUnlocked?: () => void
 }) {
   const [state, setState] = useState<"idle" | "terms" | "loading" | "paywall" | "limit" | "error">("idle")
   const [unlocked, setUnlocked] = useState(isUnlockedProp)
@@ -75,6 +78,7 @@ export function ContactCTA({
       window.dispatchEvent(new Event("unlocks-updated"))
       setUnlocked(true)
       setState("idle")
+      onUnlocked?.()
       router.refresh()
       return
     }

@@ -28,6 +28,16 @@ export default function ContactsList({ contacts, totalCount, isFree, searchFilte
 
   const handleClose = useCallback(() => setPreviewContact(null), [])
 
+  // Keep previewContact in sync when the contacts list refreshes (e.g. after unlock).
+  // This ensures the preview sees the updated is_unlocked state without requiring a close/reopen.
+  useEffect(() => {
+    setPreviewContact((prev) => {
+      if (!prev) return null
+      const fresh = contacts.find((c) => c.id === prev.id)
+      return fresh ?? prev
+    })
+  }, [contacts])
+
   const toggleSelected = useCallback((id: string) => {
     setSelectAllMode(false)
     setSelectedIds((prev) => {
