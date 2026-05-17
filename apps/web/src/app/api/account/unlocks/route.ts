@@ -13,10 +13,10 @@ export async function GET(): Promise<NextResponse> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  // Active subscription + plan
+  // Active subscription + plan — fetch everything needed in one query
   const { data: sub } = await supabase
     .from("subscriptions")
-    .select("current_period_end, plan:plans(name, code, monthly_unlock_limit)")
+    .select("current_period_start, current_period_end, plan:plans(name, code, monthly_unlock_limit)")
     .eq("user_id", user.id)
     .in("status", ["active", "trialing"])
     .order("created_at", { ascending: false })
@@ -52,22 +52,14 @@ export async function GET(): Promise<NextResponse> {
   }
 
   // Subscribed: count unlocks in current billing period from contact_unlocks (authoritative)
-  const { data: subFull } = await supabase
-    .from("subscriptions")
-    .select("current_period_start, current_period_end, plan:plans(name, code, monthly_unlock_limit)")
-    .eq("user_id", user.id)
-    .in("status", ["active", "trialing"])
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const planFull = subFull?.plan as unknown as { name: string; code: string; monthly_unlock_limit: number } | null
+  // (reuses `sub` fetched above — no second round-trip needed)
+  const planFull = sub?.plan as unknown as { name: string; code: string; monthly_unlock_limit: number } | null
   const planCodeFull = planFull?.code ?? planCode
   const planNameFull = planFull?.name ?? planName
   const planLimit = planFull?.monthly_unlock_limit ?? PLAN_LIMITS[planCodeFull] ?? 0
 
-  const periodStart = subFull?.current_period_start
-    ? new Date(subFull.current_period_start).toISOString()
+  const periodStart = sub?.current_period_start
+    ? new Date(sub.current_period_start).toISOString()
     : new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
 
   const { count: periodUsed } = await supabase
@@ -91,7 +83,7 @@ export async function GET(): Promise<NextResponse> {
     limit: planLimit,
     bonus,
     totalRemaining: planLimit === -1 ? -1 : Math.max(0, planLimit - (periodUsed ?? 0)) + bonus,
-    periodEnd: subFull?.current_period_end ?? null,
+    periodEnd: sub?.current_period_end ?? null,
     planName: planNameFull,
     planCode: planCodeFull,
   })

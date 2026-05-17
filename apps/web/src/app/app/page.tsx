@@ -177,10 +177,12 @@ export default async function SearchPage({
     params,
   )
 
-  // Data: authenticated client (respects RLS, includes org logo join)
+  // Data: admin client — avoids the 8s statement_timeout on the authenticated role
+  // which fires at deep offsets (e.g. page 500, offset 12 475 → 16 s query).
+  // The WHERE clauses below replicate what RLS enforces for the user role.
   const sort = params.sort ?? "name_asc"
   let dataQuery = applyContactFilters(
-    supabase
+    adminSupabase
       .from("contacts")
       .select(CONTACT_COLUMNS)
       .eq("visibility_status", "published")
