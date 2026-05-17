@@ -202,6 +202,7 @@ export default function AdminContactsClient() {
   const [selected,    setSelected]    = useState<Set<string>>(new Set())
   const [bulkAction,  setBulkAction]  = useState("")
   const [acting,      setActing]      = useState(false)
+  const [rowActing,   setRowActing]   = useState<Set<string>>(new Set())
   const [toast,       setToast]       = useState<{ msg: string; ok: boolean } | null>(null)
   const [confirmText, setConfirmText] = useState<string | null>(null)
   const pendingAction = useRef<string>("")
@@ -325,6 +326,30 @@ export default function AdminContactsClient() {
       return
     }
     executeBulkAction(action)
+  }
+
+  // ── Row quick action ──────────────────────────────────────────────────────
+  async function executeRowAction(id: string, action: string) {
+    setRowActing(prev => new Set(prev).add(id))
+    // Optimistic update
+    setContacts(prev => prev.map(c => {
+      if (c.id !== id) return c
+      if (action === "suppress")   return { ...c, suppression_status: "suppressed" }
+      if (action === "unsuppress") return { ...c, suppression_status: "active" }
+      if (action === "publish")    return { ...c, visibility_status: "published" }
+      if (action === "draft")      return { ...c, visibility_status: "draft" }
+      return c
+    }))
+    const res = await fetch("/api/admin/contacts/bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ids: [id] }),
+    })
+    setRowActing(prev => { const next = new Set(prev); next.delete(id); return next })
+    if (!res.ok) {
+      showToast("Action failed", false)
+      load() // revert optimistic update
+    }
   }
 
   // ── Export ────────────────────────────────────────────────────────────────
@@ -757,12 +782,61 @@ export default function AdminContactsClient() {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/admin/contacts/${c.id}`}
-                    className="text-gold text-xs hover:underline"
-                  >
-                    Edit
-                  </Link>
+                  <div className="flex items-center gap-1.5">
+                    {/* Suppress / Unsuppress */}
+                    <button
+                      onClick={() => executeRowAction(c.id, c.suppression_status === "active" ? "suppress" : "unsuppress")}
+                      disabled={rowActing.has(c.id)}
+                      title={c.suppression_status === "active" ? "Suppress contact" : "Remove suppression"}
+                      className={`p-1 rounded transition-colors disabled:opacity-40 cursor-pointer ${
+                        c.suppression_status === "active"
+                          ? "text-gray-500 hover:text-red-400"
+                          : "text-red-400 hover:text-green-400"
+                      }`}
+                    >
+                      {c.suppression_status === "active" ? (
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                    </button>
+                    {/* Publish / Unpublish */}
+                    <button
+                      onClick={() => executeRowAction(c.id, c.visibility_status === "published" ? "draft" : "publish")}
+                      disabled={rowActing.has(c.id)}
+                      title={c.visibility_status === "published" ? "Unpublish (set to draft)" : "Publish"}
+                      className={`p-1 rounded transition-colors disabled:opacity-40 cursor-pointer ${
+                        c.visibility_status === "published"
+                          ? "text-gray-500 hover:text-yellow-400"
+                          : "text-yellow-400 hover:text-green-400"
+                      }`}
+                    >
+                      {c.visibility_status === "published" ? (
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      )}
+                    </button>
+                    {/* Edit */}
+                    <Link
+                      href={`/admin/contacts/${c.id}`}
+                      title="Edit contact"
+                      className="p-1 text-gray-500 hover:text-gold transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -173,7 +173,8 @@ export default async function SearchPage({
       .from("contacts")
       .select("*", { count: "exact", head: true })
       .eq("visibility_status", "published")
-      .eq("suppression_status", "active"),
+      .eq("suppression_status", "active")
+      .eq("is_honeypot", false),
     params,
   )
 
@@ -186,7 +187,8 @@ export default async function SearchPage({
       .from("contacts")
       .select(CONTACT_COLUMNS)
       .eq("visibility_status", "published")
-      .eq("suppression_status", "active"),
+      .eq("suppression_status", "active")
+      .eq("is_honeypot", false),
     params,
   )
   if (sort === "recently_added") {
