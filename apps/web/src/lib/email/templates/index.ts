@@ -9,6 +9,7 @@ import Reactivation2Email from "./reactivation-2"
 import Reactivation3Email from "./reactivation-3"
 import Reactivation4Email from "./reactivation-4"
 import Reactivation5Email from "./reactivation-5"
+import WinbackCancelEmail from "./winback-cancel"
 
 export interface TemplateDefinition<S extends z.ZodTypeAny> {
   schema: S
@@ -102,6 +103,17 @@ export const TEMPLATES = {
     schema:    Reactivation5Schema,
     component: Reactivation5Email,
     subject:   () => "Existing users: Pro is £19 for your first month",
+    category:  "marketing",
+  },
+  "winback-cancel": {
+    schema: z.object({
+      firstName:     z.string().min(1).max(80),
+      accessUntil:   z.string().min(1).max(60),
+      reactivateUrl: z.string().url(),
+    }),
+    component: WinbackCancelEmail,
+    subject:   ({ firstName }: { firstName: string }) =>
+      `${firstName}, before your access ends — two options for you`,
     category:  "marketing",
   },
 } as const satisfies Record<string, TemplateDefinition<z.ZodTypeAny>>

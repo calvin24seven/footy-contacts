@@ -2,8 +2,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { sendClaimedEmailJob, type ClaimedEmailJob } from "./sender"
 import * as Sentry from "@sentry/nextjs"
 
-const BATCH_SIZE   = 50   // Resend rate-limits at 5 req/sec; sequential sends at ~200ms each = ~10s per drain
-const LOCK_MINUTES = 5   // requeue jobs stuck in 'sending' longer than this
+const BATCH_SIZE    = 50   // max emails per drain run (50 × 210 ms = ~10 s, well inside 60 s timeout)
+const LOCK_MINUTES  = 5    // requeue jobs stuck in 'sending' longer than this
+const SEND_DELAY_MS = 210  // ~4.7 req/sec — safely under Resend's 5 req/sec hard limit
 
 export async function drainEmailQueue(): Promise<{
   requeued: number
@@ -46,8 +47,7 @@ export async function drainEmailQueue(): Promise<{
 
   const claimedJobs = (jobs ?? []) as ClaimedEmailJob[]
 
-  // Send sequentially to stay within Resend's 5 req/sec rate limit.
-  // At ~200ms per send, 50 jobs = ~10s per drain — well within Vercel's timeout.
+  // Send sequentially with throttling to stay within Resend's 5 req/sec rate limit.
   let sent = 0
   let failed = 0
   for (const job of claimedJobs) {
@@ -57,6 +57,8 @@ export async function drainEmailQueue(): Promise<{
     } catch {
       failed++
     }
+    // Enforce delay after every send (including failed ones) to avoid burst on retry
+    await new Promise<void>(r => setTimeout(r, SEND_DELAY_MS))
   }
 
   return {

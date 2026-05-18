@@ -3,6 +3,7 @@ import Stripe from "stripe"
 import { getStripe } from "@/lib/stripe"
 import { getSecret } from "@/lib/secrets"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { enqueueEmail } from "@/lib/email/enqueue"
 
 // Must read raw body for Stripe signature verification
 export const dynamic = "force-dynamic"
@@ -114,6 +115,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             break
           }
           resolvedUserId = existingSub.user_id
+        }
+
+        // Detect cancel_at_period_end transition false → true (user scheduled a cancellation)
+        if (event.type === "customer.subscription.updated" && sub.cancel_at_period_end) {
+          const { data: existing } = await admin
+            .from("subscriptions")
+            .select("cancel_at_period_end, user_id")
+            .eq("stripe_subscription_id", sub.id)
+            .maybeSingle()
+
+          const justScheduledCancel = existing && !existing.cancel_at_period_end
+          if (justScheduledCancel && existing.user_id) {
+            // Fire-and-forget win-back email
+            sendWinbackEmail(admin, existing.user_id, sub).catch(console.error)
+          }
         }
 
         await upsertSubscription(admin, {
@@ -281,4 +297,44 @@ async function getPlanCode(
 ): Promise<string> {
   const { data } = await admin.from("plans").select("code").eq("id", planId).maybeSingle()
   return data?.code ?? ""
+}
+
+/**
+ * Enqueues a win-back email when a subscriber schedules cancellation via the portal.
+ * Sends 24 hours after cancellation is scheduled, giving them time to change their mind first.
+ */
+async function sendWinbackEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  sub: Stripe.Subscription
+): Promise<void> {
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("email, first_name")
+    .eq("id", userId)
+    .maybeSingle()
+
+  if (!profile?.email) return
+
+  const periodEnd = sub.items?.data?.[0]?.current_period_end
+  const accessUntil = periodEnd
+    ? new Date(periodEnd * 1000).toLocaleDateString("en-GB", {
+        day: "numeric", month: "long", year: "numeric",
+      })
+    : null
+
+  await enqueueEmail({
+    idempotencyKey: `winback:cancel:${sub.id}`,
+    to:             { email: profile.email, name: profile.first_name ?? undefined },
+    replyTo:        "hello@footycontacts.com",
+    templateId:     "winback-cancel",
+    templateProps:  {
+      firstName:    profile.first_name ?? "there",
+      accessUntil:  accessUntil ?? "the end of your billing period",
+      reactivateUrl: "https://footycontacts.com/app/billing",
+    },
+    userId,
+    maxAttempts:  3,
+    sendAfter:    new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h delay
+  })
 }

@@ -33,6 +33,7 @@ export default async function BillingPage({
   const plans: PlanRow[] = plansResult.data ?? []
   const currentPlanCode = (subscription?.plan as { code?: string } | null)?.code ?? null
   const hasActiveSub = !!subscription
+  const cancelAtPeriodEnd = subscription?.cancel_at_period_end ?? false
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -54,6 +55,8 @@ export default async function BillingPage({
         hasActiveSub={hasActiveSub}
         periodEnd={subscription?.current_period_end ?? null}
         subStatus={subscription?.status ?? null}
+        cancelAtPeriodEnd={cancelAtPeriodEnd}
+        success={success === "true"}
       />
     </div>
   )

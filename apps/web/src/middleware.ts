@@ -45,6 +45,7 @@ export async function middleware(request: NextRequest) {
   const isAuthCallbackPath = pathname.startsWith("/auth/callback") || pathname.startsWith("/auth/update-password")
   const isOnboardingPath = pathname.startsWith("/onboarding")
   const isSuspendedPath = pathname.startsWith("/suspended")
+  const isOrgPage = pathname.startsWith("/org/")
 
   if (isAuthCallbackPath) {
     return supabaseResponse
@@ -52,7 +53,7 @@ export async function middleware(request: NextRequest) {
 
   // ── Not logged in ──────────────────────────────────────────────────────────
   if (!user) {
-    if (isPublicPath || isSuspendedPath) return supabaseResponse
+    if (isPublicPath || isSuspendedPath || isOrgPage) return supabaseResponse
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)

@@ -1,8 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import type { Tables } from "@/database.types"
+import CancelRetentionModal from "./CancelRetentionModal"
+
+declare global {
+  interface Window {
+    dataLayer: Record<string, unknown>[]
+  }
+}
 
 type PlanRow = Tables<"plans">
 type BillingInterval = "monthly" | "yearly"
@@ -44,6 +51,8 @@ interface BillingContentProps {
   hasActiveSub: boolean
   periodEnd: string | null
   subStatus: string | null
+  cancelAtPeriodEnd?: boolean
+  success?: boolean
 }
 
 export function BillingContent({
@@ -52,12 +61,21 @@ export function BillingContent({
   hasActiveSub,
   periodEnd,
   subStatus,
+  cancelAtPeriodEnd = false,
+  success,
 }: BillingContentProps) {
   const [interval, setInterval] = useState<BillingInterval>("monthly")
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [managingPortal, setManagingPortal] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    if (!success) return
+    window.dataLayer = window.dataLayer || []
+    window.dataLayer.push({ event: "subscription_activated" })
+  }, [success])
 
   async function handleCheckout(plan: PlanRow) {
     setLoadingPlan(plan.code)
@@ -73,6 +91,8 @@ export function BillingContent({
       setLoadingPlan(null)
       return
     }
+    window.dataLayer = window.dataLayer || []
+    window.dataLayer.push({ event: "begin_checkout", plan: plan.code, billing_period: interval })
     router.push(data.url)
   }
 
@@ -95,6 +115,19 @@ export function BillingContent({
 
   return (
     <div className="space-y-8">
+      {showCancelModal && (
+        <CancelRetentionModal
+          planName={currentPlanCode ?? "Pro"}
+          periodEnd={periodEnd}
+          onSaveAccepted={() => setShowCancelModal(false)}
+          onContinueToCancel={async () => {
+            setShowCancelModal(false)
+            await handlePortal()
+          }}
+          onClose={() => setShowCancelModal(false)}
+        />
+      )}
+
       {/* Current plan */}
       <div className="bg-navy-light border border-white/[0.05] rounded-xl p-5">
         <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Current plan</p>
@@ -124,13 +157,29 @@ export function BillingContent({
             )}
           </div>
           {hasActiveSub && (
-            <button
-              onClick={handlePortal}
-              disabled={managingPortal}
-              className="shrink-0 px-4 py-2 border border-gray-600 text-gray-300 rounded-lg text-sm hover:border-gray-400 hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {managingPortal ? "Loading…" : "Manage subscription"}
-            </button>
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <button
+                onClick={handlePortal}
+                disabled={managingPortal}
+                className="px-4 py-2 border border-gray-600 text-gray-300 rounded-lg text-sm hover:border-gray-400 hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {managingPortal ? "Loading…" : "Manage subscription"}
+              </button>
+              {!cancelAtPeriodEnd && (
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  disabled={managingPortal}
+                  className="text-xs text-gray-600 hover:text-gray-400 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Cancel subscription
+                </button>
+              )}
+              {cancelAtPeriodEnd && (
+                <p className="text-xs text-amber-400/80">
+                  Cancels at end of period
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -3,6 +3,12 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 
+declare global {
+  interface Window {
+    dataLayer: Record<string, unknown>[]
+  }
+}
+
 /**
  * /upgrade — Entry point from Email 5 reactivation CTA.
  * Pre-applies COMEBACK50 coupon and redirects to Stripe checkout.
@@ -27,6 +33,8 @@ export default function UpgradePage() {
 
         const { url } = await res.json() as { url?: string }
         if (url) {
+          window.dataLayer = window.dataLayer || []
+          window.dataLayer.push({ event: "begin_checkout", plan: "pro", billing_period: "monthly", source: "reactivation_email" })
           window.location.href = url
         } else {
           router.replace("/app/billing")

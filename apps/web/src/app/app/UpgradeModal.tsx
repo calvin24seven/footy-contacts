@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
+declare global {
+  interface Window {
+    dataLayer: Record<string, unknown>[]
+  }
+}
+
 type PlanCode = "pro" | "agency"
 type BillingInterval = "monthly" | "yearly"
 
@@ -75,6 +81,8 @@ export default function UpgradeModal({ context = "upgrade", onClose }: UpgradeMo
       setLoading(null)
       return
     }
+    window.dataLayer = window.dataLayer || []
+    window.dataLayer.push({ event: "begin_checkout", plan: planCode, billing_period: interval })
     router.push(data.url)
   }
 

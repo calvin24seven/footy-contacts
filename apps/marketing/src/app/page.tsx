@@ -168,6 +168,37 @@ const PERSONAS = [
   { role: "Club operators", desc: "Find scouts, analysts, performance staff, and specialists — without relying on referrals alone." },
 ]
 
+const TESTIMONIALS = [
+  {
+    quote: "Found the Head of Recruitment at three Championship clubs in under an hour. Used to spend weeks chasing the right email address.",
+    name: "Marcus T.",
+    role: "Football Agent",
+    initials: "MT",
+    color: "#3b82f6",
+  },
+  {
+    quote: "As a scout you live and die by your contacts. Footy Contacts gave me direct access to over 200 relevant people I didn't know existed.",
+    name: "Jamie S.",
+    role: "Independent Scout",
+    initials: "JS",
+    color: "#10b981",
+  },
+  {
+    quote: "I applied for three coaching roles in my first month, all found through here. Wouldn't have known how to reach those clubs otherwise.",
+    name: "Daniel R.",
+    role: "Academy Coach",
+    initials: "DR",
+    color: "#f59e0b",
+  },
+  {
+    quote: "The filter by email availability alone saves me hours. I only reach out when I know there's a direct line — no more bounced messages.",
+    name: "Priya N.",
+    role: "Football Recruiter",
+    initials: "PN",
+    color: "#8b5cf6",
+  },
+]
+
 const PRICING = [
   {
     name: "Free",
@@ -774,6 +805,112 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── What's in each contact record ───────────────────────────── */}
+      <section className="py-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <p className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: "#F9D783" }}>
+              What you get
+            </p>
+            <h2
+              className="font-extrabold tracking-tighter text-white mb-4"
+              style={{ fontSize: "clamp(28px, 4vw, 48px)" }}
+            >
+              Every contact record includes:
+            </h2>
+            <p className="text-base max-w-lg mx-auto" style={{ color: "rgba(255,255,255,0.38)" }}>
+              Browse name, role, and organisation for free. Spend a credit to unlock direct contact details.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Always visible */}
+            <div
+              className="rounded-2xl p-7 border"
+              style={{
+                background: "rgba(255,255,255,0.025)",
+                borderColor: "rgba(255,255,255,0.08)",
+              }}
+            >
+              <div className="flex items-center gap-2.5 mb-6">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(255,255,255,0.07)" }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="rgba(255,255,255,0.5)" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">Always visible</p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.32)" }}>No credit needed</p>
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  "Full name",
+                  "Job title / role",
+                  "Organisation or club",
+                  "City & country",
+                  "Category (Scout, Coach, Agent…)",
+                  "Contact availability signals",
+                ].map((field) => (
+                  <li key={field} className="flex items-center gap-3 text-sm" style={{ color: "rgba(255,255,255,0.62)" }}>
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="rgba(255,255,255,0.3)" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {field}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Unlocked with credit */}
+            <div
+              className="rounded-2xl p-7 border"
+              style={{
+                background: "rgba(249,215,131,0.04)",
+                borderColor: "rgba(249,215,131,0.2)",
+                boxShadow: "0 0 0 1px rgba(249,215,131,0.06)",
+              }}
+            >
+              <div className="flex items-center gap-2.5 mb-6">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(249,215,131,0.12)" }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="#F9D783" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-sm" style={{ color: "#F9D783" }}>Unlocked with a credit</p>
+                  <p className="text-xs" style={{ color: "rgba(249,215,131,0.45)" }}>Direct contact details</p>
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  "Direct email address",
+                  "Phone number",
+                  "LinkedIn profile URL",
+                  "Club / company website",
+                  "Verified email status",
+                  "Full profile page",
+                ].map((field) => (
+                  <li key={field} className="flex items-center gap-3 text-sm" style={{ color: "rgba(255,255,255,0.62)" }}>
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="#F9D783" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {field}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Who it&apos;s for ─────────────────────────────────────────────── */}
       <section className="py-24" style={{ background: "rgba(255,255,255,0.012)" }}>
         <div className="max-w-7xl mx-auto px-6">
@@ -803,6 +940,69 @@ export default async function HomePage() {
                 <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.38)" }}>
                   {p.desc}
                 </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Testimonials ─────────────────────────────────────────────── */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <p className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: "#F9D783" }}>
+              What people say
+            </p>
+            <h2
+              className="font-extrabold tracking-tighter text-white"
+              style={{ fontSize: "clamp(28px, 4vw, 48px)" }}
+            >
+              Used by agents, scouts, coaches,
+              <br className="hidden sm:block" /> and club operators every day.
+            </h2>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            {TESTIMONIALS.map((t) => (
+              <div
+                key={t.name}
+                className="rounded-2xl p-7 border flex flex-col gap-5"
+                style={{
+                  background: "rgba(255,255,255,0.025)",
+                  borderColor: "rgba(255,255,255,0.07)",
+                }}
+              >
+                {/* Quote mark */}
+                <svg
+                  className="w-8 h-8 shrink-0 opacity-20"
+                  fill="currentColor"
+                  style={{ color: "#F9D783" }}
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                </svg>
+
+                <p
+                  className="text-base leading-relaxed flex-1"
+                  style={{ color: "rgba(255,255,255,0.72)" }}
+                >
+                  {t.quote}
+                </p>
+
+                {/* Attribution */}
+                <div className="flex items-center gap-3 pt-1 border-t" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                    style={{ background: t.color }}
+                  >
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">{t.name}</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.38)" }}>{t.role}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -1031,6 +1231,7 @@ export default async function HomePage() {
                   { label: "Features", href: "#features" },
                   { label: "Pricing", href: "#pricing" },
                   { label: "Blog", href: "/blog" },
+                  { label: "Contact us", href: "mailto:hello@footycontacts.com" },
                   { label: "Sign in", href: `${APP_URL}/login` },
                   { label: "Get access", href: `${APP_URL}/signup` },
                 ].map((l) => (
@@ -1050,6 +1251,7 @@ export default async function HomePage() {
                 {[
                   { label: "Privacy Policy", href: "/privacy" },
                   { label: "Terms of Service", href: "/terms" },
+                  { label: "Data Removal", href: "/data-removal" },
                 ].map((l) => (
                   <li key={l.label}>
                     <Link href={l.href} className="text-sm" style={{ color: "rgba(255,255,255,0.38)" }}>
