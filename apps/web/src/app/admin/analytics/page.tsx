@@ -71,7 +71,7 @@ async function AnalyticsContent({ from, to }: { from: string; to: string }) {
 
   // DAU/WAU/MAU from auth audit log  
   const [dauResult, wauResult, mauResult] = await Promise.all([
-    admin.rpc("get_dau_wau_mau" as never, {} as never).catch(() => ({ data: null })),
+    Promise.resolve(admin.rpc("get_dau_wau_mau" as never, {} as never)).catch(() => ({ data: null })),
     Promise.resolve({ data: null }),
     Promise.resolve({ data: null }),
   ])
