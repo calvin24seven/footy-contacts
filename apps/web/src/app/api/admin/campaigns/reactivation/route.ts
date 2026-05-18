@@ -6,6 +6,9 @@ import {
   CAMPAIGN_ID,
   type CampaignUser,
 } from "@/lib/email/campaign"
+import { createUnsubscribeToken } from "@/lib/email/unsubscribe"
+
+const APP_URL = "https://footycontacts.com"
 
 export const runtime    = "nodejs"
 export const maxDuration = 60
@@ -27,7 +30,7 @@ export const maxDuration = 60
  *
  * Auth: admin session required (profile.role = 'admin').
  */
-export async function POST(_req: NextRequest): Promise<NextResponse> {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   // ── Auth check ──────────────────────────────────────────────────────────────
   const serverClient = await createAdminClient()
   const {
@@ -48,7 +51,64 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  // ── Query eligible users ─────────────────────────────────────────────────────
+  // ── Test mode: ?testEmail=you@example.com ────────────────────────────────────
+  const testEmail = req.nextUrl.searchParams.get("testEmail")?.toLowerCase().trim()
+  if (testEmail) {
+    const SCHEDULE_DAYS: Record<number, number> = { 1: 0, 2: 3, 3: 6, 4: 10, 5: 14 }
+    const OFFER_VALID_DAYS = 21
+    const now = new Date()
+    const unsubToken = createUnsubscribeToken(testEmail, "marketing")
+    const unsubUrl   = `${APP_URL}/unsubscribe?email=${encodeURIComponent(testEmail)}&category=marketing&token=${unsubToken}`
+    const offerEnd     = new Date(now.getTime() + OFFER_VALID_DAYS * 86_400_000)
+    const offerEndDate = offerEnd.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+
+    const supabase = createServiceClient()
+    const jobs = Array.from({ length: 5 }, (_, i) => {
+      const step   = i + 1
+      const sendAt = new Date(now.getTime() + SCHEDULE_DAYS[step] * 86_400_000)
+      const props: Record<string, unknown> = {
+        firstName:      "Calvin",
+        unsubscribeUrl: unsubUrl,
+        ...(step === 5 ? { offerEndDate } : {}),
+      }
+      return {
+        idempotency_key: `test:${CAMPAIGN_ID}:email-${step}:${testEmail}`,
+        to_email:        testEmail,
+        to_name:         "Calvin",
+        reply_to:        "hello@footycontacts.com",
+        template_id:     `reactivation-${step}`,
+        template_props:  props,
+        category:        "marketing",
+        user_id:         null,
+        max_attempts:    3,
+        next_retry_at:   sendAt.toISOString(),
+      }
+    })
+
+    const { error: insertErr } = await supabase
+      .from("email_jobs")
+      .upsert(jobs, { onConflict: "idempotency_key", ignoreDuplicates: true })
+
+    if (insertErr) {
+      return NextResponse.json({ error: insertErr.message }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      ok:        true,
+      testMode:  true,
+      testEmail,
+      queued:    5,
+      message:   "5 test jobs queued. Trigger GET /api/cron/email-drain with your CRON_SECRET to send immediately.",
+      schedule: {
+        "email-1": now.toISOString(),
+        "email-2": new Date(now.getTime() + 3  * 86_400_000).toISOString(),
+        "email-3": new Date(now.getTime() + 6  * 86_400_000).toISOString(),
+        "email-4": new Date(now.getTime() + 10 * 86_400_000).toISOString(),
+        "email-5": new Date(now.getTime() + 14 * 86_400_000).toISOString(),
+      },
+    })
+  }
+
   const supabase = createServiceClient()
 
   const { data: rows, error } = await supabase.rpc("get_reactivation_audience")
