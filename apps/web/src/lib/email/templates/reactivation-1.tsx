@@ -52,7 +52,7 @@ export default function Reactivation1Email({ firstName, unsubscribeUrl }: Reacti
       <Text style={body}>Search for one person you have been meaning to reach:</Text>
 
       <Button
-        href="https://app/footycontacts.com"
+        href="https://app.footycontacts.com"
         style={cta}
       >
         Search Footy Contacts →

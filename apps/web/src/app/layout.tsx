@@ -8,8 +8,10 @@ import CookieConsent from "@/components/CookieConsent"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Footy Contacts — Football Contact Intelligence",
-  description: "Find and connect with football industry professionals worldwide.",
+  title: "Footy Contacts — Search the Football Network",
+  description:
+    "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 50,000+ published football industry contacts. Start with 3 free unlocks.",
+  robots: { index: false, follow: false },
 }
 
 export default function RootLayout({

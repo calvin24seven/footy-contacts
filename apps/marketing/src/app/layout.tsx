@@ -5,6 +5,8 @@ import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
+const defaultOgImage = "https://footycontacts.com/og?title=Footy+Contacts&subtitle=Search+the+Football+Network"
+
 export const metadata: Metadata = {
   title: {
     default: "Footy Contacts — Search the Football Network",
@@ -17,9 +19,11 @@ export const metadata: Metadata = {
     siteName: "Footy Contacts",
     type: "website",
     locale: "en_GB",
+    images: [{ url: defaultOgImage, width: 1200, height: 630, alt: "Footy Contacts" }],
   },
   twitter: {
     card: "summary_large_image",
+    images: [defaultOgImage],
   },
   robots: {
     index: true,

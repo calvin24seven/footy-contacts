@@ -1,7 +1,7 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@footy/types"],
+  transpilePackages: ["@footy/types", "@footy/seo"],
   images: {
     remotePatterns: [
       {

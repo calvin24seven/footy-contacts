@@ -6,6 +6,7 @@ import { PortableText, type PortableTextBlock } from "@portabletext/react"
 import { client } from "@/sanity/lib/client"
 import { postBySlugQuery, allSlugsQuery } from "@/sanity/lib/queries"
 import { urlFor } from "@/sanity/lib/image"
+import { buildArticleSchema, buildBreadcrumbSchema, buildCanonicalUrl } from "@footy/seo"
 
 export const revalidate = 3600
 
@@ -95,22 +96,33 @@ export default async function BlogPostPage({
         </div>
       </nav>
 
-      {/* Article structured data */}
+      {/* Structured data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: post.title,
-            description: post.excerpt,
-            datePublished: post.publishedAt,
-            publisher: {
-              "@type": "Organization",
-              name: "Footy Contacts",
-              url: "https://footycontacts.com",
-            },
-          }),
+          __html: JSON.stringify(
+            buildArticleSchema({
+              headline: post.title,
+              description: post.excerpt,
+              url: buildCanonicalUrl(`/blog/${post.slug.current}`),
+              publishedAt: post.publishedAt,
+              ...(post.mainImage?.asset && {
+                imageUrl: urlFor(post.mainImage).width(1200).height(630).url(),
+              }),
+            }),
+          ),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            buildBreadcrumbSchema([
+              { name: "Home", url: "https://footycontacts.com" },
+              { name: "Blog", url: "https://footycontacts.com/blog" },
+              { name: post.title, url: buildCanonicalUrl(`/blog/${post.slug.current}`) },
+            ]),
+          ),
         }}
       />
 
