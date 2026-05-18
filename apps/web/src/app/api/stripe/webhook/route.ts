@@ -121,7 +121,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         if (event.type === "customer.subscription.updated" && sub.cancel_at_period_end) {
           const { data: existing } = await admin
             .from("subscriptions")
-            .select("cancel_at_period_end, user_id")
+            .select("cancel_at_period_end, user_id, plan_id")
             .eq("stripe_subscription_id", sub.id)
             .maybeSingle()
 
@@ -129,7 +129,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           if (justScheduledCancel && existing.user_id) {
             // Fire-and-forget win-back email
             sendWinbackEmail(admin, existing.user_id, sub).catch(console.error)
+            // Log pending cancellation billing event
+            logBillingEvent(admin, {
+              userId: existing.user_id,
+              eventType: "subscription_cancelled",
+              planId: existing.plan_id,
+              mrrChange: -(await getPlanMrr(admin, existing.plan_id)),
+              stripeEventId: event.id,
+            }).catch(console.error)
           }
+        }
+
+        // Log subscription_created billing event
+        if (event.type === "customer.subscription.created") {
+          const planMrr = await getPlanMrr(admin, planId ?? null)
+          logBillingEvent(admin, {
+            userId: resolvedUserId,
+            eventType: sub.status === "trialing" ? "trial_started" : "subscription_created",
+            planId: planId ?? null,
+            mrrChange: sub.status === "trialing" ? 0 : planMrr,
+            stripeEventId: event.id,
+          }).catch(console.error)
         }
 
         await upsertSubscription(admin, {
@@ -154,6 +174,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription
+        // Look up user before we mark cancelled
+        const { data: existingSub } = await admin
+          .from("subscriptions")
+          .select("user_id, plan_id")
+          .eq("stripe_subscription_id", sub.id)
+          .maybeSingle()
+        if (existingSub) {
+          logBillingEvent(admin, {
+            userId: existingSub.user_id,
+            eventType: "subscription_cancelled",
+            planId: existingSub.plan_id,
+            mrrChange: -(await getPlanMrr(admin, existingSub.plan_id)),
+            stripeEventId: event.id,
+          }).catch(console.error)
+        }
         await admin
           .from("subscriptions")
           .update({ status: "canceled", updated_at: new Date().toISOString() })
@@ -169,6 +204,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         const sub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ["items"] })
         const periods = getPeriodDates(sub)
+
+        // Look up user/plan to log renewal
+        const { data: existingSub } = await admin
+          .from("subscriptions")
+          .select("user_id, plan_id, status")
+          .eq("stripe_subscription_id", sub.id)
+          .maybeSingle()
+        if (existingSub) {
+          const eventType =
+            existingSub.status === "trialing" ? "trial_converted" : "subscription_renewed"
+          logBillingEvent(admin, {
+            userId: existingSub.user_id,
+            eventType,
+            planId: existingSub.plan_id,
+            mrrChange: eventType === "trial_converted"
+              ? await getPlanMrr(admin, existingSub.plan_id)
+              : 0, // renewal doesn't change MRR
+            stripeEventId: event.id,
+          }).catch(console.error)
+        }
+
         await admin
           .from("subscriptions")
           .update({
@@ -186,6 +242,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const subscriptionId = getInvoiceSubscriptionId(invoice as any)
         if (!subscriptionId) break
+
+        // Log payment failure
+        const { data: existingSub } = await admin
+          .from("subscriptions")
+          .select("user_id, plan_id")
+          .eq("stripe_subscription_id", subscriptionId)
+          .maybeSingle()
+        if (existingSub) {
+          logBillingEvent(admin, {
+            userId: existingSub.user_id,
+            eventType: "payment_failed",
+            planId: existingSub.plan_id,
+            mrrChange: 0,
+            stripeEventId: event.id,
+          }).catch(console.error)
+        }
 
         const now = new Date().toISOString()
         // Only set past_due_since if not already set (preserves original failure date)
@@ -297,6 +369,42 @@ async function getPlanCode(
 ): Promise<string> {
   const { data } = await admin.from("plans").select("code").eq("id", planId).maybeSingle()
   return data?.code ?? ""
+}
+
+/** Look up the monthly MRR value for a plan */
+async function getPlanMrr(
+  admin: ReturnType<typeof createAdminClient>,
+  planId: string | null | undefined
+): Promise<number> {
+  if (!planId) return 0
+  const { data } = await admin
+    .from("plans")
+    .select("monthly_price_gbp")
+    .eq("id", planId)
+    .maybeSingle()
+  return Number(data?.monthly_price_gbp ?? 0)
+}
+
+/** Write a billing_events row — fire-and-forget safe */
+async function logBillingEvent(
+  admin: ReturnType<typeof createAdminClient>,
+  opts: {
+    userId: string
+    eventType: string
+    planId: string | null | undefined
+    mrrChange: number
+    stripeEventId?: string
+    metadata?: Record<string, unknown>
+  }
+): Promise<void> {
+  await admin.from("billing_events").insert({
+    user_id: opts.userId,
+    event_type: opts.eventType,
+    plan_id: opts.planId ?? null,
+    mrr_change: opts.mrrChange,
+    stripe_event_id: opts.stripeEventId ?? null,
+    metadata: opts.metadata ?? {},
+  })
 }
 
 /**
