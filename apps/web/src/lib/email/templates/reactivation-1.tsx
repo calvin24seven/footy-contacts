@@ -26,8 +26,7 @@ export default function Reactivation1Email({ firstName, unsubscribeUrl }: Reacti
       </Text>
 
       <Text style={body}>
-        I&apos;ve now come back to it properly, fixed the main user flows, and reopened
-        the database.
+        I&apos;ve now come back to it properly, fixed the main user flows, and improved the quality of the application.
       </Text>
 
       <Text style={{ ...body, marginBottom: "8px" }}>
@@ -36,11 +35,9 @@ export default function Reactivation1Email({ firstName, unsubscribeUrl }: Reacti
 
       <Text style={list}>
         — 55,016 football industry contacts in the database
-        {"\n"}— 12,422 currently published and searchable
         {"\n"}— 42,614 contacts with email fields
-        {"\n"}— 47,154 contacts with phone fields
         {"\n"}— 54,996 LinkedIn profiles
-        {"\n"}— 114 countries covered
+        {"\n"}— 80+ countries covered
       </Text>
 
       <Text style={body}>
@@ -55,7 +52,7 @@ export default function Reactivation1Email({ firstName, unsubscribeUrl }: Reacti
       <Text style={body}>Search for one person you have been meaning to reach:</Text>
 
       <Button
-        href="https://footycontacts.com/app"
+        href="https://app/footycontacts.com"
         style={cta}
       >
         Search Footy Contacts →

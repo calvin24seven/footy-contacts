@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s | Footy Contacts",
   },
   description:
-    "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 12,400+ published football industry contacts. Start with 3 free unlocks.",
+    "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 50,000+ published football industry contacts. Start with 3 free unlocks.",
   metadataBase: new URL("https://footycontacts.com"),
   openGraph: {
     siteName: "Footy Contacts",

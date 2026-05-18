@@ -21,7 +21,7 @@ export default function Reactivation3Email({ firstName, unsubscribeUrl }: Reacti
 
       <Text style={list}>
         — email
-        {"\n"}— phone
+        {"\n"}— work phone
         {"\n"}— LinkedIn
         {"\n"}— role
         {"\n"}— organisation
@@ -37,7 +37,7 @@ export default function Reactivation3Email({ firstName, unsubscribeUrl }: Reacti
 
       <Text style={body}>No card needed.</Text>
 
-      <Button href="https://footycontacts.com/app" style={cta}>
+      <Button href="https://app/footycontacts.com" style={cta}>
         Use a free unlock →
       </Button>
 

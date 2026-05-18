@@ -25,12 +25,12 @@ export default function Reactivation2Email({ firstName, unsubscribeUrl }: Reacti
 
       <Text style={list}>
         — scout + England
-        {"\n"}— chief scout + Championship
-        {"\n"}— academy director + League One
-        {"\n"}— agent + Spain
-        {"\n"}— head of recruitment + Premier League
-        {"\n"}— sporting director + Belgium
-        {"\n"}— journalist + Nigeria
+        {"\n"}— chief scout + Arsenal
+        {"\n"}— academy director + Spain
+        {"\n"}— agent + France
+        {"\n"}— head of recruitment 
+        {"\n"}— sporting director + USA
+        {"\n"}— journalist + Portugal
         {"\n"}— sports science + Germany
         {"\n"}— player representative + France
       </Text>
@@ -46,7 +46,7 @@ export default function Reactivation2Email({ firstName, unsubscribeUrl }: Reacti
 
       <Text style={body}>You have 3 free unlocks on your account.</Text>
 
-      <Button href="https://footycontacts.com/app" style={cta}>
+      <Button href="https://app.footycontacts.com" style={cta}>
         Try a search →
       </Button>
 

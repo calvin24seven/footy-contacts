@@ -128,7 +128,7 @@ export default async function Image() {
               lineHeight: 1.4,
             }}
           >
-            12,400+ contacts · 114 countries · scouts, agents, coaches, club staff
+            50,000+ contacts · 114 countries · scouts, agents, coaches, club staff
           </div>
 
           {/* Stats strip */}

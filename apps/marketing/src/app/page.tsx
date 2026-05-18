@@ -6,11 +6,11 @@ const APP_URL = "https://app.footycontacts.com"
 export const metadata: Metadata = {
   title: "Footy Contacts — Search the Football Network",
   description:
-    "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 12,400+ published football industry contacts. Start with 3 free unlocks.",
+    "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 50,000+ published football industry contacts. Start with 3 free unlocks.",
   openGraph: {
     title: "Footy Contacts — Search the Football Network",
     description:
-      "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 12,400+ published football industry contacts. Start with 3 free unlocks.",
+      "Find scouts, agents, coaches, academy staff, and club contacts across 114 countries. Search 50,000+ published football industry contacts. Start with 3 free unlocks.",
     type: "website",
     locale: "en_GB",
   },
@@ -70,7 +70,7 @@ const HOW_IT_WORKS = [
   {
     n: "01",
     title: "Search the network",
-    desc: "Filter by role, club, country, or level. Browse 12,400+ published contacts with names, organisations, and roles visible to everyone.",
+    desc: "Filter by role, club, country, or level. Browse 50,000+ published contacts with names, organisations, and roles visible to everyone.",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -101,7 +101,7 @@ const HOW_IT_WORKS = [
 
 const FEATURES = [
   {
-    title: "12,400+ published contacts",
+    title: "50,000+ published contacts",
     desc: "Scouts, agents, coaches, academy directors, club secretaries, press officers, and operators. Verified and searchable.",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +174,7 @@ const PRICING = [
     period: "",
     badge: null as string | null,
     desc: "Try it. 3 unlocks to see exactly what you get before spending a penny.",
-    features: ["3 unlock credits", "Full contact browsing", "Search & filter all 12,400+", "No credit card"],
+    features: ["3 unlock credits", "Full contact browsing", "Search & filter all 50,000+", "No credit card"],
     cta: "Get access free",
     href: `${APP_URL}/signup`,
     featured: false,
@@ -477,7 +477,7 @@ export default function HomePage() {
                 }}
               >
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#F9D783" }} />
-                12,400+ verified contacts · 114 countries
+                50,000+ verified contacts · 114 countries
               </div>
 
               {/* Headline */}
@@ -605,7 +605,7 @@ export default function HomePage() {
             }}
           >
             {[
-              { value: "12,400+", label: "Published contacts", sub: "Searchable right now" },
+              { value: "50,000+", label: "Published contacts", sub: "Searchable right now" },
               { value: "114", label: "Countries covered", sub: "Global football network", divider: true },
               { value: "3 free", label: "Unlocks to start", sub: "No credit card needed", divider: true },
             ].map(({ value, label, sub, divider }) => (
