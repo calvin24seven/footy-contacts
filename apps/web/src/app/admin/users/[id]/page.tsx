@@ -59,7 +59,8 @@ export default async function AdminUserDetailPage({ params }: Props): Promise<JS
       .in("action" as never, ["login", "user_signedup"])
       .order("created_at" as never, { ascending: false })
       .limit(20),
-    admin.from("billing_events")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from("billing_events")
       .select("*, plans(name)")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })

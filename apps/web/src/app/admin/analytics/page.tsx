@@ -51,7 +51,8 @@ async function AnalyticsContent({ from, to }: { from: string; to: string }) {
       .gte("viewed_at", from).lte("viewed_at", to + "T23:59:59Z"),
     admin.from("subscriptions").select("id", { count: "exact", head: true })
       .eq("status", "active"),
-    admin.from("daily_metrics")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from("daily_metrics")
       .select("date, new_signups, dau, unlocks, exports, mrr, contact_views")
       .gte("date", from).lte("date", to)
       .order("date", { ascending: true }),
