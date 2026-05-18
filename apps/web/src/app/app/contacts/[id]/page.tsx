@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import UnlockButton from "./UnlockButton"
 import SaveToListButton from "@/components/SaveToListButton"
+import CopyButton from "./CopyButton"
 import { getOrgLogoUrl } from "@/lib/orgLogo"
 import { headers as nextHeaders } from "next/headers"
 
@@ -123,9 +124,15 @@ export default async function ContactPage({
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-white text-lg sm:text-2xl font-bold leading-tight">{contact.name}</h1>
               {contact.verified_status === "verified" && (
-                <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded shrink-0">
-                  Verified
-                </span>
+                <svg
+                  className="w-5 h-5 text-emerald-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-label="Email verified"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               )}
             </div>
             {contact.role && (
@@ -146,25 +153,26 @@ export default async function ContactPage({
         </div>
 
         {/* Meta */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {contact.category && (
-            <MetaItem label="Category" value={contact.category} />
-          )}
-          {contact.level && <MetaItem label="Level" value={contact.level} />}
-          {contact.region && <MetaItem label="Region" value={contact.region} />}
-        </div>
+        {(contact.category || contact.level || contact.region) && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {contact.category && <MetaItem label="Category" value={contact.category} />}
+            {contact.level && <MetaItem label="Level" value={contact.level} />}
+            {contact.region && <MetaItem label="Region" value={contact.region} />}
+          </div>
+        )}
 
         {/* Contact details — gated */}
         <div className="border-t border-gray-700 pt-6">
           <h2 className="text-white font-semibold mb-4">Contact Details</h2>
           {isUnlocked ? (
-            <div className="space-y-3">
+            <div className="space-y-0 divide-y divide-white/[0.05]">
               {contact.email && (
                 <ContactDetail
                   label="Email"
                   icon="email"
                   value={contact.email}
                   href={`mailto:${contact.email}`}
+                  copyValue={contact.email}
                 />
               )}
               {contact.phone && (
@@ -173,6 +181,7 @@ export default async function ContactPage({
                   icon="phone"
                   value={contact.phone}
                   href={`tel:${contact.phone}`}
+                  copyValue={contact.phone}
                 />
               )}
               {contact.linkedin_url && (
@@ -225,9 +234,9 @@ export default async function ContactPage({
 
 function MetaItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-[#222C41] rounded-lg p-3">
-      <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-white text-sm">{value}</p>
+    <div className="bg-[#1e2535] rounded-lg px-3 py-2.5 flex-1 min-w-[120px]">
+      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-white text-sm font-medium">{value}</p>
     </div>
   )
 }
@@ -238,12 +247,14 @@ function ContactDetail({
   value,
   href,
   external,
+  copyValue,
 }: {
   label: string
   icon: "email" | "phone" | "linkedin" | "globe"
   value: string
   href: string
   external?: boolean
+  copyValue?: string
 }) {
   const icons = {
     email: (
@@ -269,8 +280,8 @@ function ContactDetail({
   }
 
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-gray-700/50 last:border-0 gap-4">
-      <div className="flex items-center gap-2.5 text-gray-400 shrink-0">
+    <div className="flex items-center gap-3 py-3">
+      <div className="flex items-center gap-2.5 text-gray-500 shrink-0 w-24">
         {icons[icon]}
         <span className="text-sm">{label}</span>
       </div>
@@ -278,10 +289,16 @@ function ContactDetail({
         href={href}
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}
-        className="text-gold text-sm hover:underline truncate min-w-0"
+        className="flex-1 text-gold text-sm hover:underline truncate min-w-0 font-medium"
       >
         {value}
       </a>
+      {copyValue && <CopyButton value={copyValue} />}
+      {external && (
+        <svg className="w-3.5 h-3.5 text-gray-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      )}
     </div>
   )
 }

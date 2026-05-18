@@ -59,7 +59,27 @@ export default async function ListDetailPage({
     (listContacts ?? []).map((lc) => [lc.contact_id, lc.created_at ?? new Date().toISOString()])
   )
 
-  // Merge contacts with their added_at timestamps
+  // Fetch which contacts the user has already unlocked
+  let unlockedSet = new Set<string>()
+  if (user && contactIds.length > 0) {
+    const { data: unlocks } = await supabase
+      .from("contact_unlocks")
+      .select("contact_id")
+      .eq("user_id", user.id)
+      .in("contact_id", contactIds)
+    unlockedSet = new Set((unlocks ?? []).map((u) => u.contact_id))
+  }
+
+  // Fetch user's other lists for bulk "add to list" action
+  const { data: userLists } = await supabase
+    .from("lists")
+    .select("id, name")
+    .eq("user_id", user!.id)
+    .neq("id", id)
+    .order("created_at", { ascending: false })
+  const allLists = userLists ?? []
+
+  // Merge contacts with their added_at timestamps and unlock status
   const contactsWithMeta: ContactWithMeta[] = contacts.map((c) => ({
     id: c.id as string,
     name: (c.name as string) ?? "",
@@ -72,6 +92,7 @@ export default async function ListDetailPage({
     has_email: (c.has_email as boolean) ?? false,
     has_phone: (c.has_phone as boolean) ?? false,
     has_linkedin: (c.has_linkedin as boolean) ?? false,
+    is_unlocked: unlockedSet.has(c.id as string),
     added_at: addedAtMap[c.id as string] ?? (c.created_at as string) ?? new Date().toISOString(),
   }))
 
@@ -152,6 +173,7 @@ export default async function ListDetailPage({
         contacts={contactsWithMeta}
         listId={id}
         isSystem={isSystem}
+        allLists={allLists}
       />
     </div>
   )

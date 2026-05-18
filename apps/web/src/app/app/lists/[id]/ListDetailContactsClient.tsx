@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import OrgAvatar from "@/app/app/OrgAvatar"
 import SignalIcons from "@/app/app/SignalIcons"
 import { ContactCTA } from "@/app/app/ContactCTA"
 
@@ -18,6 +19,7 @@ export type ContactWithMeta = {
   has_email: boolean
   has_phone: boolean
   has_linkedin: boolean
+  is_unlocked: boolean
   added_at: string
 }
 
@@ -27,6 +29,7 @@ interface Props {
   contacts: ContactWithMeta[]
   listId: string
   isSystem: boolean
+  allLists: { id: string; name: string }[]
 }
 
 function relativeDate(iso: string): string {
@@ -47,11 +50,49 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "verified", label: "Verified first" },
 ]
 
-export default function ListDetailContactsClient({ contacts: initialContacts, listId, isSystem }: Props) {
+export default function ListDetailContactsClient({
+  contacts: initialContacts,
+  listId,
+  isSystem,
+  allLists,
+}: Props) {
   const [contacts, setContacts] = useState(initialContacts)
   const [sortBy, setSortBy] = useState<SortKey>("added")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [bulkRemoving, setBulkRemoving] = useState(false)
+  const [addToListOpen, setAddToListOpen] = useState(false)
+  const [savingListId, setSavingListId] = useState<string | null>(null)
+  const addDropdownRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
+
+  useEffect(() => {
+    if (!addToListOpen) return
+    function handle(e: MouseEvent) {
+      if (addDropdownRef.current && !addDropdownRef.current.contains(e.target as Node)) {
+        setAddToListOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handle)
+    return () => document.removeEventListener("mousedown", handle)
+  }, [addToListOpen])
+
+  const allSelected = contacts.length > 0 && selectedIds.size === contacts.length
+  const someSelected = selectedIds.size > 0
+
+  function toggleAll() {
+    if (allSelected) setSelectedIds(new Set())
+    else setSelectedIds(new Set(contacts.map((c) => c.id)))
+  }
+
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const s = new Set(prev)
+      if (s.has(id)) s.delete(id)
+      else s.add(id)
+      return s
+    })
+  }
 
   function getSorted(): ContactWithMeta[] {
     return [...contacts].sort((a, b) => {
@@ -82,6 +123,31 @@ export default function ListDetailContactsClient({ contacts: initialContacts, li
     setRemovingId(null)
   }
 
+  async function bulkRemove() {
+    setBulkRemoving(true)
+    const ids = [...selectedIds]
+    await supabase
+      .from("list_contacts")
+      .delete()
+      .eq("list_id", listId)
+      .in("contact_id", ids)
+    setContacts((prev) => prev.filter((c) => !ids.includes(c.id)))
+    setSelectedIds(new Set())
+    setBulkRemoving(false)
+  }
+
+  async function addToList(targetListId: string) {
+    setSavingListId(targetListId)
+    const ids = [...selectedIds]
+    await supabase.from("list_contacts").upsert(
+      ids.map((contactId) => ({ list_id: targetListId, contact_id: contactId })),
+      { onConflict: "list_id,contact_id", ignoreDuplicates: true } as unknown as object
+    )
+    setSavingListId(null)
+    setAddToListOpen(false)
+    setSelectedIds(new Set())
+  }
+
   if (contacts.length === 0) {
     return (
       <div className="text-center py-16 text-gray-500">
@@ -103,99 +169,189 @@ export default function ListDetailContactsClient({ contacts: initialContacts, li
 
   return (
     <div>
-      {/* Sort controls */}
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <span className="text-xs text-gray-500 shrink-0">Sort:</span>
-        {SORTS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setSortBy(key)}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-              sortBy === key
-                ? "bg-gold/20 text-gold border border-gold/30"
-                : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/10"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Top bar: select-all + sort */}
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
+        <label className="flex items-center gap-2 cursor-pointer select-none shrink-0">
+          <input
+            type="checkbox"
+            checked={allSelected}
+            ref={(el) => {
+              if (el) el.indeterminate = someSelected && !allSelected
+            }}
+            onChange={toggleAll}
+            className="w-4 h-4 rounded border-gray-600 bg-navy accent-gold cursor-pointer"
+          />
+          <span className="text-xs text-gray-500">
+            {someSelected ? `${selectedIds.size} selected` : "Select all"}
+          </span>
+        </label>
+        <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+          <span className="text-xs text-gray-600">Sort:</span>
+          {SORTS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setSortBy(key)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                sortBy === key
+                  ? "bg-gold/20 text-gold border border-gold/30"
+                  : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/10"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Contact rows */}
-      <div className="space-y-2">
-        {displayed.map((contact) => (
-          <div
-            key={contact.id}
-            className="flex items-center gap-3 bg-navy-light rounded-xl px-4 py-3.5 border border-white/[0.05] hover:border-white/10 transition-colors"
-          >
-            {/* Avatar */}
-            <div className="w-9 h-9 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold text-sm shrink-0">
-              {contact.name[0]?.toUpperCase()}
-            </div>
-
-            {/* Identity */}
-            <Link
-              href={`/app/contacts/${contact.id}`}
-              className="flex-1 min-w-0 hover:opacity-80 transition-opacity"
-            >
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-white font-medium text-sm leading-tight">
-                  {contact.name}
-                </span>
-                {contact.verified_status === "verified" && (
-                  <span
-                    title="Email verified"
-                    className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-emerald-400/80 bg-emerald-900/20 border border-emerald-900/40 px-1.5 py-0.5 rounded-full leading-none shrink-0"
-                  >
-                    <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Verified
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-400 truncate mt-0.5">
-                {[contact.role, contact.organisation].filter(Boolean).join(" · ")}
-              </p>
-              <p className="text-[11px] text-gray-600 mt-0.5">
-                Added {relativeDate(contact.added_at)}
-              </p>
-            </Link>
-
-            {/* Signal icons — hidden on small screens */}
-            <div className="shrink-0 hidden sm:block">
-              <SignalIcons
-                hasEmail={contact.has_email}
-                hasPhone={contact.has_phone}
-                hasLinkedin={contact.has_linkedin}
-              />
-            </div>
-
-            {/* Unlock / View CTA */}
-            <div className="shrink-0 w-20" onClick={(e) => e.stopPropagation()}>
-              <ContactCTA
-                contactId={contact.id}
-                verifiedStatus={contact.verified_status}
-                hasEmail={contact.has_email}
-                hasPhone={contact.has_phone}
-                hasLinkedin={contact.has_linkedin}
-                isUnlocked={false}
-              />
-            </div>
-
-            {/* Remove */}
-            {!isSystem && (
+      {/* Bulk action bar */}
+      {someSelected && !isSystem && (
+        <div className="flex items-center gap-2 mb-3 px-3 py-2.5 bg-navy-light border border-white/[0.08] rounded-xl flex-wrap">
+          <span className="text-xs text-gray-400 shrink-0">
+            {selectedIds.size} contact{selectedIds.size !== 1 ? "s" : ""} selected
+          </span>
+          {allLists.length > 0 && (
+            <div className="relative" ref={addDropdownRef}>
               <button
-                onClick={() => removeContact(contact.id)}
-                disabled={removingId === contact.id}
-                className="shrink-0 text-xs text-gray-600 hover:text-red-400 transition-colors disabled:opacity-40 ml-1"
-                title="Remove from list"
+                onClick={() => setAddToListOpen((v) => !v)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10 text-gray-300 text-xs hover:bg-white/10 transition-colors"
               >
-                {removingId === contact.id ? "…" : "✕"}
+                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                Add to list
+                <svg className="w-3 h-3 shrink-0 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
-            )}
-          </div>
-        ))}
+              {addToListOpen && (
+                <div className="absolute left-0 top-full mt-1 z-30 bg-navy border border-navy-light rounded-xl shadow-xl min-w-[180px] py-1 overflow-hidden">
+                  {allLists.map((list) => (
+                    <button
+                      key={list.id}
+                      onClick={() => addToList(list.id)}
+                      disabled={savingListId !== null}
+                      className="w-full text-left px-3 py-2.5 text-xs text-gray-300 hover:bg-white/[0.06] hover:text-white transition-colors disabled:opacity-50 truncate"
+                    >
+                      {savingListId === list.id ? "Adding…" : list.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <button
+            onClick={bulkRemove}
+            disabled={bulkRemoving}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs hover:bg-red-500/20 transition-colors disabled:opacity-50 ml-auto"
+          >
+            {bulkRemoving ? "Removing…" : `Remove ${selectedIds.size} from list`}
+          </button>
+        </div>
+      )}
+
+      {/* Contact rows */}
+      <div className="space-y-1.5">
+        {displayed.map((contact) => {
+          const selected = selectedIds.has(contact.id)
+          const location = [contact.city, contact.country].filter(Boolean).join(", ")
+          return (
+            <div
+              key={contact.id}
+              className={`flex items-center gap-3 rounded-xl px-3 py-3 border transition-colors ${
+                selected
+                  ? "bg-gold/[0.06] border-gold/20"
+                  : "bg-navy-light border-white/[0.05] hover:border-white/10"
+              }`}
+            >
+              {/* Checkbox */}
+              <input
+                type="checkbox"
+                checked={selected}
+                onChange={() => toggleOne(contact.id)}
+                onClick={(e) => e.stopPropagation()}
+                className="w-4 h-4 rounded border-gray-600 bg-navy accent-gold cursor-pointer shrink-0"
+              />
+
+              {/* Org avatar */}
+              <div className="shrink-0">
+                <OrgAvatar
+                  name={contact.organisation}
+                  category={contact.category}
+                  logoUrl={null}
+                />
+              </div>
+
+              {/* Identity */}
+              <Link
+                href={`/app/contacts/${contact.id}`}
+                className="flex-1 min-w-0 hover:opacity-80 transition-opacity"
+              >
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-white font-medium text-[13px] leading-tight truncate">
+                    {contact.name}
+                  </span>
+                  {contact.verified_status === "verified" && (
+                    <svg
+                      className="w-3.5 h-3.5 text-emerald-400 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-label="Email verified"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </div>
+                {contact.role && (
+                  <p className="text-[11px] text-gray-400 truncate mt-0.5">{contact.role}</p>
+                )}
+                <p className="text-[11px] text-gray-600 truncate">
+                  {[contact.organisation, location].filter(Boolean).join(" · ")}
+                </p>
+              </Link>
+
+              {/* Signal icons */}
+              <div className="shrink-0 hidden sm:block">
+                <SignalIcons
+                  hasEmail={contact.has_email}
+                  hasPhone={contact.has_phone}
+                  hasLinkedin={contact.has_linkedin}
+                />
+              </div>
+
+              {/* Added date */}
+              <span className="text-[10px] text-gray-700 shrink-0 hidden md:block whitespace-nowrap">
+                {relativeDate(contact.added_at)}
+              </span>
+
+              {/* Unlock / View CTA */}
+              <div className="shrink-0 w-20" onClick={(e) => e.stopPropagation()}>
+                <ContactCTA
+                  contactId={contact.id}
+                  verifiedStatus={contact.verified_status}
+                  hasEmail={contact.has_email}
+                  hasPhone={contact.has_phone}
+                  hasLinkedin={contact.has_linkedin}
+                  isUnlocked={contact.is_unlocked}
+                />
+              </div>
+
+              {/* Remove */}
+              {!isSystem && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeContact(contact.id) }}
+                  disabled={removingId === contact.id}
+                  className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/[0.08] transition-colors disabled:opacity-40"
+                  title="Remove from list"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
