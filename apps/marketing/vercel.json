@@ -1,6 +1,16 @@
 {
   "redirects": [
     {
+      "source": "/app",
+      "destination": "https://app.footycontacts.com",
+      "permanent": false
+    },
+    {
+      "source": "/app/:path*",
+      "destination": "https://app.footycontacts.com/:path*",
+      "permanent": false
+    },
+    {
       "source": "/blog/:slug",
       "has": [{ "type": "host", "value": "footycontacts.com" }],
       "destination": "/blog/:slug",

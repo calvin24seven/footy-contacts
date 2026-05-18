@@ -37,7 +37,7 @@ SELECT cron.schedule(
   '*/5 * * * *',
   $$
   SELECT net.http_get(
-    url     := 'https://footycontacts.com/api/cron/email-drain',
+    url     := 'https://footy-contacts-new3-calvin24sevens-projects.vercel.app/api/cron/email-drain',
     headers := jsonb_build_object(
       'Authorization',
       'Bearer ' || (
@@ -45,7 +45,9 @@ SELECT cron.schedule(
         FROM vault.decrypted_secrets
         WHERE name = 'cron_secret'
         LIMIT 1
-      )
+      ),
+      'x-vercel-protection-bypass',
+      (SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'vercel_bypass_secret' LIMIT 1)
     )
   );
   $$

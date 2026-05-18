@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { sendClaimedEmailJob, type ClaimedEmailJob } from "./sender"
 import * as Sentry from "@sentry/nextjs"
 
-const BATCH_SIZE   = 350  // ~half the reactivation audience — spreads Email 1 over 2 days
+const BATCH_SIZE   = 50   // Resend rate-limits at 5 req/sec; sequential sends at ~200ms each = ~10s per drain
 const LOCK_MINUTES = 5   // requeue jobs stuck in 'sending' longer than this
 
 export async function drainEmailQueue(): Promise<{
@@ -45,14 +45,24 @@ export async function drainEmailQueue(): Promise<{
   }
 
   const claimedJobs = (jobs ?? []) as ClaimedEmailJob[]
-  const results = await Promise.allSettled(
-    claimedJobs.map((job) => sendClaimedEmailJob(job))
-  )
+
+  // Send sequentially to stay within Resend's 5 req/sec rate limit.
+  // At ~200ms per send, 50 jobs = ~10s per drain — well within Vercel's timeout.
+  let sent = 0
+  let failed = 0
+  for (const job of claimedJobs) {
+    try {
+      await sendClaimedEmailJob(job)
+      sent++
+    } catch {
+      failed++
+    }
+  }
 
   return {
     requeued: requeued ?? 0,
     claimed:  claimedJobs.length,
-    sent:     results.filter((r) => r.status === "fulfilled").length,
-    failed:   results.filter((r) => r.status === "rejected").length,
+    sent,
+    failed,
   }
 }
