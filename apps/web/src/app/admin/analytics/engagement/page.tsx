@@ -57,7 +57,8 @@ async function EngagementContent({ from, to }: { from: string; to: string }) {
       .eq("is_system", false)
       .gte("created_at", fromTs).lte("created_at", toTs),
     // Search events
-    admin.from("user_events")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from("user_events")
       .select("user_id, properties, created_at")
       .eq("event_name", "search")
       .gte("created_at", fromTs).lte("created_at", toTs),
