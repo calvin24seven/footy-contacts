@@ -4,83 +4,97 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getStripe } from "@/lib/stripe"
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const [supabase, stripe] = await Promise.all([createClient(), getStripe()])
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
+  try {
+    const [supabase, stripe] = await Promise.all([createClient(), getStripe()])
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
 
-  const body = await req.json() as { planId?: string; planCode?: string; billingPeriod?: "monthly" | "yearly"; coupon?: string }
-  const { planId, planCode, billingPeriod = "monthly", coupon } = body
+    const body = await req.json() as { planId?: string; planCode?: string; billingPeriod?: "monthly" | "yearly"; coupon?: string }
+    const { planId, planCode, billingPeriod = "monthly", coupon } = body
 
-  if (!planId && !planCode) {
-    return NextResponse.json({ error: "plan_id or plan_code required" }, { status: 400 })
-  }
+    if (!planId && !planCode) {
+      return NextResponse.json({ error: "plan_id or plan_code required" }, { status: 400 })
+    }
 
-  // Fetch plan by id or code
-  const planQuery = supabase.from("plans").select("*")
-  const { data: plan } = await (
-    planId
-      ? planQuery.eq("id", planId).single()
-      : planQuery.eq("code", planCode!).eq("is_active", true).single()
-  )
-
-  if (!plan) return NextResponse.json({ error: "plan_not_found" }, { status: 404 })
-
-  const priceId = billingPeriod === "yearly" ? plan.stripe_yearly_price_id : plan.stripe_monthly_price_id
-
-  if (!priceId) {
-    return NextResponse.json(
-      { error: "This plan is not yet available for purchase. Please try again soon." },
-      { status: 422 }
+    // Fetch plan by id or code
+    const planQuery = supabase.from("plans").select("*")
+    const { data: plan } = await (
+      planId
+        ? planQuery.eq("id", planId).single()
+        : planQuery.eq("code", planCode!).eq("is_active", true).single()
     )
-  }
 
-  const adminClient = createAdminClient()
+    if (!plan) return NextResponse.json({ error: "plan_not_found" }, { status: 404 })
 
-  // Fetch or create Stripe customer
-  const { data: existingSub } = await adminClient
-    .from("subscriptions")
-    .select("stripe_customer_id")
-    .eq("user_id", user.id)
-    .not("stripe_customer_id", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    const priceId = billingPeriod === "yearly" ? plan.stripe_yearly_price_id : plan.stripe_monthly_price_id
 
-  let customerId = existingSub?.stripe_customer_id
+    if (!priceId) {
+      return NextResponse.json(
+        { error: "This plan is not yet available for purchase. Please try again soon." },
+        { status: 422 }
+      )
+    }
 
-  if (!customerId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", user.id)
-      .single()
+    const adminClient = createAdminClient()
 
-    const customer = await stripe.customers.create({
-      email: user.email,
-      name: profile?.full_name ?? undefined,
-      metadata: { supabase_user_id: user.id },
-    })
-    customerId = customer.id
-  }
+    // Fetch or create Stripe customer
+    const { data: existingSub } = await adminClient
+      .from("subscriptions")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .not("stripe_customer_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-  const origin = req.headers.get("origin") ?? "https://footycontacts.com"
+    let customerId = existingSub?.stripe_customer_id
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    customer: customerId,
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${origin}/app/billing?success=true`,
-    cancel_url: `${origin}/app/billing`,
-    subscription_data: {
-      metadata: {
-        supabase_user_id: user.id,
-        plan_id: plan.id,
+    if (!customerId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single()
+
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: profile?.full_name ?? undefined,
+        metadata: { supabase_user_id: user.id },
+      })
+      customerId = customer.id
+    }
+
+    const origin = req.headers.get("origin") ?? "https://footycontacts.com"
+
+    // Validate coupon exists before creating the session to give a clear error
+    if (coupon) {
+      try {
+        await stripe.coupons.retrieve(coupon)
+      } catch {
+        return NextResponse.json({ error: "Invalid or expired promotion code." }, { status: 422 })
+      }
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${origin}/app/billing?success=true`,
+      cancel_url: `${origin}/app/billing`,
+      subscription_data: {
+        metadata: {
+          supabase_user_id: user.id,
+          plan_id: plan.id,
+        },
       },
-    },
-    ...(coupon
-      ? { discounts: [{ coupon }] }
-      : { allow_promotion_codes: true }),
-  })
+      ...(coupon
+        ? { discounts: [{ coupon }] }
+        : { allow_promotion_codes: true }),
+    })
 
-  return NextResponse.json({ url: session.url })
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    console.error("[billing/checkout]", err)
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 })
+  }
 }
