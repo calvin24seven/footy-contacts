@@ -2,7 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { Suspense } from "react"
 import type { JSX } from "react"
 import Link from "next/link"
-import DateRangePicker, { resolveDateRange } from "@/components/admin/DateRangePicker"
+import DateRangePicker from "@/components/admin/DateRangePicker"
+import { resolveDateRange } from "@/components/admin/date-range-utils"
 
 export const dynamic = "force-dynamic"
 

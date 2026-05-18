@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
-import Link from "next/link"
 import type { JSX, ReactNode } from "react"
+import AdminSidebar from "@/components/admin/AdminSidebar"
 
 export default async function AdminLayout({ children }: { children: ReactNode }): Promise<JSX.Element> {
   const supabase = await createClient()
@@ -47,33 +47,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="min-h-screen bg-navy-dark text-white flex">
-      <aside className="w-56 bg-navy flex flex-col border-r border-navy-light">
-        <div className="p-4 border-b border-navy-light">
-          <span className="text-gold font-bold">Admin Panel</span>
-        </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-navy-light hover:text-white transition-colors"
-            >
-              <span>{item.label}</span>
-              {item.badge != null && (
-                <span className="ml-1 min-w-[1.25rem] px-1 py-0.5 rounded-full bg-gold text-navy text-[10px] font-bold text-center leading-none">
-                  {item.badge > 999 ? "999+" : item.badge}
-                </span>
-              )}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-navy-light">
-          <Link href="/app" className="block px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white transition-colors">
-            ← Back to App
-          </Link>
-        </div>
-      </aside>
-      <main className="flex-1 overflow-auto">{children}</main>
+      <AdminSidebar navItems={navItems} />
+      <main className="flex-1 overflow-auto lg:ml-0 pt-14 lg:pt-0">{children}</main>
     </div>
   )
 }

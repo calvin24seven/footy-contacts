@@ -45,17 +45,24 @@ type ContactPreviewRow = {
 // ── Static params (top 1 000 orgs for pre-rendering) ─────────────────────────
 
 export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
-  const supabase = createMarketingClient()
-  const { data } = await supabase
-    .from("organisations")
-    .select("slug")
-    .not("slug", "is", null)
-    .order("name")
-    .limit(1000)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return []
+  }
+  try {
+    const supabase = createMarketingClient()
+    const { data } = await supabase
+      .from("organisations")
+      .select("slug")
+      .not("slug", "is", null)
+      .order("name")
+      .limit(1000)
 
-  return (data ?? [])
-    .filter((r): r is { slug: string } => typeof r.slug === "string")
-    .map(({ slug }) => ({ slug }))
+    return (data ?? [])
+      .filter((r): r is { slug: string } => typeof r.slug === "string")
+      .map(({ slug }) => ({ slug }))
+  } catch {
+    return []
+  }
 }
 
 // ── SEO metadata ──────────────────────────────────────────────────────────────
