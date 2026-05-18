@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import type { Json } from "@/database.types"
 import { createAdminClient } from "@/lib/supabase/server"
 import { createAdminClient as createServiceClient } from "@/lib/supabase/admin"
 import {
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         to_name:         "Calvin",
         reply_to:        "hello@footycontacts.com",
         template_id:     `reactivation-${step}`,
-        template_props:  props,
+        template_props:  props as Json,
         category:        "marketing",
         user_id:         null,
         max_attempts:    3,
