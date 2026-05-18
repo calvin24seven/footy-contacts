@@ -12,19 +12,14 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 })
 
-  // Require email verification before any unlock
-  if (!user.email_confirmed_at) {
-    return NextResponse.json({ error: "email_verification_required" }, { status: 403 })
-  }
-
-  // 20 unlocks per user per minute — fail closed: Redis outage = unlock blocked
-  const perMin = await rateLimit(`unlock:${user.id}:min`, 20, 60, { failClosed: true })
+  // 20 unlocks per user per minute
+  const perMin = await rateLimit(`unlock:${user.id}:min`, 20, 60)
   if (!perMin.allowed) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 })
   }
 
-  // 200 unlocks per user per day — fail closed
-  const perDay = await rateLimitDaily(`unlock:${user.id}`, 200, { failClosed: true })
+  // 200 unlocks per user per day
+  const perDay = await rateLimitDaily(`unlock:${user.id}`, 200)
   if (!perDay.allowed) {
     return NextResponse.json({ error: "daily_limit_reached" }, { status: 429 })
   }

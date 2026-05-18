@@ -27,6 +27,10 @@
     }
   },
   "dependencies": {
-    "@sentry/nextjs": "10"
+    "@sentry/nextjs": "10",
+    "@supabase/supabase-js": "^2.49.4",
+    "csv-parse": "^6.2.1",
+    "dotenv": "^17.4.2",
+    "node-fetch": "^3.3.2"
   }
 }

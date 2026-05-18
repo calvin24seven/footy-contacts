@@ -12,7 +12,10 @@ import {
   buildOrgFaqs,
   buildCanonicalUrl,
   MIN_CONTACTS_TO_INDEX,
+  toSlug,
 } from "@footy/seo"
+import { Breadcrumb } from "@/components/seo/Breadcrumb"
+import { RelatedPages } from "@/components/seo/RelatedPages"
 
 export const revalidate = 3600
 
@@ -52,13 +55,14 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
     const supabase = createMarketingClient()
     const { data } = await supabase
       .from("organisations")
-      .select("slug")
+      .select("slug, contact_count")
       .not("slug", "is", null)
-      .order("name")
+      .gte("contact_count", MIN_CONTACTS_TO_INDEX)
+      .order("contact_count", { ascending: false })
       .limit(1000)
 
     return (data ?? [])
-      .filter((r): r is { slug: string } => typeof r.slug === "string")
+      .filter((r): r is { slug: string; contact_count: number } => typeof r.slug === "string")
       .map(({ slug }) => ({ slug }))
   } catch {
     return []
@@ -93,11 +97,13 @@ export async function generateMetadata({
 
   const contactCount = count ?? 0
 
-  // Title: include league context when available
+  // Title: tiered formula based on contact_count + league availability
   const title =
-    org.league
-      ? `${org.name} Staff Contacts (${org.league}) | Footy Contacts`
-      : `${org.name} Staff & Contacts | Footy Contacts`
+    contactCount >= 50 && org.league
+      ? `${org.name} Staff Contacts (${org.league}) — ${contactCount}+ Profiles | Footy Contacts`
+      : contactCount >= 10
+        ? `${org.name} Football Staff & Contacts | Footy Contacts`
+        : `${org.name} | Footy Contacts`
 
   // Description: pack in unique signals (count, league, country)
   const descParts: string[] = [`Browse ${contactCount > 0 ? `${contactCount} ` : ""}${org.name} football staff contacts`]
@@ -228,7 +234,7 @@ export default async function OrgPage({ params }: { params: Promise<Params> }) {
   const orgUrl = buildCanonicalUrl(`/org/${slug}`)
   const breadcrumbItems = [
     { name: "Home", url: "https://footycontacts.com" },
-    ...(typedOrg.country ? [{ name: typedOrg.country, url: buildCanonicalUrl(`/football-contacts/${typedOrg.country.toLowerCase().replace(/\s+/g, "-")}`) }] : []),
+    ...(typedOrg.league ? [{ name: typedOrg.league, url: buildCanonicalUrl(`/football-contacts/league/${toSlug(typedOrg.league)}`) }] : []),
     { name: typedOrg.name, url: orgUrl },
   ]
 
@@ -283,26 +289,9 @@ export default async function OrgPage({ params }: { params: Promise<Params> }) {
       </header>
 
       {/* ── Breadcrumb ── */}
-      <nav aria-label="Breadcrumb" className="max-w-5xl mx-auto px-4 sm:px-6 pt-4">
-        <ol className="flex items-center gap-1.5 text-xs text-gray-500">
-          <li><Link href="/" className="hover:text-gray-300 transition-colors">Home</Link></li>
-          {typedOrg.country && (
-            <>
-              <li aria-hidden>/</li>
-              <li>
-                <Link
-                  href={`/football-contacts/${typedOrg.country.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="hover:text-gray-300 transition-colors"
-                >
-                  {typedOrg.country}
-                </Link>
-              </li>
-            </>
-          )}
-          <li aria-hidden>/</li>
-          <li className="text-gray-300">{typedOrg.name}</li>
-        </ol>
-      </nav>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4">
+        <Breadcrumb items={breadcrumbItems} />
+      </div>
 
       {/* ── Org header ── */}
       <div className="border-b border-white/[0.06] bg-navy/30">
@@ -324,7 +313,7 @@ export default async function OrgPage({ params }: { params: Promise<Params> }) {
             )}
 
             <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">{typedOrg.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">{typedOrg.name} Staff &amp; Contacts</h1>
               {(typedOrg.country || typedOrg.league) && (
                 <p className="text-gray-400 mt-1 text-sm flex items-center gap-2 flex-wrap">
                   {typedOrg.country && <span>{typedOrg.country}</span>}
@@ -505,6 +494,11 @@ export default async function OrgPage({ params }: { params: Promise<Params> }) {
           </dl>
         </section>
       )}
+
+      {/* ── Related pages ── */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <RelatedPages context={{ orgSlug: slug }} />
+      </div>
 
       {/* ── Footer ── */}
       <footer className="border-t border-white/[0.06] bg-navy/30 py-6">

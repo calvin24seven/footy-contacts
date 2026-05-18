@@ -34,6 +34,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       ? [{ href: "/admin/contacts/pending-changes", label: "Pending Changes", badge: pendingChanges }]
       : []),
     { href: "/admin/users", label: "Users" },
+    { href: "/admin/campaigns", label: "Campaigns" },
     { href: "/admin/email-verify", label: "Email Verify" },
     { href: "/admin/health", label: "Contact Health" },
     { href: "/admin/suppressions", label: "Suppressions" },

@@ -10,6 +10,9 @@
   "scripts": {
     "type-check": "tsc --noEmit"
   },
+  "dependencies": {
+    "server-only": "^0.0.1"
+  },
   "peerDependencies": {
     "next": ">=15.0.0"
   },

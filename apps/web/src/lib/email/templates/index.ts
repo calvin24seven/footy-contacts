@@ -10,6 +10,7 @@ import Reactivation3Email from "./reactivation-3"
 import Reactivation4Email from "./reactivation-4"
 import Reactivation5Email from "./reactivation-5"
 import WinbackCancelEmail from "./winback-cancel"
+import WaitlistLaunchEmail from "./waitlist-launch"
 
 export interface TemplateDefinition<S extends z.ZodTypeAny> {
   schema: S
@@ -114,6 +115,12 @@ export const TEMPLATES = {
     component: WinbackCancelEmail,
     subject:   ({ firstName }: { firstName: string }) =>
       `${firstName}, before your access ends — two options for you`,
+    category:  "marketing",
+  },
+  "waitlist-launch": {
+    schema:    z.object({ unsubscribeUrl: z.string().url() }),
+    component: WaitlistLaunchEmail,
+    subject:   () => "Footy Contacts is now live — you're in",
     category:  "marketing",
   },
 } as const satisfies Record<string, TemplateDefinition<z.ZodTypeAny>>

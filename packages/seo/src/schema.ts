@@ -52,6 +52,27 @@ export function buildOrgSchema(org: {
   }
 }
 
+export function buildCollectionPageSchema({
+  name,
+  url,
+  description,
+  itemCount,
+}: {
+  name: string
+  url: string
+  description: string
+  itemCount?: number
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    description,
+    url,
+    ...(itemCount !== undefined && { numberOfItems: itemCount }),
+  }
+}
+
 export function buildArticleSchema(article: {
   headline: string
   description: string
