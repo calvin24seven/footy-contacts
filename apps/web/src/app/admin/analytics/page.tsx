@@ -169,15 +169,16 @@ async function AnalyticsContent({ from, to }: { from: string; to: string }) {
   ]
 
   // Build chart data — signups and unlocks per day
-  const chartDays = metrics.length > 0
-    ? metrics
+  type ChartDay = { date: string; new_signups: number; dau: number; unlocks: number; exports: number; mrr: number; contact_views: number }
+  const chartDays: ChartDay[] = metrics.length > 0
+    ? (metrics as ChartDay[])
     : Array.from({ length: rangeDays }, (_, i) => {
         const d = new Date(fromDate); d.setDate(fromDate.getDate() + i)
         return { date: d.toISOString().slice(0, 10), new_signups: 0, dau: 0, unlocks: 0, exports: 0, mrr: 0, contact_views: 0 }
       })
 
-  const maxSignups = Math.max(...chartDays.map((d: { new_signups?: number }) => d.new_signups ?? 0), 1)
-  const maxUnlocks = Math.max(...chartDays.map((d: { unlocks?: number }) => d.unlocks ?? 0), 1)
+  const maxSignups = Math.max(...chartDays.map((d) => d.new_signups ?? 0), 1)
+  const maxUnlocks = Math.max(...chartDays.map((d) => d.unlocks ?? 0), 1)
 
   return (
     <div className="space-y-8">

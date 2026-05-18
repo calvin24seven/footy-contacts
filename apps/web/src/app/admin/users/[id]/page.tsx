@@ -294,7 +294,7 @@ export default async function AdminUserDetailPage({ params }: Props): Promise<JS
             <p className="px-5 py-4 text-gray-500 text-xs">No billing events yet</p>
           ) : (
             <div className="divide-y divide-navy-dark/50 max-h-72 overflow-y-auto">
-              {(billingEvents.data ?? []).map((e) => {
+              {(billingEvents.data as Array<{ id: string; event_type: string; mrr_change: number; created_at: string; plans?: { name: string } | null }> ?? []).map((e) => {
                 const ep = e.plans as { name: string } | null
                 return (
                   <div key={e.id} className="px-5 py-2 flex items-center justify-between">

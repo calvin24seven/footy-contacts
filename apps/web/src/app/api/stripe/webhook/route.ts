@@ -397,7 +397,8 @@ async function logBillingEvent(
     metadata?: Record<string, unknown>
   }
 ): Promise<void> {
-  await admin.from("billing_events").insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (admin as any).from("billing_events").insert({
     user_id: opts.userId,
     event_type: opts.eventType,
     plan_id: opts.planId ?? null,

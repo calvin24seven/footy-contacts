@@ -40,13 +40,15 @@ async function RevenueContent({ from, to }: { from: string; to: string }) {
       .select("id", { count: "exact", head: true })
       .eq("status", "past_due"),
     // Billing events in period
-    admin
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any)
       .from("billing_events")
       .select("event_type, mrr_change, created_at, plan_id, user_id")
       .gte("created_at", from)
       .lte("created_at", to + "T23:59:59Z"),
     // Daily MRR trend
-    admin
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any)
       .from("daily_metrics")
       .select("date, mrr, new_mrr, churned_mrr, new_paid_users, churned_users")
       .gte("date", from)
@@ -58,7 +60,8 @@ async function RevenueContent({ from, to }: { from: string; to: string }) {
       .select("plan_id, plans(name, monthly_price_gbp, code)")
       .eq("status", "active"),
     // Recent billing events
-    admin
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any)
       .from("billing_events")
       .select("id, event_type, mrr_change, created_at, user_id, plan_id, plans(name)")
       .order("created_at", { ascending: false })
@@ -78,7 +81,8 @@ async function RevenueContent({ from, to }: { from: string; to: string }) {
   const arr = mrr * 12
 
   // Period billing stats
-  const events = billingEventsResult.data ?? []
+  type BillingEvent = { id: string; event_type: string; mrr_change: number; created_at: string; user_id: string; plan_id: string; plans?: { name: string } | null }
+  const events = (billingEventsResult.data ?? []) as BillingEvent[]
   const newMrr    = events.filter((e) => e.mrr_change > 0).reduce((s, e) => s + Number(e.mrr_change), 0)
   const churnedMrr = events.filter((e) => e.mrr_change < 0).reduce((s, e) => s + Math.abs(Number(e.mrr_change)), 0)
   const netMrr     = newMrr - churnedMrr
@@ -111,7 +115,8 @@ async function RevenueContent({ from, to }: { from: string; to: string }) {
     planCounts[s.plan_id].mrr  += Number(p.monthly_price_gbp)
   }
 
-  const metrics = dailyMetrics.data ?? []
+  type DailyMetric = { date: string; mrr: number; new_mrr: number; churned_mrr: number; new_paid_users: number; churned_users: number }
+  const metrics = (dailyMetrics.data ?? []) as DailyMetric[]
   const maxMrr  = Math.max(...metrics.map((d) => Number(d.mrr ?? 0)), mrr, 1)
 
   const eventTypeColors: Record<string, string> = {
@@ -266,7 +271,7 @@ async function RevenueContent({ from, to }: { from: string; to: string }) {
               No billing events yet — they'll appear once subscriptions change via Stripe webhooks.
             </p>
           ) : (
-            (recentBillingEvents.data ?? []).map((e) => {
+            (recentBillingEvents.data as BillingEvent[] ?? []).map((e) => {
               const plan = e.plans as { name: string } | null
               return (
                 <div key={e.id} className="flex items-center justify-between px-5 py-3">

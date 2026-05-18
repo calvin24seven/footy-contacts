@@ -1,0 +1,84 @@
+ WARNING  --no-cache is deprecated and will be removed in a future major version. Use --cache=local:r,remote:r
+• turbo 2.9.6
+
+   • Packages in scope: web
+   • Running build in 1 packages
+   • Remote caching disabled
+
+web:build: cache miss, executing 2e135004f304fce3
+web:build: 
+web:build: > web@0.0.1 build C:\Users\Calvi\footy-contacts\apps\web
+web:build: > next build
+web:build: 
+web:build:    ▲ Next.js 15.5.15
+web:build:    - Environments: .env.local
+web:build: 
+web:build:    Creating an optimized production build ...
+web:build:  ⚠ Compiled with warnings in 19.6s
+web:build: 
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.212.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+web:build: Critical dependency: the request of a dependency is an expression
+web:build: 
+web:build: Import trace for requested module:
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.212.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.212.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.212.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.212.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+web:build: ../../node_modules/.pnpm/@fastify+otel@0.18.0_@opentelemetry+api@1.9.1/node_modules/@fastify/otel/index.js
+web:build: ../../node_modules/.pnpm/@sentry+node@10.53.1/node_modules/@sentry/node/build/cjs/integrations/tracing/fastify/index.js
+web:build: ../../node_modules/.pnpm/@sentry+node@10.53.1/node_modules/@sentry/node/build/cjs/index.js
+web:build: ../../node_modules/.pnpm/@sentry+nextjs@10.53.1_@opentelemetry+core@2.7.1_@opentelemetry+api@1.9.1__@opentelemetry+sdk_3cvvneorqz6ql324tm2gzerecm/node_modules/@sentry/nextjs/build/cjs/index.server.js
+web:build: ./sentry.server.config.ts
+web:build: 
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.207.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+web:build: Critical dependency: the request of a dependency is an expression
+web:build: 
+web:build: Import trace for requested module:
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.207.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.207.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.207.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.207.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+web:build: ../../node_modules/.pnpm/@prisma+instrumentation@7.6.0_@opentelemetry+api@1.9.1/node_modules/@prisma/instrumentation/dist/index.js
+web:build: ../../node_modules/.pnpm/@sentry+node@10.53.1/node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+web:build: ../../node_modules/.pnpm/@sentry+node@10.53.1/node_modules/@sentry/node/build/cjs/index.js
+web:build: ../../node_modules/.pnpm/@sentry+nextjs@10.53.1_@opentelemetry+core@2.7.1_@opentelemetry+api@1.9.1__@opentelemetry+sdk_3cvvneorqz6ql324tm2gzerecm/node_modules/@sentry/nextjs/build/cjs/index.server.js
+web:build: ./src/app/api/email/unsubscribe/route.ts
+web:build: 
+web:build: ../../node_modules/.pnpm/require-in-the-middle@8.0.1/node_modules/require-in-the-middle/index.js
+web:build: Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+web:build: 
+web:build: Import trace for requested module:
+web:build: ../../node_modules/.pnpm/require-in-the-middle@8.0.1/node_modules/require-in-the-middle/index.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.214.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.214.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.214.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+web:build: ../../node_modules/.pnpm/@opentelemetry+instrumentation@0.214.0_@opentelemetry+api@1.9.1/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+web:build: ../../node_modules/.pnpm/@sentry+node@10.53.1/node_modules/@sentry/node/build/cjs/integrations/tracing/express.js
+web:build: ../../node_modules/.pnpm/@sentry+node@10.53.1/node_modules/@sentry/node/build/cjs/index.js
+web:build: ../../node_modules/.pnpm/@sentry+nextjs@10.53.1_@opentelemetry+core@2.7.1_@opentelemetry+api@1.9.1__@opentelemetry+sdk_3cvvneorqz6ql324tm2gzerecm/node_modules/@sentry/nextjs/build/cjs/index.server.js
+web:build: ./src/app/api/email/unsubscribe/route.ts
+web:build: 
+web:build:  ✓ Compiled successfully in 27.0s
+web:build:    Linting and checking validity of types ...
+web:build: Failed to compile.
+web:build: 
+web:build: ./src/app/admin/users/[id]/page.tsx:297:48
+web:build: Type error: Parameter 'e' implicitly has an 'any' type.
+web:build: 
+web:build: [0m [90m 295 |[39m           ) [33m:[39m (
+web:build:  [90m 296 |[39m             [33m<[39m[33mdiv[39m className[33m=[39m[32m"divide-y divide-navy-dark/50 max-h-72 overflow-y-auto"[39m[33m>[39m
+web:build: [31m[1m>[22m[39m[90m 297 |[39m               {(billingEvents[33m.[39mdata [33m?[39m[33m?[39m [])[33m.[39mmap((e) [33m=>[39m {
+web:build:  [90m     |[39m                                                [31m[1m^[22m[39m
+web:build:  [90m 298 |[39m                 [36mconst[39m ep [33m=[39m e[33m.[39mplans [36mas[39m { name[33m:[39m string } [33m|[39m [36mnull[39m
+web:build:  [90m 299 |[39m                 [36mreturn[39m (
+web:build:  [90m 300 |[39m                   [33m<[39m[33mdiv[39m key[33m=[39m{e[33m.[39mid} className[33m=[39m[32m"px-5 py-2 flex items-center justify-between"[39m[33m>[39m[0m
+web:build: Next.js build worker exited with code: 1 and signal: null
+web:build:  ELIFECYCLE  Command failed with exit code 1.
+ ERROR  web#build: command (C:\Users\Calvi\footy-contacts\apps\web) C:\Users\Calvi\AppData\Local\pnpm\.tools\pnpm\9.15.0\bin\pnpm.CMD run build exited (1)
+
+ Tasks:    0 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    1m17.079s 
+Failed:    web#build
+
+ ERROR  run failed: command  exited (1)

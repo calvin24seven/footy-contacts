@@ -58,7 +58,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const admin = createAdminClient()
-  await admin.from("user_events").insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (admin as any).from("user_events").insert({
     user_id: user.id,
     event_name: event,
     properties,
