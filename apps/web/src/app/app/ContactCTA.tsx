@@ -51,6 +51,7 @@ export function ContactCTA({
   verifiedStatus,
   hasEmail,
   hasPhone,
+  hasLinkedin = false,
   isUnlocked: isUnlockedProp = false,
   onUnlocked,
 }: {
@@ -58,6 +59,7 @@ export function ContactCTA({
   verifiedStatus: string | null
   hasEmail: boolean
   hasPhone: boolean
+  hasLinkedin?: boolean
   isUnlocked?: boolean
   /** Called immediately after a successful unlock, before the page refreshes. */
   onUnlocked?: () => void
@@ -112,7 +114,7 @@ export function ContactCTA({
   )
 
   // No contact info at all
-  if (!hasEmail && !hasPhone) return (
+  if (!hasEmail && !hasPhone && !hasLinkedin) return (
     <Link
       href={`/app/contacts/${contactId}`}
       onClick={(e) => e.stopPropagation()}

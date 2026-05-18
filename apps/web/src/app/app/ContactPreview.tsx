@@ -264,6 +264,7 @@ export default function ContactPreview({ contact, onClose, desktopMode = false }
                 verifiedStatus={contact.verified_status}
                 hasEmail={contact.has_email}
                 hasPhone={contact.has_phone}
+                hasLinkedin={contact.has_linkedin}
                 isUnlocked={false}
                 onUnlocked={() => void fetchDetails(contact.id)}
               />

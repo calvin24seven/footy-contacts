@@ -32,9 +32,9 @@ export default function StepWhat({
   return (
     <>
       <h2 className="text-white text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-3">
-        What are you<br />here to do?
+        Who are you<br />looking for?
       </h2>
-      <p className="text-gray-500 text-sm mb-8">Select all that apply.</p>
+      <p className="text-gray-500 text-sm mb-8">Select all that apply — we&apos;ll suggest relevant searches.</p>
 
       <div className="grid grid-cols-2 gap-2 mb-8">
         {LOOKING_FOR.map((goal) => (

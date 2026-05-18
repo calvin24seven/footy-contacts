@@ -52,7 +52,7 @@ function WelcomeScreen({ onContinue }: { onContinue: () => void }) {
           The football<br />network,<br />at your fingertips.
         </h1>
         <p className="text-gray-400 text-base leading-relaxed max-w-xs">
-          12,400 scouts, agents, clubs and coaches across 114 countries.
+          50,000+ scouts, agents, clubs and coaches across 114 countries.
           Direct contact details — no middleman.
         </p>
       </div>

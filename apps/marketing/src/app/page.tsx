@@ -1,5 +1,6 @@
 import Link from "next/link"
 import type { Metadata } from "next"
+import { getContactCount } from "../lib/getContactCount"
 
 const APP_URL = "https://app.footycontacts.com"
 
@@ -368,7 +369,8 @@ function ProductMockup() {
 
 // ── Page component ────────────────────────────────────────────────────────────
 
-export default function HomePage() {
+export default async function HomePage() {
+  const contactCount = await getContactCount()
   return (
     <div className="min-h-screen text-white" style={{ background: "#0D111C" }}>
 
@@ -477,7 +479,7 @@ export default function HomePage() {
                 }}
               >
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#F9D783" }} />
-                50,000+ verified contacts · 114 countries
+                {contactCount} verified contacts · 114 countries
               </div>
 
               {/* Headline */}
@@ -605,7 +607,7 @@ export default function HomePage() {
             }}
           >
             {[
-              { value: "50,000+", label: "Published contacts", sub: "Searchable right now" },
+              { value: contactCount, label: "Published contacts", sub: "Searchable right now" },
               { value: "114", label: "Countries covered", sub: "Global football network", divider: true },
               { value: "3 free", label: "Unlocks to start", sub: "No credit card needed", divider: true },
             ].map(({ value, label, sub, divider }) => (

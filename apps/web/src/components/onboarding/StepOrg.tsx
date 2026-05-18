@@ -3,11 +3,11 @@
 import { useState } from "react"
 
 const LABEL_BY_TYPE: Record<string, string> = {
-  agent:  "Which agency are you with?",
-  scout:  "Which club do you scout for?",
-  coach:  "Which club or academy?",
-  club:   "Which club or organisation?",
-  media:  "Which publication or outlet?",
+  agent:  "What's the name of your agency or company?",
+  scout:  "Which organisation do you represent?",
+  coach:  "Which club or organisation are you with?",
+  club:   "What's the name of your club or organisation?",
+  media:  "Which company or publication are you with?",
   player: "Which club are you with?",
   parent: "Which club is your child with?",
   other:  "Which organisation are you with?",

@@ -20,6 +20,19 @@ interface Props {
   initialLists: ListRow[]
 }
 
+type SortKey = "updated" | "name" | "count"
+
+function relativeDate(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const days = Math.floor(diff / 86400000)
+  if (days === 0) return "today"
+  if (days === 1) return "yesterday"
+  if (days < 7) return `${days}d ago`
+  if (days < 30) return `${Math.floor(days / 7)}w ago`
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`
+  return `${Math.floor(days / 365)}y ago`
+}
+
 // ── Tag pill ──────────────────────────────────────────────────────────────────
 function TagPill({ tag, onRemove }: { tag: string; onRemove?: () => void }) {
   return (
@@ -201,6 +214,8 @@ export default function ListsClient({ initialLists }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [exportingListId, setExportingListId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [sortBy, setSortBy] = useState<SortKey>("updated")
+  const [filterTag, setFilterTag] = useState<string | null>(null)
   const supabase = createClient()
 
   async function createList(name: string, desc: string, tags: string[]) {
@@ -336,89 +351,162 @@ export default function ListsClient({ initialLists }: Props) {
         <p className="text-red-400 text-sm mb-4">{error}</p>
       )}
 
-      {lists.length > 0 ? (
-        <div className="space-y-2">
-          {[...lists].sort((a, b) => (a.is_system === b.is_system ? 0 : a.is_system ? -1 : 1)).map((list) => (
-            <div
-              key={list.id}
-              className="bg-navy-light border border-white/[0.05] rounded-xl px-5 py-4 hover:border-white/10 transition-colors"
-            >
-              <div className="flex items-start justify-between gap-3">
-                {/* Left: list info */}
-                <Link href={`/app/lists/${list.id}`} className="flex-1 min-w-0 group">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-white font-semibold group-hover:text-gold transition-colors leading-tight">
-                      {list.name}
-                    </p>
-                    {/* System list badge */}
-                    {list.is_system && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gold/70 bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded-full leading-none shrink-0">
-                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                        Auto
-                      </span>
-                    )}
-                    {/* Contact count badge */}
-                    <span className="text-[11px] text-gray-500 font-medium bg-white/[0.04] border border-white/[0.06] px-1.5 py-0.5 rounded-full leading-none shrink-0">
-                      {list.contact_count === 0
-                        ? "empty"
-                        : `${list.contact_count} contact${list.contact_count !== 1 ? "s" : ""}`}
-                    </span>
-                  </div>
+      {lists.length > 0 ? (() => {
+        // Collect all unique tags across user lists (non-system)
+        const allTags = Array.from(
+          new Set(lists.filter((l) => !l.is_system).flatMap((l) => l.tags))
+        ).sort()
 
-                  {/* Tags */}
-                  {list.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      {list.tags.map((tag) => (
-                        <TagPill key={tag} tag={tag} />
-                      ))}
-                    </div>
-                  )}
+        // Sort + filter
+        const sorted = [...lists].sort((a, b) => {
+          if (a.is_system !== b.is_system) return a.is_system ? -1 : 1
+          switch (sortBy) {
+            case "name":    return a.name.localeCompare(b.name)
+            case "count":   return b.contact_count - a.contact_count
+            case "updated": return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+          }
+        })
+        const displayed = filterTag ? sorted.filter((l) => l.tags.includes(filterTag)) : sorted
 
-                  {/* Description */}
-                  {list.description && (
-                    <p className="text-gray-500 text-xs mt-1.5 truncate">{list.description}</p>
-                  )}
-                </Link>
-
-                {/* Actions */}
-                <div className="flex items-center gap-1 shrink-0 mt-0.5">
-                  {!list.is_system && (
+        return (
+          <div>
+            {/* Sort + filter bar */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+              {/* Sort */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">Sort:</span>
+                {([["updated", "Recent"], ["name", "Name"], ["count", "Contacts"]] as [SortKey, string][]).map(([key, label]) => (
                   <button
-                    onClick={() => { setError(null); setEditingList(list) }}
-                    className="px-2.5 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-colors font-medium"
-                    title="Edit list"
+                    key={key}
+                    onClick={() => setSortBy(key)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      sortBy === key
+                        ? "bg-gold/20 text-gold border border-gold/30"
+                        : "text-gray-500 hover:text-gray-300 border border-transparent hover:border-white/10"
+                    }`}
                   >
-                    Edit
+                    {label}
                   </button>
-                  )}
-                  {list.contact_count > 0 && (
-                    <button
-                      onClick={() => handleExportList(list.id, list.name)}
-                      disabled={exportingListId === list.id}
-                      className="px-2.5 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-colors font-medium disabled:opacity-40"
-                      title="Export list to CSV"
-                    >
-                      {exportingListId === list.id ? "…" : "Export"}
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (confirm(`Delete "${list.name}"? This cannot be undone.`)) {
-                        deleteList(list.id)
-                      }
-                    }}
-                    disabled={deletingId === list.id || list.is_system}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs transition-colors ${list.is_system ? "hidden" : "text-gray-500 hover:text-red-400 hover:bg-red-400/[0.06] disabled:opacity-40"}`}
-                    title="Delete list"
-                  >
-                    {deletingId === list.id ? "…" : "Delete"}
-                  </button>
-                </div>
+                ))}
               </div>
+
+              {/* Tag filter */}
+              {allTags.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs text-gray-500">Filter:</span>
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setFilterTag(filterTag === tag ? null : tag)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                        filterTag === tag
+                          ? "bg-gold/20 text-gold border border-gold/30"
+                          : "text-gray-500 hover:text-gold/70 border border-transparent hover:border-gold/20"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      ) : (
+
+            {/* Empty filter result */}
+            {displayed.length === 0 && (
+              <p className="text-gray-500 text-sm py-6 text-center">
+                No lists tagged &ldquo;{filterTag}&rdquo;.{" "}
+                <button onClick={() => setFilterTag(null)} className="text-gold hover:underline">Clear filter</button>
+              </p>
+            )}
+
+            <div className="space-y-2">
+              {displayed.map((list) => (
+                <div
+                  key={list.id}
+                  className="bg-navy-light border border-white/[0.05] rounded-xl px-5 py-4 hover:border-white/10 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    {/* Left: list info */}
+                    <Link href={`/app/lists/${list.id}`} className="flex-1 min-w-0 group">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-white font-semibold group-hover:text-gold transition-colors leading-tight">
+                          {list.name}
+                        </p>
+                        {/* System list badge */}
+                        {list.is_system && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gold/70 bg-gold/10 border border-gold/20 px-1.5 py-0.5 rounded-full leading-none shrink-0">
+                            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            Auto
+                          </span>
+                        )}
+                        {/* Contact count badge */}
+                        <span className="text-[11px] text-gray-500 font-medium bg-white/[0.04] border border-white/[0.06] px-1.5 py-0.5 rounded-full leading-none shrink-0">
+                          {list.contact_count === 0
+                            ? "empty"
+                            : `${list.contact_count} contact${list.contact_count !== 1 ? "s" : ""}`}
+                        </span>
+                        {/* Updated date */}
+                        <span className="text-[11px] text-gray-600 leading-none shrink-0">
+                          {relativeDate(list.updated_at)}
+                        </span>
+                      </div>
+
+                      {/* Tags */}
+                      {list.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {list.tags.map((tag) => (
+                            <TagPill key={tag} tag={tag} />
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Description */}
+                      {list.description && (
+                        <p className="text-gray-500 text-xs mt-1.5 truncate">{list.description}</p>
+                      )}
+                    </Link>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                      {!list.is_system && (
+                      <button
+                        onClick={() => { setError(null); setEditingList(list) }}
+                        className="px-2.5 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-colors font-medium"
+                        title="Edit list"
+                      >
+                        Edit
+                      </button>
+                      )}
+                      {list.contact_count > 0 && (
+                        <button
+                          onClick={() => handleExportList(list.id, list.name)}
+                          disabled={exportingListId === list.id}
+                          className="px-2.5 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/10 transition-colors font-medium disabled:opacity-40"
+                          title="Export list to CSV"
+                        >
+                          {exportingListId === list.id ? "…" : "Export"}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete "${list.name}"? This cannot be undone.`)) {
+                            deleteList(list.id)
+                          }
+                        }}
+                        disabled={deletingId === list.id || list.is_system}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs transition-colors ${list.is_system ? "hidden" : "text-gray-500 hover:text-red-400 hover:bg-red-400/[0.06] disabled:opacity-40"}`}
+                        title="Delete list"
+                      >
+                        {deletingId === list.id ? "…" : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })() : (
         <div className="text-center py-16 text-gray-500">
           <p className="text-lg mb-2">No lists yet</p>
           <p className="text-sm mb-4">Create a list to save and organise contacts</p>

@@ -194,6 +194,7 @@ export default function ContactRow({
             verifiedStatus={contact.verified_status}
             hasEmail={contact.has_email}
             hasPhone={contact.has_phone}
+            hasLinkedin={contact.has_linkedin}
             isUnlocked={contact.is_unlocked ?? false}
           />
         </div>
@@ -234,6 +235,7 @@ export default function ContactRow({
                 verifiedStatus={contact.verified_status}
                 hasEmail={contact.has_email}
                 hasPhone={contact.has_phone}
+                hasLinkedin={contact.has_linkedin}
                 isUnlocked={contact.is_unlocked ?? false}
               />
             </div>
