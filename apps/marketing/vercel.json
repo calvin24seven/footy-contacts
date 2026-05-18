@@ -9,12 +9,6 @@
       "source": "/app/:path*",
       "destination": "https://app.footycontacts.com/:path*",
       "permanent": false
-    },
-    {
-      "source": "/blog/:slug",
-      "has": [{ "type": "host", "value": "footycontacts.com" }],
-      "destination": "/blog/:slug",
-      "permanent": false
     }
   ]
 }

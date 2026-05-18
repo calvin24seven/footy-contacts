@@ -53,6 +53,10 @@ export async function middleware(request: NextRequest) {
 
   // ── Not logged in ──────────────────────────────────────────────────────────
   if (!user) {
+    // Root path → redirect to marketing site
+    if (pathname === "/") {
+      return NextResponse.redirect("https://footycontacts.com")
+    }
     if (isPublicPath || isSuspendedPath || isOrgPage) return supabaseResponse
     const url = request.nextUrl.clone()
     url.pathname = "/login"
