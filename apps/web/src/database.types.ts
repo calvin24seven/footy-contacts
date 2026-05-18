@@ -1236,6 +1236,7 @@ export type Database = {
           name: string
           normalised_name: string | null
           org_type: string | null
+          slug: string | null
           updated_at: string | null
           website: string | null
         }
@@ -1252,6 +1253,7 @@ export type Database = {
           name: string
           normalised_name?: string | null
           org_type?: string | null
+          slug?: string | null
           updated_at?: string | null
           website?: string | null
         }
@@ -1268,6 +1270,7 @@ export type Database = {
           name?: string
           normalised_name?: string | null
           org_type?: string | null
+          slug?: string | null
           updated_at?: string | null
           website?: string | null
         }
@@ -2323,3 +2326,4 @@ export const Constants = {
     },
   },
 } as const
+
